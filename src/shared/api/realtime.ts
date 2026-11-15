@@ -1,7 +1,7 @@
 /* Live updates over a WebSocket. A ticket from POST /v1/realtime/ticket/ works once, within 30 s.
    Events: connected, new_message { conversationId, message }, notification { notification }.
    On every reconnect the dashboards refetch, because events sent while offline are not replayed. */
-import { api, API_BASE, isSignedIn } from "./client";
+import { api, isSignedIn, REALTIME_BASE } from "./client";
 
 export type LiveEvent =
   | { event: "connected" }
@@ -26,8 +26,7 @@ async function connect(): Promise<void> {
   if (!isSignedIn()) return;
   try {
     const t = await api<{ ticket: string; path?: string }>("/v1/realtime/ticket/", { method: "POST" });
-    const base = API_BASE.replace(/^http/, "ws");
-    ws = new WebSocket(`${base}${t.path || "/ws/"}?ticket=${encodeURIComponent(t.ticket)}`);
+    ws = new WebSocket(`${REALTIME_BASE}${t.path || "/ws/"}?ticket=${encodeURIComponent(t.ticket)}`);
   } catch {
     schedule();
     return;

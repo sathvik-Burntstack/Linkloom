@@ -34,15 +34,26 @@ function apiPreconnect(origin: string): Plugin {
   };
 }
 
+const BACKEND = "https://collab-api-ewju.onrender.com";
+
+/* Same as the /api rewrite in vercel.json, for `vite` and `vite preview` with VITE_API_BASE_URL=/api. */
+const apiProxy = {
+  "/api": { target: BACKEND, changeOrigin: true, rewrite: (p: string) => p.replace(/^\/api/, "") },
+};
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const parity = !!(env.VITE_TEST_HOOKS || process.env.VITE_TEST_HOOKS);
+  const base = (env.VITE_API_BASE_URL || BACKEND).replace(/\/+$/, "");
   return {
     base: "./",
     plugins: [
       noSampleData(!parity),
-      apiPreconnect(parity ? "" : (env.VITE_API_BASE_URL || "https://collab-api-ewju.onrender.com").replace(/\/+$/, "")),
+      /* a same-site base ("/api") needs no preconnect: the page's own connection is reused */
+      apiPreconnect(parity || base.startsWith("/") ? "" : base),
     ],
+    server: { proxy: apiProxy },
+    preview: { proxy: apiProxy },
     resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
     build: {
       target: "es2022",

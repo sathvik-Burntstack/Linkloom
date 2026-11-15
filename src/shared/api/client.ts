@@ -8,7 +8,16 @@
 
    Tokens live in localStorage when the person ticked "Remember me", otherwise in sessionStorage for this tab. */
 const DEFAULT_BASE = "https://collab-api-ewju.onrender.com";
-export const API_BASE = (import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE).replace(/\/+$/, "");
+const RAW_BASE = (import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE).replace(/\/+$/, "");
+const SAME_SITE = RAW_BASE.startsWith("/");
+/* A base that starts with "/" (production: "/api") goes through the site's own address: vercel.json (and the dev
+   server) forward /api/* to the backend. The browser then never makes a cross-site call, so sign-in doesn't depend
+   on the backend's CORS list naming this site. */
+export const API_BASE = SAME_SITE ? location.origin + RAW_BASE : RAW_BASE;
+/* A rewrite can't carry a WebSocket, so live updates always connect to the backend itself. */
+export const REALTIME_BASE = (import.meta.env.VITE_REALTIME_URL || (SAME_SITE ? DEFAULT_BASE : RAW_BASE))
+  .replace(/\/+$/, "")
+  .replace(/^http/, "ws");
 const AUTH_KEY = "ll-auth";
 
 /** The parity build runs on the prototype's sample data and must never call the server. */
