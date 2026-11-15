@@ -10,3 +10,12 @@
    TODO(backend): accept bids from unverified creators; block payout until the ID check is approved. Until then the
    server answers KYC_REQUIRED and the bid form falls back to asking for the ID check. */
 export const BID_BEFORE_KYC: boolean = import.meta.env.VITE_TRIAL_BID_BEFORE_KYC === "1";
+
+/** The wording asked for when an accepted bid is waiting on the ID check (C10). */
+export const KYC_AFTER_ACCEPT = "Your bid was accepted. Verify your ID (about 4 minutes) to start.";
+
+/** True when the trial let an unverified creator bid, so the ID check is still owed before a deal can start.
+    Kept here, with no imports, so live/creator.ts can use it without pulling in the store (that import cycle blanks
+    the dashboard: store -> empty seed -> live/creator -> store). */
+export const kycOwedFor = (k: { status: string } | null | undefined): boolean =>
+  BID_BEFORE_KYC && !!k && k.status !== "verified";

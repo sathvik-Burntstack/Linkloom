@@ -42,7 +42,7 @@ import {
   toneOf,
   usageText,
 } from "../../../shared/live";
-import { KYC_AFTER_ACCEPT, kycOwed } from "../core/kyc-gate";
+import { KYC_AFTER_ACCEPT, kycOwedFor } from "../flags"; // not core/kyc-gate: that imports the store (cycle)
 
 /* ---------- backend rows (only the fields the app reads) ---------- */
 
@@ -453,7 +453,7 @@ export function mapNotification(n: Obj): Notification {
     if (reply === "viewed") text = `${brand || "A brand"} viewed your bid${title ? ` for ${title}` : ""}`;
     else if (reply === "shortlisted") text = `You're shortlisted${title ? ` for ${title}` : ""}`;
     else if (reply === "declined") text = `Not selected this time${title ? ` · ${title}` : ""}`;
-    else if (kycOwed()) {
+    else if (kycOwedFor(store?.s.kyc)) {
       text = KYC_AFTER_ACCEPT;
       go = "#kyc";
     } else text = `${brand || "The brand"} accepted your bid${title ? ` for ${title}` : ""}`;

@@ -2,7 +2,7 @@
    With the C10 trial on (flags.ts, BID_BEFORE_KYC) Bid opens the form straight away and the ID check is asked for
    later, once a brand accepts the bid or before the first payout.
    TODO(backend): accept bids from unverified creators; block payout until the ID check is approved. */
-import { BID_BEFORE_KYC } from "../flags";
+import { BID_BEFORE_KYC, KYC_AFTER_ACCEPT, kycOwedFor } from "../flags";
 import type { Kyc } from "../types";
 import { today } from "./clock";
 import { go } from "./router";
@@ -27,10 +27,9 @@ export const kycGate = (jobId: string): boolean => {
 };
 
 /** True when the trial lets an unverified creator bid, so the ID check is still owed before a deal can start. */
-export const kycOwed = (k: Kyc = store.s.kyc): boolean => BID_BEFORE_KYC && k.status !== "verified";
+export const kycOwed = (k: Kyc = store.s.kyc): boolean => kycOwedFor(k);
 
-/** The wording asked for when an accepted bid is waiting on the ID check (C10). */
-export const KYC_AFTER_ACCEPT = "Your bid was accepted. Verify your ID (about 4 minutes) to start.";
+export { KYC_AFTER_ACCEPT };
 
 /** When the ID review is expected to finish, if the API gave an estimate (see live/creator.ts mapKyc). */
 export type KycWithEta = Kyc & { reviewEtaAt?: string };
