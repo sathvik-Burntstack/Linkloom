@@ -242,10 +242,33 @@ function expired(token: string): boolean {
   }
 }
 
-async function raw<T>(
+/** Told about every request as it starts (not retries), so the UI can show which button is waiting (shared/ux.ts). */
+type RequestObserver = (p: Promise<unknown>, method: string, path: string) => void;
+let requestObserver: RequestObserver | null = null;
+export const onRequest = (f: RequestObserver): void => {
+  requestObserver = f;
+};
+
+function raw<T>(
   path: string,
   o: RequestOptions,
   retried = false,
+): Promise<{ data: T; meta: Envelope<T>["meta"] }> {
+  const p = send<T>(path, o, retried);
+  if (!retried && requestObserver) {
+    try {
+      requestObserver(p, o.method ?? "GET", path);
+    } catch {
+      /* the UI hook must never break a request */
+    }
+  }
+  return p;
+}
+
+async function send<T>(
+  path: string,
+  o: RequestOptions,
+  retried: boolean,
 ): Promise<{ data: T; meta: Envelope<T>["meta"] }> {
   const useAuth = o.auth !== false;
   let token = useAuth ? getToken() : null;

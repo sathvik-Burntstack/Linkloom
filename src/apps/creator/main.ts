@@ -1,6 +1,7 @@
 /* Entry point. Import order is the prototype's <link>/<script> order: the cascade and the module side effects depend on it. */
 import "../../shared/analytics";
 import "./styles/core.css";
+import "../../shared/layout.css"; // F1 tokens and the shared .ll-* pieces, after core.css on purpose
 import "./styles/motion.css";
 import "./screens/login/login.css";
 import "./screens/setup/setup.css";

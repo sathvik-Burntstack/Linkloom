@@ -1,0 +1,401 @@
+/* Shared layout foundations for both dashboards (brief F1, F3, F4, F5). Imported by each app's main.ts right after its
+   core.css, so the tokens below are the one source for spacing and the .ll-* pieces look the same on both sides.
+
+   Spacing (gap between sections is at least twice the gap inside one):
+     --space-inside   4-8px    label to field, icon to text
+     --space-items    16px     between items in a section (trial: 12-16px, start at 16)
+     --space-section  48px     between sections
+     --space-title    24px     page title to the first section
+
+   Dividers, one style per page:
+     .ll-panel      white section panel on the page background (Home, Post a brief, profiles)
+     .ll-hairline   1px rule with section space above and below (long reading pages, e.g. brief detail)
+     .ll-band       alternating full-width bands (Reports) */
+:root {
+  --space-inside: 8px;
+  --space-items: 16px;
+  --space-section: 48px;
+  --space-title: 24px;
+  --ll-panel-line: #ececef;
+  --ll-panel-r: 20px;
+}
+
+/* ---------- F1: stack of sections, section panel ---------- */
+.ll-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section);
+  min-width: 0;
+}
+.ll-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-items);
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--ll-panel-line);
+  border-radius: var(--ll-panel-r);
+  background: #fff;
+}
+.ll-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+.ll-panel-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ll-panel-h {
+  margin: 0;
+  font: 600 22px/28px var(--ll-sans);
+  letter-spacing: -0.01em;
+  color: var(--ll-ink-text);
+  text-wrap: balance;
+}
+.ll-panel-sub {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-slate);
+  text-wrap: pretty;
+}
+.ll-panel-more {
+  flex: none;
+  align-self: center;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+  color: var(--ll-ink-text);
+  border-bottom: 1.5px solid transparent;
+  transition: border-color 0.25s;
+}
+.ll-panel-more:hover,
+.ll-panel-more:focus-visible {
+  border-color: currentColor;
+}
+.ll-hairline {
+  height: 1px;
+  margin: calc(var(--space-section) / 2) 0;
+  background: var(--ll-rule);
+}
+.ll-band {
+  padding: var(--space-section) 0;
+}
+.ll-band:nth-child(even) {
+  background: #fff;
+  box-shadow:
+    -100vmax 0 0 #fff,
+    100vmax 0 0 #fff;
+  clip-path: inset(0 -100vmax);
+}
+
+/* "Step 2 of 5" progress line (B3, ID check) */
+.ll-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-inside);
+}
+.ll-steps-t {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ll-slate);
+  font-variant-numeric: tabular-nums;
+}
+.ll-steps-bar {
+  display: flex;
+  gap: 6px;
+}
+.ll-steps-bar > * {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ll-rule);
+  transition: background-color 0.3s;
+}
+.ll-steps-bar > .is-done {
+  background: var(--ll-ink-text);
+}
+.ll-steps-bar > .is-now {
+  background: var(--ll-slate);
+}
+
+/* ---------- trust line beside money and ID asks ---------- */
+.ll-trust {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--ll-slate);
+}
+.ll-trust svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+}
+.ll-ask {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-inside);
+}
+
+/* ---------- F3: busy button (a network call is running) ---------- */
+.is-busy {
+  position: relative;
+  pointer-events: none;
+  cursor: progress;
+}
+.is-busy {
+  color: transparent !important;
+}
+.is-busy > * {
+  visibility: hidden;
+}
+.is-busy::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid var(--busy-c, var(--ll-ink-text));
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: llSpin 0.7s linear infinite;
+  z-index: 2;
+}
+.lq.is-busy::before {
+  transform: translateY(40%) scaleY(0.0001);
+} /* no hover fill while busy */
+.is-busy[disabled],
+.lq.is-busy[aria-disabled="true"] {
+  opacity: 1;
+}
+@keyframes llSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-busy::after {
+    animation-duration: 1.6s;
+  }
+}
+
+/* ---------- F4: page skeleton while the dashboard or a screen loads ---------- */
+.ll-skel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-title);
+  padding-top: 8px;
+}
+.ll-skel i {
+  display: block;
+  border-radius: 10px;
+  background: var(--ll-paper-raised);
+  animation: llSk 1.2s ease-in-out infinite alternate;
+}
+.ll-skel .s-h {
+  width: min(420px, 70%);
+  height: 48px;
+}
+.ll-skel .s-l {
+  width: min(560px, 90%);
+  height: 16px;
+}
+.ll-skel .s-p {
+  height: 220px;
+  border-radius: var(--ll-panel-r);
+}
+.ll-skel .s-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-items);
+}
+.ll-skel .s-row i {
+  height: 180px;
+  border-radius: var(--ll-panel-r);
+}
+.ll-skel-note {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-slate);
+}
+@keyframes llSk {
+  to {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-skel i {
+    animation: none;
+  }
+}
+
+/* ---------- F5: avatar menu ---------- */
+.ll-menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.ll-menu-btn {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+.ll-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--ll-panel-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--ll-shadow-float);
+  color: var(--ll-ink-text);
+}
+.ll-menu[hidden] {
+  display: none;
+}
+.ll-menu-who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 8px;
+  min-width: 0;
+}
+.ll-menu-who b {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ll-menu-who span {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ll-slate);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ll-menu-i {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  font: 500 14px/20px var(--ll-sans);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ll-menu-i svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+.ll-menu-i:hover,
+.ll-menu-i:focus-visible {
+  background: var(--ll-paper);
+  outline: none;
+}
+.ll-menu-i:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--ll-ink-text);
+}
+.ll-menu-sep {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--ll-rule);
+}
+
+/* sidebar slip with no money yet (C11): a short line instead of ₹0 */
+.side .slip-next {
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 21px;
+  color: var(--ll-white);
+  text-wrap: pretty;
+}
+
+/* ---------- the best moment: first deal confirmed, first payout ---------- */
+.ll-cheer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+  border-radius: var(--ll-panel-r);
+  background: var(--ll-butter);
+  color: var(--ll-ink-text);
+}
+.ll-cheer-ic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--ll-ink-text);
+  color: var(--ll-butter);
+}
+.ll-cheer-ic svg {
+  width: 22px;
+  height: 22px;
+}
+.ll-cheer-t {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ll-cheer-t b {
+  font: 600 20px/26px var(--ll-sans);
+}
+.ll-cheer-t span {
+  font-size: 14px;
+  line-height: 20px;
+}
+.ll-cheer .lq {
+  flex: none;
+}
+.ll-cheer-x {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.ll-cheer-x:hover {
+  background: rgba(18, 18, 18, 0.08);
+}
+.ll-cheer-x svg {
+  width: 16px;
+  height: 16px;
+}
+@media (max-width: 720px) {
+  .ll-cheer {
+    flex-wrap: wrap;
+  }
+}

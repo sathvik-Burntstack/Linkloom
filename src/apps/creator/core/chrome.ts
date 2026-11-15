@@ -26,7 +26,17 @@ export function renderChrome(): void {
   const ib = $("#inbox");
   if (ib) ib.setAttribute("aria-label", unread ? `Messages, ${unread} unread` : "Messages");
   const held = s.active.filter(a => a.pay === "escrow").reduce((n, a) => n + a.price, 0);
-  $$("[data-side-ready]").forEach(e => (e.textContent = inr(s.readyToWithdraw || 0)));
+  /* C11: the amount only once there is money to withdraw; until then, when the next payout comes, never "₹0" */
+  const ready = s.readyToWithdraw || 0;
+  $$("[data-side-label]").forEach(e => (e.textContent = ready > 0 ? "Ready to withdraw" : "Next payout"));
+  $$("[data-side-ready]").forEach(e => {
+    e.textContent = ready > 0 ? inr(ready) : "";
+    e.hidden = !(ready > 0);
+  });
+  $$("[data-side-next]").forEach(e => {
+    e.textContent = ready > 0 ? "" : held ? "When the brand approves your work" : "After your first approved deal";
+    e.hidden = ready > 0;
+  });
   /* subscription plan, shown quietly in the sidebar slip; never a price */
   const p = s.plan;
   $$("[data-side-plan]").forEach(e => {

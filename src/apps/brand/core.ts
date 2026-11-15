@@ -94,8 +94,9 @@
     return i < 0 ? { name: h, param: null } : { name: h.slice(0, i), param: h.slice(i + 1) };
   };
   const go = hash => {
-    if (location.hash === hash) route();
-    else location.hash = hash;
+    if (location.hash === hash) {
+      if (booted) route(); // before boot the hash is all there is; boot routes to it (F4)
+    } else location.hash = hash;
   };
   let booted = false,
     routed = false,
@@ -178,7 +179,16 @@
     LLD.motion.enter(el, { name });
     renderChrome();
   }
-  addEventListener("hashchange", route);
+  /* While the dashboard is still loading (before boot) a tab click only marks the tab; boot then opens it. Routing that
+     early treated a signed-in brand as signed out and sent them to the sign-in page (F4). */
+  addEventListener("hashchange", () => {
+    if (booted) return route();
+    const name = parse().name;
+    $$("[data-nav]").forEach(a => {
+      if (a.dataset.nav === name) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+  });
 
   /* ---------- chrome: badges, avatar, KYC banner ---------- */
   function renderChrome() {
@@ -210,9 +220,18 @@
     const live = s.campaigns.filter(c =>
       ["funded", "in_progress", "submitted", "revision", "approved"].includes(c.stage),
     ).length;
-    $$("[data-side-held]").forEach(e => (e.textContent = inr(held)));
+    /* no ₹0 for a new brand: the amount only once something is held */
+    $$("[data-side-label]").forEach(e => (e.textContent = held > 0 ? "Held in escrow" : "Escrow"));
+    $$("[data-side-held]").forEach(e => {
+      e.textContent = held > 0 ? inr(held) : "";
+      e.hidden = !(held > 0);
+    });
+    $$("[data-side-next]").forEach(e => {
+      e.textContent = held > 0 ? "" : "You pay in only when you hire. Released when you approve.";
+      e.hidden = held > 0;
+    });
     $$("[data-side-live]").forEach(e => {
-      e.innerHTML = icon("lock") + " " + live + (live === 1 ? " campaign running" : " campaigns running");
+      e.innerHTML = icon("lock") + " " + live + (live === 1 ? " deal running" : " deals running");
       e.hidden = !live;
     }); /* escrow pills always carry the lock */
     /* subscription plan, shown quietly; never a price */

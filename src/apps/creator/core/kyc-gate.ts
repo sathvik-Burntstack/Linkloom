@@ -42,6 +42,6 @@ export function kycWaitText(k: KycWithEta = store.s.kyc): string {
   if (!Number.isFinite(at)) return "within 2 hours";
   const min = Math.ceil((at - today().getTime()) / 60000);
   if (min <= 2) return "almost done";
-  if (min < 60) return `about ${Math.max(5, Math.ceil(min / 5) * 5)} min left`;
+  if (min < 55) return `about ${Math.max(5, Math.ceil(min / 5) * 5)} min left`;
   return `about ${Math.max(1, Math.round(min / 60))} h left`;
 }

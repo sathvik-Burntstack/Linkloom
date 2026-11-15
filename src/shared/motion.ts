@@ -569,7 +569,7 @@
   }
 
   /* ---------- press: scale 0.98 on pointerdown, released on a spring; delegated for the core controls ---------- */
-  const PRESS = '.lq,.ibtn,.chip,.seg button,.tabbar a,[data-go],.mo-press,[data-motion~="press"]';
+  const PRESS = '.lq,.ibtn,.chip,.seg button,.tabbar a,[data-go],.mo-press,[data-motion~="press"],button,.btn-q,.ll-panel-more';
   let pressed = null,
     pressT = 0,
     pStart = null;

@@ -14,6 +14,7 @@ import { setGuestRoutes } from "./core/router";
 import { creatorApi, loadCreator, loadGuest } from "./live/creator";
 import { wireCreatorOffers } from "./live/creator-offers";
 import { addSiteLink } from "../signin/handoff";
+import { mountAvatarMenu, showSkeleton, wireBusyButtons } from "../../shared/ux";
 
 const OPEN_DURING_SETUP = new Set(["setup", "login"]);
 const GUEST_ROUTES = new Set(["home", "jobs", "login"]);
@@ -27,16 +28,37 @@ type Live = typeof creatorApi & {
 
 const view = (): HTMLElement | null => document.getElementById("view");
 
-function loading(on: boolean, text = "Loading your dashboard…"): void {
-  const v = view();
-  if (!v) return;
-  if (on) {
-    v.innerHTML = `<div class="empty live-loading" role="status" aria-live="polite"><p class="t-h2">${text}</p><p class="muted" data-slow hidden>The server is waking up. This can take up to a minute the first time.</p></div>`;
-    setTimeout(() => {
-      const s = v.querySelector<HTMLElement>("[data-slow]");
-      if (s) s.hidden = false;
-    }, 4000);
-  }
+/** F4: a page-shaped skeleton at once (never a blank area); a tab clicked meanwhile opens as soon as data lands. */
+function loading(on: boolean, text = "Loading your dashboard"): void {
+  if (on) showSkeleton(view(), text);
+}
+
+/** F5: the avatar opens Profile, Settings, Help and Sign out, so signing out is two clicks from anywhere. */
+function avatarMenu(): void {
+  const a = document.querySelector<HTMLElement>(".top .avatar");
+  if (!a) return;
+  const toSettings = () => {
+    LLD.go("#profile");
+    setTimeout(() => document.querySelector("[data-settings]")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  };
+  mountAvatarMenu({
+    avatar: a,
+    who: () => ({ name: store.s.me.name, sub: store.s.session.email || store.s.me.handle || "" }),
+    items: [
+      { label: "Profile", icon: LLD.icon("user"), run: () => LLD.go("#profile") },
+      { label: "Settings", icon: LLD.icon("filter"), run: toSettings },
+      { label: "Help", icon: LLD.icon("info"), run: () => (location.href = "mailto:support@linkloom.in?subject=Help%20with%20Linkloom") },
+      { kind: "sep", label: "" },
+      {
+        label: "Sign out",
+        icon: LLD.icon("logout"),
+        run: () =>
+          store.set(s => {
+            s.session.signedIn = false;
+          }, "signed-out"),
+      },
+    ],
+  });
 }
 
 function failed(retry: () => void): void {
@@ -116,7 +138,7 @@ async function enterSignedIn(): Promise<boolean> {
 }
 
 async function enterGuest(): Promise<boolean> {
-  loading(true, "Loading Linkloom…");
+  loading(true, "Loading Linkloom");
   await loadGuest(store);
   document.documentElement.classList.add("is-guest");
   store.set(s => {
@@ -178,6 +200,8 @@ export function initSession(): boolean | Promise<boolean> {
   });
 
   setGuestRoutes(GUEST_ROUTES);
+  wireBusyButtons();
+  avatarMenu();
   wireCreatorOffers();
   guardClicks();
   addSiteLink();

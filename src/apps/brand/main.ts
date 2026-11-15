@@ -1,6 +1,7 @@
 /* Brand dashboard entry. Import order is the prototype's order. Mechanical port: still uses window.LLD like the original. */
 import "../../shared/analytics";
 import "./core.css";
+import "../../shared/layout.css"; // F1 tokens and the shared .ll-* pieces, after core.css on purpose
 import "./motion.css";
 import "./screens/auth.css";
 import "./screens/profile.css";

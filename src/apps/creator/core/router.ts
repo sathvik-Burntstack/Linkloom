@@ -46,8 +46,9 @@ const parse = (): RouteInfo => {
   return i < 0 ? { name: h, param: null } : { name: h.slice(0, i), param: h.slice(i + 1) };
 };
 export const go = (hash: string): void => {
-  if (location.hash === hash) route();
-  else location.hash = hash;
+  if (location.hash === hash) {
+    if (booted) route(); // before boot the hash is all there is; boot routes to it (F4)
+  } else location.hash = hash;
 };
 /** The route showing now. Null only before the first route has run. */
 export const getCurrent = (): RouteInfo | null => current;
@@ -141,4 +142,13 @@ export function route(): void {
   motion.enter(el, { name });
   renderChrome();
 }
-addEventListener("hashchange", route);
+/* While the dashboard is still loading (before boot) a tab click only marks the tab; boot then opens it. Routing that
+   early treated a signed-in creator as signed out and sent them to the sign-in page (F4). */
+addEventListener("hashchange", () => {
+  if (booted) return route();
+  const name = parse().name;
+  $$("[data-nav]").forEach(a => {
+    if (a.dataset.nav === name) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+});

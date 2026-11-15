@@ -12,6 +12,7 @@ import { stopLive } from "../../shared/api/realtime";
 import { addSiteLink } from "../signin/handoff";
 import { brandApi, loadBrand, loadBrandGuest } from "./live";
 import { registerBrandKyc } from "./kyc";
+import { mountAvatarMenu, showSkeleton, wireBusyButtons } from "../../shared/ux";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the brand runtime is still untyped
 const w = window as any;
@@ -21,14 +22,38 @@ const GUEST_ROUTES = new Set(["home", "creators"]);
 
 const view = (): HTMLElement | null => document.getElementById("view");
 
-function loading(text = "Loading your dashboard…"): void {
-  const v = view();
-  if (!v) return;
-  v.innerHTML = `<div class="empty" role="status" aria-live="polite"><p class="t-h2">${text}</p><p class="muted" data-slow hidden>The server is waking up. This can take up to a minute the first time.</p></div>`;
-  setTimeout(() => {
-    const s = v.querySelector<HTMLElement>("[data-slow]");
-    if (s) s.hidden = false;
-  }, 4000);
+/** F4: a page-shaped skeleton at once (never a blank area); a tab clicked meanwhile opens as soon as data lands. */
+function loading(text = "Loading your dashboard"): void {
+  showSkeleton(view(), text);
+}
+
+/** F5: the avatar opens Profile, Settings, Help and Sign out, so signing out is two clicks from anywhere. */
+function avatarMenu(): void {
+  const a = document.querySelector<HTMLElement>(".top .avatar");
+  if (!a) return;
+  const L = w.LLD;
+  const toSettings = () => {
+    L.go("#profile");
+    setTimeout(() => document.querySelector("[data-settings]")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  };
+  mountAvatarMenu({
+    avatar: a,
+    who: () => ({ name: w.LLD_DATA.me.brand || "", sub: w.LLD_DATA.session.email || w.LLD_DATA.me.name || "" }),
+    items: [
+      { label: "Profile", icon: L.icon("user"), run: () => L.go("#profile") },
+      { label: "Settings", icon: L.icon("filter"), run: toSettings },
+      { label: "Help", icon: L.icon("info"), run: () => (location.href = "mailto:support@linkloom.in?subject=Help%20with%20Linkloom") },
+      { kind: "sep", label: "" },
+      {
+        label: "Sign out",
+        icon: L.icon("logout"),
+        run: () =>
+          L.store.set((s: { session: { signedIn: boolean } }) => {
+            s.session.signedIn = false;
+          }, "signed-out"),
+      },
+    ],
+  });
 }
 
 function failed(retry: () => void): void {
@@ -108,7 +133,7 @@ async function enterSignedIn(): Promise<boolean> {
 }
 
 async function enterGuest(): Promise<boolean> {
-  loading("Loading Linkloom…");
+  loading("Loading Linkloom");
   await loadBrandGuest();
   document.documentElement.classList.add("is-guest");
   w.LLD.store.set((s: { session: Record<string, unknown>; me: Record<string, unknown> }) => {
@@ -140,6 +165,8 @@ export function initBrandSession(): boolean | Promise<boolean> {
   });
 
   w.LLD.setGuestRoutes(GUEST_ROUTES);
+  wireBusyButtons();
+  avatarMenu();
   guardClicks();
   addSiteLink();
 
@@ -205,6 +232,11 @@ export function initBrandSession(): boolean | Promise<boolean> {
   };
   addEventListener("hashchange", creatorDetail);
   setTimeout(creatorDetail, 0);
+  /* opened straight from a link (brand.html#creator-<id>): the first try ran before sign-in finished, so try again
+     once the data has loaded */
+  w.LLD.store.on((why: string) => {
+    if (why === "live-loaded") creatorDetail();
+  });
 
   /* signing out (profile) ends the server session, then hands over to the shared page */
   let was = isSignedIn();
