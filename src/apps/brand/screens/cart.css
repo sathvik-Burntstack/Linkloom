@@ -283,6 +283,14 @@
 .cart-send {
   flex: none;
 }
+/* the send button with its trust line directly under it */
+.cart-send-w {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-inside, 8px);
+}
 
 /* ---------- after sending: the row becomes its receipt ---------- */
 .cart-slip {
@@ -469,6 +477,10 @@
   }
   .cart-send {
     width: 100%;
+  }
+  .cart-send-w {
+    width: 100%;
+    align-items: stretch;
   }
   .cart-row-h {
     grid-template-columns: 48px minmax(0, 1fr) auto;

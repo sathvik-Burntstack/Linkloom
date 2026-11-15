@@ -233,7 +233,7 @@
       el.innerHTML = `<div class="view-in messages-none-v"><h1 class="t-h1">Messages</h1>
         <div class="empty"><img src="assets/step-01-envelope.svg" width="220" height="160" alt=""><p class="t-h2">No chats yet</p>
         <p class="muted">A chat opens when a creator accepts your invitation or bid and you pay into escrow. Until then, nobody can message you here.</p>
-        <div class="row wrap" style="justify-content:center"><a class="lq lq-p" href="#creators">Find creators</a><a class="lq lq-s" href="#campaigns">See campaigns</a></div></div></div>`;
+        <div class="row wrap" style="justify-content:center"><a class="lq lq-p" href="#creators">Find creators</a><a class="lq lq-s" href="#campaigns">See deals</a></div></div></div>`;
       return;
     }
     const offs = [];
@@ -245,7 +245,7 @@
         <aside class="messages-list" aria-labelledby="msgH">
           <header class="messages-list-h">
             <h1 class="t-h2" id="msgH">Messages</h1>
-            <p class="help">A chat opens once you pay a campaign into escrow. <span class="sample">Sample</span></p>
+            <p class="help">A chat opens once you pay a deal into escrow. <span class="sample">Sample</span></p>
           </header>
           <div class="messages-scroll">
             ${list.length ? `<ul class="messages-threads" aria-label="Open chats">${list.map(x => threadRow(x, t && t.id)).join("")}</ul>` : '<p class="messages-nolist muted">No open chats yet.</p>'}
@@ -271,14 +271,14 @@
     <img src="assets/step-01-envelope.svg" width="200" height="146" alt="">
     <p class="t-h2">Pick a chat</p>
     <ul class="chat-rules">
-      <li>${ic("lock")}<span>Chats open only after you pay a campaign into escrow.</span></li>
+      <li>${ic("lock")}<span>Chats open only after you pay a deal into escrow.</span></li>
       <li>${ic("file")}<span>Share briefs, product shots and feedback files here. Creators send their deliveries here too.</span></li>
       <li>${ic("shield")}<span>Never send PAN, Aadhaar or bank details in chat. Payments stay on Linkloom.</span></li>
     </ul></div>`;
   const missing = () => `<div class="chat-empty">
     <img src="assets/step-03-lock.svg" width="200" height="146" alt="" class="chat-empty-ink">
     <p class="t-h2">This chat isn’t open</p>
-    <p class="muted">Chat is only for campaigns you have paid into escrow. If a campaign was cancelled or refunded, its chat closes too.</p>
+    <p class="muted">Chat is only for deals you have paid into escrow. If a deal was cancelled or refunded, its chat closes too.</p>
     <a class="lq lq-s" href="#messages">All chats</a></div>`;
 
   /* the calm locked state: why it is locked, where the campaign is, and the next step */
@@ -302,7 +302,8 @@
         ${step(false, acc, "Pay into escrow")}
         ${step(false, false, "Chat opens")}
       </ol>
-      <div class="row wrap chat-lk-acts">${acc ? `<a class="lq lq-p" href="#campaign-${esc(c.id)}">Pay into escrow</a>` : `<a class="lq lq-p" href="#campaign-${esc(c.id)}">Open the campaign</a>`}<a class="lq lq-s" href="#messages">All chats</a></div>
+      <div class="row wrap chat-lk-acts">${acc ? `<a class="lq lq-p" href="#campaign-${esc(c.id)}">Pay into escrow</a>` : `<a class="lq lq-p" href="#campaign-${esc(c.id)}">Open the deal</a>`}<a class="lq lq-s" href="#messages">All chats</a></div>
+      ${acc ? `<p class="ll-trust">${ic("lock")}Held safely until you approve.</p>` : ""}
     </div>`;
   }
 
@@ -426,14 +427,14 @@
         <div class="chat-more">
           <button class="chat-opt" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="chatMenu">Options${ic("down")}</button>
           <ul class="chat-menu" id="chatMenu" role="menu" aria-label="Chat options" hidden>
-            ${c.loose ? "" : `<li role="none"><a role="menuitem" tabindex="-1" href="#campaign-${esc(c.id)}">${ic("rail")}Open the campaign</a></li>`}
+            ${c.loose ? "" : `<li role="none"><a role="menuitem" tabindex="-1" href="#campaign-${esc(c.id)}">${ic("rail")}Open the deal</a></li>`}
             <li role="none"><a role="menuitem" tabindex="-1" href="#creator-${esc(cr.id)}">${ic("user")}View ${esc(fn)}’s profile</a></li>
             <li role="none"><button role="menuitem" tabindex="-1" type="button" data-report>${ic("flag")}Report this chat</button></li>
           </ul>
         </div>
       </header>
       <a class="chat-job" href="#campaign-${esc(c.id)}" data-done="${c.stage === "released"}"${c.loose ? " hidden" : ""}>
-        <span class="chat-job-t"><span class="chat-job-k">Campaign</span><b>${esc(c.title)}</b><span class="chat-job-s"><i aria-hidden="true"></i>${esc((STAGE[c.stage] || "") + dueLine(c))}</span></span>
+        <span class="chat-job-t"><span class="chat-job-k">Deal</span><b>${esc(c.title)}</b><span class="chat-job-s"><i aria-hidden="true"></i>${esc((STAGE[c.stage] || "") + dueLine(c))}</span></span>
         <span class="chat-job-m"><b class="t-money">${L.inr(c.price)}</b>${payPill(c)}</span>
         ${ic("chevron")}
       </a>

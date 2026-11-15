@@ -287,7 +287,7 @@
      #setup (first run)
      ===================================================================== */
   const STEPS = [
-    { t: "Your brand", sub: "Creators see this on your jobs and invitations before they accept." },
+    { t: "Your brand", sub: "Creators see this on your briefs and invitations before they accept." },
     { t: "Billing details", sub: "Printed on every invoice and credit note. Creators never see it." },
   ];
   let D = null;
@@ -393,7 +393,7 @@
           D.step === 0
             ? `
           <div data-logo></div>
-          ${fld("su", "brand", "Brand name", `<input class="input" id="su-brand" autocomplete="organization" value="${esc(D.brand)}" placeholder="Mirevo Skincare">`, "Shown on your jobs, invitations and chats.")}
+          ${fld("su", "brand", "Brand name", `<input class="input" id="su-brand" autocomplete="organization" value="${esc(D.brand)}" placeholder="Mirevo Skincare">`, "Shown on your briefs, invitations and chats.")}
           <div class="profile-two">
             ${fld("su", "website", "Website", `<input class="input" id="su-website" inputmode="url" spellcheck="false" autocapitalize="off" value="${esc(D.website)}" placeholder="mirevo.in">`)}
             ${fld("su", "industry", "Industry", sel("su-industry", INDUSTRIES, D.industry))}
@@ -584,6 +584,58 @@
       .reduce((n, x) => n + x.amount, 0);
   };
 
+  /* B12: business check (brand KYC) status, from the /v1/kyc/ status the dashboard loads. Null in the sample build. */
+  function bizCheck(k) {
+    if (!k) return null;
+    const st = String(k.status || "not_started").toLowerCase(),
+      steps = k.steps || {},
+      n = [steps.pan, steps.id, steps.bank].filter(x => x && x.done).length;
+    if (st === "verified")
+      return {
+        tone: "ok",
+        pill: "pill-ok",
+        state: "Verified",
+        icon: "verified",
+        sub: "You can post briefs, send offers and hire with escrow.",
+      };
+    if (["pending", "submitted", "in_review", "under_review"].includes(st))
+      return {
+        tone: "review",
+        pill: "pill-info",
+        state: "In review",
+        icon: "clock",
+        sub: "Usually within a day. We check it by hand and send you a notification when it's done.",
+      };
+    if (st === "rejected")
+      return {
+        tone: "fix",
+        pill: "pill-err",
+        state: "Needs a fix",
+        icon: "alert",
+        sub: k.rejectionReason || "One of the details needs changing before we can verify it.",
+        todo: "Fix it",
+      };
+    return {
+      tone: "todo",
+      pill: "pill-paper",
+      state: n ? `${n} of 3 done` : "Not started",
+      icon: "shield",
+      sub: n
+        ? "A few minutes to finish. Needed to post a brief, send an offer or hire."
+        : "About 4 min. Needed to post a brief, send an offer or hire.",
+      todo: n ? "Continue" : "Start",
+    };
+  }
+  const checkCard =
+    c => `<section class="ll-panel profile-check is-${c.tone}" aria-labelledby="profile-check-h">
+          <span class="profile-check-ic" aria-hidden="true">${icon(c.icon)}</span>
+          <div class="profile-check-t">
+            <h2 class="profile-check-h" id="profile-check-h">Business check <span class="pill ${c.pill}">${c.tone === "ok" ? icon("check") : ""}${esc(c.state)}</span></h2>
+            <p class="muted">${esc(c.sub)}</p>
+          </div>
+          ${c.todo ? `<div class="profile-check-a"><a class="lq lq-p" href="#kyc" data-kyc>${esc(c.todo)}</a><p class="ll-trust">${icon("lock")}Encrypted. Never shown to creators.</p></div>` : ""}
+        </section>`;
+
   function renderProfile(el, param) {
     const paint = () => {
       const s = store.s,
@@ -595,29 +647,35 @@
       const bud = s.budget,
         used = budgetUsed(s);
       const hiredNames = st.hiredIds.map(id => (L.creator(id) || {}).name).filter(Boolean);
+      const where = [me.city, me.state].filter(Boolean).join(", ");
+      const check = bizCheck(s.kyc);
       el.innerHTML = `
       <div class="view-in profile">
         <header class="profile-mast">
           <div class="profile-logo ${me.logo ? "has-img" : ""}">${me.logo ? `<img src="${esc(me.logo)}" alt="${esc(me.brand)} logo">` : `<span aria-hidden="true">${esc(initial(me.brand))}</span>`}</div>
           <div class="profile-id">
-            <p class="t-eyebrow">Brand · ${esc(me.industry || "Industry not set")} · ${esc(me.city || "")}${me.state ? ", " + esc(me.state) : ""}</p>
+            <p class="t-eyebrow">${esc(["Brand", me.industry, where].filter(Boolean).join(" · "))}</p>
             <h1 class="t-display profile-name">${esc(me.brand)}</h1>
             ${me.website ? `<p class="profile-web"><a href="${esc(href(me.website))}" target="_blank" rel="noopener noreferrer">${icon("link")}<span>${esc(me.website)}</span><span class="sr-only">, opens in a new tab</span></a></p>` : ""}
             ${me.about ? `<p class="profile-bio">${esc(me.about)}</p>` : ""}
-            <p class="profile-meta"><span class="pill pill-ok">${icon("verified")}${me.mobile ? "Email and mobile verified" : "Email verified"}</span><span class="profile-langs">Contact: ${esc(me.name)}${me.role ? ", " + esc(me.role) : ""}</span></p>
+            <p class="profile-meta"><span class="pill pill-ok">${icon("verified")}${me.mobile ? "Email and mobile verified" : "Email verified"}</span>${me.name ? `<span class="profile-langs">Contact: ${esc(me.name)}${me.role ? ", " + esc(me.role) : ""}</span>` : ""}</p>
           </div>
-          <div class="profile-act"><button class="lq lq-p" type="button" data-edit>${icon("edit", "ic")}Edit profile</button></div>
+          <div class="profile-act"><button class="lq ${check && check.todo ? "lq-s" : "lq-p"}" type="button" data-edit>${icon("edit", "ic")}Edit profile</button></div>
         </header>
-
-        <section class="profile-band" aria-labelledby="profile-on">
+        ${check ? checkCard(check) : ""}
+        ${
+          st.hired || st.funded || st.jobs
+            ? `<section class="profile-band" aria-labelledby="profile-on">
           <div class="profile-band-h"><h2 class="t-eyebrow" id="profile-on">On Linkloom</h2>
             <p class="profile-src">${p ? "Since " + esc(L.fmtDate(p.since, { year: true })) + " · " : ""}counted by Linkloom, not self-reported <span class="sample">Sample</span></p></div>
           <dl class="profile-nums">
             <div><dt>Creators hired</dt><dd class="t-money" data-n="${st.hired}">${st.hired}</dd><p>${hiredNames.length ? esc(hiredNames.join(" and ")) : "Paid through escrow"}</p></div>
-            <div><dt>Campaigns</dt><dd class="t-money" data-n="${st.funded}">${st.funded}</dd><p>funded through escrow</p></div>
-            <div><dt>Jobs posted</dt><dd class="t-money" data-n="${st.jobs}">${st.jobs}</dd><p>${st.drafts ? `${st.drafts} draft not counted` : "open, hired or closed"}</p></div>
+            <div><dt>Deals</dt><dd class="t-money" data-n="${st.funded}">${st.funded}</dd><p>funded through escrow</p></div>
+            <div><dt>Briefs posted</dt><dd class="t-money" data-n="${st.jobs}">${st.jobs}</dd><p>${st.drafts ? `${st.drafts} draft not counted` : "open, hired or closed"}</p></div>
           </dl>
-        </section>
+        </section>`
+            : ""
+        }
 
         <div class="profile-grid">
           <div class="profile-col">
@@ -688,6 +746,13 @@
       el.querySelector("[data-pw]") && el.querySelector("[data-pw]").addEventListener("click", openPassword);
       el.querySelector("[data-editbud]").addEventListener("click", openBudget);
       el.querySelector("[data-signout]").addEventListener("click", openSignOut);
+      const kl = el.querySelector("[data-kyc]");
+      kl &&
+        kl.addEventListener("click", () => {
+          try {
+            sessionStorage.setItem("ll-brand-kyc-return", "#profile");
+          } catch (e) {}
+        });
       el.querySelectorAll(".profile-nums [data-n]").forEach(d => {
         const n = +d.dataset.n;
         if (n) mo("count", d, n, v => String(Math.round(v)));
@@ -784,7 +849,7 @@
     function openSignOut() {
       L.openSheet({
         title: "Sign out?",
-        body: `<div class="profile-q"><p class="muted">${L.live ? "You'll sign back in with your password, a one-time code or Google." : "You'll need your email and password to sign back in."} Jobs, campaigns and money in escrow are not affected.</p>
+        body: `<div class="profile-q"><p class="muted">${L.live ? "You'll sign back in with your password, a one-time code or Google." : "You'll need your email and password to sign back in."} Briefs, deals and money in escrow are not affected.</p>
           <div class="row wrap"><button class="lq lq-p" type="button" data-yes>${icon("logout", "ic")}Sign out</button><button class="lq lq-s" type="button" data-no>Stay signed in</button></div></div>`,
         onMount(b, close) {
           b.querySelector("[data-no]").addEventListener("click", () => close());

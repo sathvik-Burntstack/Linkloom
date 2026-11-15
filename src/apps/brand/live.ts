@@ -53,6 +53,37 @@ const FORMAT_KEY: Record<string, string> = {
   Short: "short",
 };
 
+/** Platform rows with handle and profile link. The API documents `platforms: { instagram?, youtube? }` (handle, url,
+    followers, avgViews, er); a list of { platform, ... } is read too. Without it there is one row for the primary
+    platform and no handle.
+    TODO(backend): GET /v1/creators/ and /v1/creators/{id}/ don't return the platform handles or profile links yet, so
+    the brand view can't link to the creator's Instagram or YouTube until they do. */
+function platformRows(c: Obj, primary: string): S[] {
+  const raw = c.platforms;
+  const list: [string, Obj][] = Array.isArray(raw)
+    ? (raw as Obj[])
+        .filter(x => x && typeof x === "object")
+        .map((x): [string, Obj] => [platformOf(x.platform || x.p), x])
+    : raw && typeof raw === "object"
+      ? Object.entries(raw as Record<string, Obj>).filter(([, x]) => x && typeof x === "object")
+      : [];
+  const rows = list
+    .filter(([k]) => k === "instagram" || k === "youtube")
+    .map(([k, x]) => ({
+      p: k,
+      handle: x.handle ? "@" + String(x.handle).replace(/^@/, "") : "",
+      url: String(x.url || ""),
+      followers: Number(x.followers ?? x.followerCount) || 0,
+      er: Number(x.er) || 0,
+      avgViews: Number(x.avgViews) || 0,
+    }))
+    .sort((a, b) => (a.p === primary ? -1 : b.p === primary ? 1 : 0));
+  const total = Number(c.followerCount) || 0;
+  if (!rows.length) return [{ p: primary, handle: "", url: "", followers: total, er: 0, avgViews: 0 }];
+  if (total && !rows.some(r => r.followers)) rows[0].followers = total;
+  return rows;
+}
+
 export function mapCreator(c: Obj): S {
   const name = String(c.displayName || c.name || "Creator");
   const [city, state] = splitLocation(c.location);
@@ -81,7 +112,7 @@ export function mapCreator(c: Obj): S {
     languages: Array.isArray(c.languages) ? c.languages : [],
     categories: Array.isArray(c.categories) ? c.categories : [],
     content: Object.keys(rates).map(k => k[0].toUpperCase() + k.slice(1)),
-    platforms: [{ p, handle: "", followers: Number(c.followerCount) || 0, er: 0, avgViews: 0 }],
+    platforms: platformRows(c, p),
     verified: !!c.verified,
     rating: Number(c.rating) || 0,
     reviews: Number(c.reviewCount) || 0,

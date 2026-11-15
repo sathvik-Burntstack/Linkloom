@@ -1,7 +1,11 @@
 // @ts-nocheck
 /* Find creators (#creators), Saved creators (#saved) and the shared creator kit (LLD.ck) used by the profile and the cart.
    Owner: Builder B. Mirrors the creator app's Find jobs screen: filter column, cards, sort, hide with undo, swipe, keyboard keys.
-   View state lives in LLD_DATA.ui.creators (and a sessionStorage copy, in try/catch). Classes are .creators-*; styles in creators.css. */
+   View state lives in LLD_DATA.ui.creators (and a sessionStorage copy, in try/catch). Classes are .creators-*; styles in creators.css.
+   The filter column shows the four filters brands use most (category, platform, followers, price); the rest sit
+   behind "More filters", which opens by itself when one of them is set. */
+import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./creator-rates";
+
 (() => {
   const L = window.LLD,
     esc = L.esc,
@@ -48,6 +52,7 @@
     sort: "match",
     hidden: [],
     showHidden: false,
+    more: false,
   };
   const SS_KEY = "ll.b.creatorsUI";
   function ensure() {
@@ -95,14 +100,12 @@
   };
   const erOf = (c, p) => weighted(c, p, "er");
   const viewsOf = (c, p) => Math.round(weighted(c, p, "avgViews"));
-  const rateList = (c, types) =>
-    Object.entries(c.rates || {}).filter(
-      ([k]) => !types || !types.length || types.some(t => t.toLowerCase() === k),
-    );
-  const fromRate = (c, types) => {
-    const r = rateList(c, types).sort((a, b) => a[1] - b[1])[0];
-    return r ? { fmt: cap(r[0]), price: r[1] } : null;
-  };
+  /* rates: empty or zero entries never count, so the lowest rate is never taken over nothing (no "₹∞") */
+  const rateList = (c, types) => listRates(c.rates, types);
+  const fromRate = (c, types) => lowestRate(c.rates, types);
+  /* engagement and reach the backend hasn't sent read as a dash, not as 0 */
+  const erTxt = v => (v > 0 ? pct(v) : "—");
+  const folTxt = n => (n > 0 ? L.compact(n) : "—");
   const glyph = p => L.icon(PLAT[p] ? PLAT[p].ic : "link");
 
   /* availability: 'open' | 'from 15 Nov' | 'busy until 20 Nov' -> days from today until the creator can start */
@@ -437,6 +440,9 @@
       gender: "",
       age: "",
     });
+  /* filters behind "More filters": all but category, platform, followers and price (and the search box) */
+  const MORE = ["er", "lang", "city", "state", "country", "rating", "verified", "avail", "gender", "age"];
+  const isMore = k => k.startsWith("ct:") || MORE.includes(k);
 
   /* ---------- favourites and cart (shared) ---------- */
   function setFav(id, on) {
@@ -488,13 +494,23 @@
     c.rating
       ? `${L.icon("star")}<span>${c.rating.toFixed(1)}</span><span class="muted">(${c.reviews})</span>`
       : `<span class="muted">New</span>`;
+  /* the price reads at the same size as the other stats: fit first, then price */
   const priceHTML = (c, types) => {
+    if (!hasRates(c.rates)) return `<span class="creators-from">${RATE_ON_REQUEST}</span>`;
     const r = fromRate(c, types);
     return r
-      ? `<span class="creators-from">From</span><b class="t-money">${L.inr(r.price)}</b><span class="creators-per">per ${esc(r.fmt)}</span>`
+      ? `<span class="creators-from">From</span><b class="num">${L.inr(r.price)}</b><span class="creators-per">per ${esc(r.fmt)}</span>`
       : `<span class="creators-from">No rate for that format</span>`;
   };
+  const niche = c =>
+    (c.categories || []).length
+      ? `<ul class="creators-niche" aria-label="Niches">${c.categories
+          .slice(0, 3)
+          .map(x => `<li>${esc(x)}</li>`)
+          .join("")}${c.categories.length > 3 ? `<li class="is-more">+${c.categories.length - 3}</li>` : ""}</ul>`
+      : "";
 
+  /* order on the card: name and badge, niches, followers and engagement, then price */
   function card(c, o = {}) {
     const tid = `cc-${o.ctx || "x"}-${c.id}`,
       ui = S().ui.creators;
@@ -503,18 +519,18 @@
         ${avatar(c)}
         <div class="creators-id">
           <h3 class="creators-name" id="${tid}"><a class="creators-card-link" href="#creator-${esc(c.id)}">${esc(c.name)}</a>${verBadge(c)}</h3>
-          <p class="creators-handle">${esc(c.handle)} · ${esc(c.city)}</p>
+          <p class="creators-handle">${esc([c.handle, c.city].filter(Boolean).join(" · "))}</p>
         </div>
       </div>
-      <p class="creators-cats">${c.categories.map(esc).join(" · ")}</p>
+      ${niche(c)}
       <dl class="creators-meta">
-        ${c.platforms.map(p => `<div><dt title="${PLAT[p.p].name} ${PLAT[p.p].unit.toLowerCase()}">${glyph(p.p)}<span>${p.p === "youtube" ? "Subs" : "Followers"}</span><span class="sr-only"> on ${PLAT[p.p].name}</span></dt><dd>${L.compact(p.followers)}</dd></div>`).join("")}
-        <div><dt><abbr title="Engagement rate">ER</abbr></dt><dd data-erv>${pct(erOf(c, o.platform !== undefined ? o.platform : ui.platform))}</dd></div>
+        ${c.platforms.map(p => `<div><dt title="${PLAT[p.p].name} ${PLAT[p.p].unit.toLowerCase()}">${glyph(p.p)}<span>${p.p === "youtube" ? "Subs" : "Followers"}</span><span class="sr-only"> on ${PLAT[p.p].name}</span></dt><dd>${folTxt(p.followers)}</dd></div>`).join("")}
+        <div><dt><abbr title="Engagement rate">ER</abbr></dt><dd data-erv>${erTxt(erOf(c, o.platform !== undefined ? o.platform : ui.platform))}</dd></div>
         <div><dt>Rating</dt><dd class="creators-rate">${ratingTxt(c)}</dd></div>
       </dl>
       <div class="creators-pricerow"><p class="creators-price" data-price>${priceHTML(c, o.content !== undefined ? o.content : ui.content)}</p>${availPill(c)}</div>
       <div class="creators-acts">
-        <button class="lq ${inCart(c.id) ? "lq-s is-in" : "lq-p"} lq-sm creators-cart" type="button" data-cart>${cartLabel(c.id)}</button>
+        <button class="lq lq-s lq-sm creators-cart${inCart(c.id) ? " is-in" : ""}" type="button" data-cart>${cartLabel(c.id)}</button>
         <span class="creators-acts-grow"></span>
         ${heartBtn(c)}
         ${o.hide === false ? "" : `<button class="ibtn creators-hide" type="button" aria-label="Hide: ${esc(c.name)}" title="Hide (or swipe left)">${L.icon("close")}</button>`}
@@ -562,9 +578,7 @@
       const b = k.querySelector("[data-cart]");
       if (b) {
         const inn = inCart(id);
-        b.classList.toggle("is-in", inn);
-        b.classList.toggle("lq-s", inn);
-        b.classList.toggle("lq-p", !inn);
+        b.classList.toggle("is-in", inn); /* always secondary: one card button per creator is not the screen's primary */
         b.querySelectorAll(".t,.t2").forEach(x => {
           x.innerHTML = cartLabel(id);
         });
@@ -669,6 +683,8 @@
     viewsOf,
     fromRate,
     rateList,
+    hasRates: c => hasRates(c.rates),
+    RATE_ON_REQUEST,
     availDays,
     availLabel,
     availPill,
@@ -736,30 +752,14 @@
         <aside class="creators-filters" id="crFilters" aria-label="Filters">
           <div class="creators-f-h"><p class="t-label">Filters</p><button class="btn-q creators-clear" type="button" data-clear>Clear all</button></div>
 
-          <fieldset class="creators-g"><legend class="t-eyebrow">Niche and platform</legend>
+          <div class="creators-g creators-g-main">
             <div class="field"><span class="lab" id="crCatL">Category</span>
               <div class="chips" role="group" aria-labelledby="crCatL">${cats.map(c => chip("cat", c, esc(c))).join("")}</div></div>
             <div class="field"><span class="lab" id="crPlatL">Platform</span>
               <div class="seg creators-seg" role="group" aria-labelledby="crPlatL">
                 <button type="button" data-plat="">All</button><button type="button" data-plat="instagram">${L.icon("ig")}Instagram</button><button type="button" data-plat="youtube">${L.icon("yt")}YouTube</button>
               </div></div>
-            <div class="field"><span class="lab" id="crCtL">Content type</span>
-              <div class="chips" role="group" aria-labelledby="crCtL">${CONTENT.map(c => chip("ct", c, esc(c))).join("")}</div></div>
-          </fieldset>
-
-          <fieldset class="creators-g"><legend class="t-eyebrow">Audience</legend>
             ${chipRow("crFolL", "Followers", "fol", FOLLOW)}
-            ${chipRow("crErL", "Engagement rate", "er", ERS)}
-            <div class="field"><label for="crLang">Language</label>
-              <select class="select" id="crLang"><option value="">Any language</option>${langs.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></div>
-            <div class="creators-loc">
-              <div class="field"><label for="crCountry">Country</label><select class="select" id="crCountry"><option value="">Any country</option>${countries.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></div>
-              <div class="field"><label for="crState">State</label><select class="select" id="crState"></select></div>
-              <div class="field"><label for="crCity">City</label><select class="select" id="crCity"></select></div>
-            </div>
-          </fieldset>
-
-          <fieldset class="creators-g"><legend class="t-eyebrow">Price and trust</legend>
             <div class="field creators-pricef"><span class="lab" id="crPriceL">Price per post</span>
               <div class="creators-pin" role="group" aria-labelledby="crPriceL">
                 <label class="creators-pi"><span class="sr-only">Minimum, in rupees</span><span aria-hidden="true">₹</span><input class="input num" id="crPmin" inputmode="numeric" autocomplete="off" placeholder="Min" value="${esc(ui.pmin)}"></label>
@@ -767,17 +767,39 @@
                 <label class="creators-pi"><span class="sr-only">Maximum, in rupees</span><span aria-hidden="true">₹</span><input class="input num" id="crPmax" inputmode="numeric" autocomplete="off" placeholder="Max" value="${esc(ui.pmax)}"></label>
               </div>
               <p class="err" id="crPriceE" aria-live="polite"></p>
-              <p class="help">Any listed rate in this range counts. Narrow it with Content type.</p></div>
-            ${chipRow("crRateL", "Rating", "rating", RATINGS)}
-            ${chipRow("crAvL", "Availability", "avail", AVAIL)}
-            <label class="check creators-verified"><input type="checkbox" id="crVer"> <span>Verified creators only<span class="help">ID and platform checked by Linkloom</span></span></label>
-          </fieldset>
+              <p class="help">Any listed rate in this range counts.</p></div>
+          </div>
 
-          <fieldset class="creators-g"><legend class="t-eyebrow">Optional</legend>
-            ${chipRow("crGenL", "Gender", "gender", GENDERS, true)}
-            ${chipRow("crAgeL", "Age range", "age", AGES, true)}
-            <p class="help">Creators choose whether to share these. Leave them on Any unless the brief needs it.</p>
-          </fieldset>
+          <button class="creators-more" type="button" data-more aria-expanded="false" aria-controls="crMore">${L.icon("filter")}<span data-morel>More filters</span>${L.icon("down")}</button>
+          <div class="creators-more-b" id="crMore" hidden>
+            <fieldset class="creators-g"><legend class="t-eyebrow">Content</legend>
+              <div class="field"><span class="lab" id="crCtL">Content type</span>
+                <div class="chips" role="group" aria-labelledby="crCtL">${CONTENT.map(c => chip("ct", c, esc(c))).join("")}</div></div>
+            </fieldset>
+
+            <fieldset class="creators-g"><legend class="t-eyebrow">Audience</legend>
+              ${chipRow("crErL", "Engagement rate", "er", ERS)}
+              <div class="field"><label for="crLang">Language</label>
+                <select class="select" id="crLang"><option value="">Any language</option>${langs.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></div>
+              <div class="creators-loc">
+                <div class="field"><label for="crCountry">Country</label><select class="select" id="crCountry"><option value="">Any country</option>${countries.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></div>
+                <div class="field"><label for="crState">State</label><select class="select" id="crState"></select></div>
+                <div class="field"><label for="crCity">City</label><select class="select" id="crCity"></select></div>
+              </div>
+            </fieldset>
+
+            <fieldset class="creators-g"><legend class="t-eyebrow">Trust</legend>
+              ${chipRow("crRateL", "Rating", "rating", RATINGS)}
+              ${chipRow("crAvL", "Availability", "avail", AVAIL)}
+              <label class="check creators-verified"><input type="checkbox" id="crVer"> <span>Verified creators only<span class="help">ID and platform checked by Linkloom</span></span></label>
+            </fieldset>
+
+            <fieldset class="creators-g"><legend class="t-eyebrow">Optional</legend>
+              ${chipRow("crGenL", "Gender", "gender", GENDERS, true)}
+              ${chipRow("crAgeL", "Age range", "age", AGES, true)}
+              <p class="help">Creators choose whether to share these. Leave them on Any unless the brief needs it.</p>
+            </fieldset>
+          </div>
           <button class="lq lq-p creators-f-done" type="button" data-done>Show creators</button>
         </aside>
 
@@ -887,6 +909,13 @@
       ft.querySelectorAll(".t,.t2").forEach(x => {
         x.innerHTML = L.icon("filter", "ic") + (n ? `Filters · ${n}` : "Filters");
       });
+      const nMore = actives(ui).filter(a => isMore(a.k)).length;
+      $("[data-morel]").textContent = nMore ? `More filters · ${nMore} active` : "More filters";
+    }
+    function showMore(on) {
+      ui.more = !!on;
+      $("#crMore").hidden = !on;
+      $("[data-more]").setAttribute("aria-expanded", String(!!on));
     }
     function apply(animate = true) {
       const { list: vis, hiddenCount } = filtered(ui),
@@ -904,7 +933,7 @@
       vis.forEach(c => {
         const k = cards.get(c.id);
         const er = k.querySelector("[data-erv]");
-        if (er) er.textContent = pct(erOf(c, ui.platform));
+        if (er) er.textContent = erTxt(erOf(c, ui.platform));
         const p = k.querySelector("[data-price]");
         const h = priceHTML(c, ui.content);
         if (p.dataset.h !== h) {
@@ -1005,7 +1034,11 @@
       const t = e.target.closest("button");
       if (!t || !root.contains(t) || t.closest(".creators-card")) return;
       const d = t.dataset;
-      if (d.cat !== undefined) {
+      if (d.more !== undefined) {
+        showMore(!ui.more);
+        persist();
+        if (ui.more) mo("reveal", $("#crMore"));
+      } else if (d.cat !== undefined) {
         toggleIn("cats", d.cat);
         settle(t);
       } else if (d.ct !== undefined) {
@@ -1078,6 +1111,8 @@
       }
     });
 
+    /* a filter set behind "More filters" (kept from the last visit) opens it, so nothing active is out of sight */
+    showMore(ui.more || actives(ui).some(a => isMore(a.k)));
     apply(false);
     mo("stagger", L.$$(".creators-card:not([hidden])", list));
     if (ui.scrollY && ui.back) {

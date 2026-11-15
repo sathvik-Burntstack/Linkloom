@@ -75,6 +75,24 @@
   width: 18px;
   height: 18px;
 }
+/* "View on Instagram": the creator's real account, in a new tab */
+.creator-ext {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  border-radius: 6px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+}
+.creator-ext:hover {
+  color: var(--brand, var(--ll-violet-deep));
+}
+.creator-handle {
+  font-weight: 400;
+  color: var(--ll-slate);
+}
 .creator-bio {
   max-width: 52ch;
   font-size: 18px;
@@ -245,6 +263,9 @@
 .creator-plat-ic svg {
   width: 24px;
   height: 24px;
+}
+a.creator-plat-ic:hover {
+  background: var(--brand, var(--ll-violet-deep));
 }
 .creator-plat-id {
   display: flex;

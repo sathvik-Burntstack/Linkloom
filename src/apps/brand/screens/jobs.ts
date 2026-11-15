@@ -145,12 +145,13 @@
     yes,
     no = "Keep it",
     danger = false,
+    trust = "",
     onYes,
   }) {
     L.openSheet({
       title,
       body: `<div class="stack jl-sheet">${mini}<ul class="jl-conseq">${bullets.map(b => `<li>${esc(b)}</li>`).join("")}</ul>${extra}
-        <div class="row wrap"><button class="lq ${danger ? "lq-p bk-danger" : "lq-p"}" type="button" data-yes>${esc(yes)}</button><button class="lq lq-s" type="button" data-no>${esc(no)}</button></div></div>`,
+        <div class="row wrap"><button class="lq ${danger ? "lq-p bk-danger" : "lq-p"}" type="button" data-yes>${esc(yes)}</button><button class="lq lq-s" type="button" data-no>${esc(no)}</button></div>${trust ? `<p class="ll-trust">${ic("lock")}${esc(trust)}</p>` : ""}</div>`,
       onMount(b, close) {
         b.querySelector("[data-no]").addEventListener("click", () => close());
         b.querySelector("[data-yes]").addEventListener("click", () => {
@@ -172,16 +173,16 @@
     const c = campOfJob(id),
       k = c && cr(c.creator);
     confirm({
-      title: "Close this job?",
+      title: "Close this brief?",
       mini: jobMini(j),
-      yes: "Close job",
+      yes: "Close brief",
       no: "Keep it open",
       bullets: [
         c
-          ? `Your campaign with ${k.name} carries on. Only the listing closes.`
+          ? `Your deal with ${k.name} carries on. Only the listing closes.`
           : "Creators can no longer find it or bid on it.",
         open
-          ? `${open} open bid${open === 1 ? " is" : "s are"} declined, and ${open === 1 ? "that creator is" : "those creators are"} told the job closed.`
+          ? `${open} open bid${open === 1 ? " is" : "s are"} declined, and ${open === 1 ? "that creator is" : "those creators are"} told the brief closed.`
           : "No open bids are waiting on you.",
         "Nothing is charged. It stays under Closed with its history.",
       ],
@@ -206,7 +207,7 @@
             }
           });
         }, "job-closed");
-        L.toast("Job closed", "check");
+        L.toast("Brief closed", "check");
         after && after();
     }
   }
@@ -217,10 +218,10 @@
     if (c) {
       const k = cr(c.creator);
       L.openSheet({
-        title: "This job can’t be deleted",
+        title: "This brief can’t be deleted",
         body: `<div class="stack jl-sheet">${jobMini(j)}
-          <p class="muted">You hired ${esc(k.name)} through it, so it is part of a campaign and its invoices. Close the listing instead. It stays in your records.</p>
-          <div class="row wrap">${j.status === "closed" ? "" : '<button class="lq lq-p" type="button" data-close-instead>Close job instead</button>'}<button class="lq lq-s" type="button" data-no>Got it</button></div></div>`,
+          <p class="muted">You hired ${esc(k.name)} through it, so it is part of a deal and its invoices. Close the listing instead. It stays in your records.</p>
+          <div class="row wrap">${j.status === "closed" ? "" : '<button class="lq lq-p" type="button" data-close-instead>Close brief instead</button>'}<button class="lq lq-s" type="button" data-no>Got it</button></div></div>`,
         onMount(b, close) {
           b.querySelector("[data-no]").addEventListener("click", () => close());
           const ci = b.querySelector("[data-close-instead]");
@@ -236,9 +237,9 @@
     const n = bidsFor(id).length || j.bids || 0,
       draft = j.status === "draft";
     confirm({
-      title: draft ? "Delete this draft?" : "Delete this job?",
+      title: draft ? "Delete this draft?" : "Delete this brief?",
       mini: jobMini(j),
-      yes: draft ? "Delete draft" : "Delete job",
+      yes: draft ? "Delete draft" : "Delete brief",
       no: "Keep it",
       danger: true,
       bullets: [
@@ -257,7 +258,7 @@
                 const x = s.jobs.find(y => y.id === id);
                 if (x) x.status = "closed";
               }, "job-closed");
-              L.toast("Job closed and removed from creators' search", "check");
+              L.toast("Brief closed and removed from creators' search", "check");
               after && after();
             },
             e => L.toast(L.live.errorText(e), "alert"),
@@ -268,7 +269,7 @@
           s.jobs = s.jobs.filter(y => y.id !== id);
           s.bids = s.bids.filter(b => b.job !== id);
         }, "job-deleted");
-        L.toast(draft ? "Draft deleted" : "Job deleted", "trash");
+        L.toast(draft ? "Draft deleted" : "Brief deleted", "trash");
         after && after();
       },
     });
@@ -351,31 +352,27 @@
     let note = "";
     if (j.status === "open")
       note = j.bids
-        ? `${j.bids} bid${j.bids === 1 ? "" : "s"} so far${nNew ? `, ${nNew} new` : ""}${nShort ? `, ${nShort} shortlisted` : ""}. Bids stay open until you hire or close the job.`
+        ? `${j.bids} bid${j.bids === 1 ? "" : "s"} so far${nNew ? `, ${nNew} new` : ""}${nShort ? `, ${nShort} shortlisted` : ""}. Bids stay open until you hire or close the brief.`
         : "Published. Creators who match will start bidding soon.";
     else if (draft) note = "Only you can see this. Publish it when the brief is ready.";
     else if (j.status === "hired")
-      note = k
-        ? `You hired ${k.name}. The work and payment live in Campaigns.`
-        : "Hired. The work lives in Campaigns.";
+      note = k ? `You hired ${k.name}. The work and payment live in Deals.` : "Hired. The work lives in Deals.";
     else note = k ? `Closed after hiring ${k.name}.` : "Closed without a hire.";
+    /* one primary per screen: the header's "Post a brief"; every slip action is secondary */
     const acts = [];
     if (j.status === "open") {
       acts.push(
-        `<a class="lq lq-p lq-sm" href="#job-${esc(j.id)}">${j.bids ? `See ${j.bids} bid${j.bids === 1 ? "" : "s"}` : "Open job"}</a>`,
+        `<a class="lq lq-s lq-sm" href="#job-${esc(j.id)}">${j.bids ? `See ${j.bids} bid${j.bids === 1 ? "" : "s"}` : "Open brief"}</a>`,
       );
       acts.push(`<a class="btn-q" href="#post-${esc(j.id)}">${ic("edit")}Edit</a>`);
-      acts.push(`<button class="btn-q" type="button" data-close="${esc(j.id)}">Close job</button>`);
+      acts.push(`<button class="btn-q" type="button" data-close="${esc(j.id)}">Close brief</button>`);
     } else if (draft) {
-      acts.push(`<a class="lq lq-p lq-sm" href="#post-${esc(j.id)}">Continue editing</a>`);
+      acts.push(`<a class="lq lq-s lq-sm" href="#post-${esc(j.id)}">Continue editing</a>`);
       acts.push(`<a class="btn-q" href="#job-${esc(j.id)}">${ic("eye")}Preview</a>`);
       acts.push(`<button class="btn-q" type="button" data-del="${esc(j.id)}">${ic("trash")}Delete</button>`);
     } else {
-      if (c)
-        acts.push(
-          `<a class="lq ${j.status === "hired" ? "lq-p" : "lq-s"} lq-sm" href="#campaign-${esc(c.id)}">Open campaign</a>`,
-        );
-      acts.push(`<a class="btn-q" href="#job-${esc(j.id)}">View job</a>`);
+      if (c) acts.push(`<a class="lq lq-s lq-sm" href="#campaign-${esc(c.id)}">Open deal</a>`);
+      acts.push(`<a class="btn-q" href="#job-${esc(j.id)}">View brief</a>`);
       if (j.status === "hired")
         acts.push(`<button class="btn-q" type="button" data-close="${esc(j.id)}">Close listing</button>`);
       if (!c)
@@ -409,35 +406,44 @@
   }
 
   L.register("jobs", {
-    title: "Jobs",
+    title: "Briefs",
     nav: "jobs",
     render(el) {
       const u = ui("jobs");
       if (!TABS.some(t => t[0] === u.tab)) u.tab = "all";
       const count = t => S().jobs.filter(j => inTab(j, t)).length;
+      /* counts only for the states that have something in them: a new brand sees the next step, not a row of zeros */
       const summary = () => {
+        if (!S().jobs.length) return "Post a brief and creators who fit bid on it. Your briefs and their bids show up here.";
         const n = t => count(t),
           nNew = S().bids.filter(b => b.status === "new" && (job(b.job) || {}).status === "open").length;
-        return `${n("open")} open, ${n("drafts")} draft${n("drafts") === 1 ? "" : "s"}, ${n("closed")} hired or closed.${nNew ? ` ${nNew} new bid${nNew === 1 ? "" : "s"} to look at.` : ""}`;
+        const parts = [
+          n("open") && `${n("open")} open`,
+          n("drafts") && `${n("drafts")} draft${n("drafts") === 1 ? "" : "s"}`,
+          n("closed") && `${n("closed")} hired or closed`,
+        ].filter(Boolean);
+        return `${parts.join(", ")}.${nNew ? ` ${nNew} new bid${nNew === 1 ? "" : "s"} to look at.` : ""}`;
       };
       const tabs = () =>
-        TABS.map(
-          ([k, n]) =>
-            `<button class="chip" type="button" data-tab="${k}" aria-pressed="${u.tab === k}">${n} <span class="jl-cn">${count(k)}</span></button>`,
-        ).join("");
+        S().jobs.length
+          ? TABS.map(
+              ([k, n]) =>
+                `<button class="chip" type="button" data-tab="${k}" aria-pressed="${u.tab === k}">${n} <span class="jl-cn">${count(k)}</span></button>`,
+            ).join("")
+          : "";
       function board() {
         const all = S().jobs;
         if (!all.length)
           return `<div class="empty jl-empty"><img src="assets/step-01-envelope.svg" width="160" height="117" alt="">
-          <p class="t-h2">No jobs yet.</p><p class="muted">Post a brief and creators who fit will bid on it. It takes about three minutes.</p><a class="lq lq-p" href="#post">Post a job</a></div>`;
+          <p class="t-h2">No briefs yet.</p><p class="muted">Post a brief and creators who fit will bid on it. It takes about three minutes.</p><a class="lq lq-p" href="#post">Post a brief</a></div>`;
         const list = all.filter(j => inTab(j, u.tab));
         if (!list.length) {
           const m = {
-            open: ["No open jobs.", "Publish a draft or post a new brief to start getting bids."],
-            drafts: ["No drafts.", "Save a job as a draft when the brief is not ready yet."],
-            closed: ["Nothing closed yet.", "Jobs you hire on or close show up here."],
+            open: ["No open briefs.", "Publish a draft or post a new brief to start getting bids."],
+            drafts: ["No drafts.", "Save a brief as a draft when it is not ready yet."],
+            closed: ["Nothing closed yet.", "Briefs you hire on or close show up here."],
           }[u.tab];
-          return `<div class="empty jl-empty"><p class="t-h2">${m[0]}</p><p class="muted">${m[1]}</p><div class="row wrap jl-empty-cta"><a class="lq lq-p" href="#post">Post a job</a><button class="lq lq-s" type="button" data-tab="all">Show all jobs</button></div></div>`;
+          return `<div class="empty jl-empty"><p class="t-h2">${m[0]}</p><p class="muted">${m[1]}</p><div class="row wrap jl-empty-cta"><button class="lq lq-s" type="button" data-tab="all">Show all briefs</button></div></div>`;
         }
         const by = (a, b) =>
           (a.status === "draft" ? 0 : 1) - (b.status === "draft" ? 0 : 1) ||
@@ -452,10 +458,10 @@
       }
       el.innerHTML = `<div class="view-in jl">
         <header class="jl-head">
-          <div class="jl-head-t"><h1 class="t-h1">Jobs</h1><p class="muted" id="jlSum">${esc(summary())} <span class="sample">Sample data</span></p></div>
-          <a class="lq lq-p" href="#post">${ic("plus")}Post a job</a>
+          <div class="jl-head-t"><h1 class="t-h1">Briefs</h1><p class="muted" id="jlSum">${esc(summary())} <span class="sample">Sample data</span></p></div>
+          <a class="lq lq-p" href="#post" data-post${S().jobs.length ? "" : " hidden"}>${ic("plus")}Post a brief</a>
         </header>
-        <div class="chips jl-filter" role="group" aria-label="Show jobs">${tabs()}</div>
+        <div class="chips jl-filter" role="group" aria-label="Show briefs"${S().jobs.length ? "" : " hidden"}>${tabs()}</div>
         <p class="sr-only" id="jlLive" aria-live="polite"></p>
         <div class="jl-board" id="jlBoard">${board()}</div>
       </div>`;
@@ -465,6 +471,7 @@
         const mutate = () => {
           $("#jlBoard").innerHTML = board();
           $(".jl-filter").innerHTML = tabs();
+          $(".jl-filter").hidden = $("[data-post]").hidden = !S().jobs.length; // the empty state carries the one button
           $("#jlSum").innerHTML = `${esc(summary())} <span class="sample">Sample data</span>`;
           L.liquid($("#jlBoard"));
         };
@@ -476,11 +483,11 @@
         if (!t || !el.contains(t)) return;
         if (t.dataset.tab) {
           u.tab = t.dataset.tab;
-          refresh(true, `Showing ${u.tab === "all" ? "all" : u.tab} jobs`);
+          refresh(true, `Showing ${u.tab === "all" ? "all" : u.tab} briefs`);
           const same = el.querySelector(`.jl-filter [data-tab="${u.tab}"]`);
           same && same.focus();
-        } else if (t.dataset.close) closeJob(t.dataset.close, () => refresh(true, "Job closed"));
-        else if (t.dataset.del) deleteJob(t.dataset.del, () => refresh(true, "Job deleted"));
+        } else if (t.dataset.close) closeJob(t.dataset.close, () => refresh(true, "Brief closed"));
+        else if (t.dataset.del) deleteJob(t.dataset.del, () => refresh(true, "Brief deleted"));
       });
       mo("stagger", L.$$(".jl-slip", el));
       if (u.justSaved) {

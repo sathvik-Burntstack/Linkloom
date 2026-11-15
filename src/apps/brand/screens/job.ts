@@ -21,11 +21,11 @@
   L.register("job", {
     title: id => {
       const j = L.bk && L.bk.job(id);
-      return j ? j.title : "Job";
+      return j ? j.title : "Brief";
     },
     crumb: id => {
       const j = L.bk && L.bk.job(id);
-      return `<a href="#jobs">Jobs</a> / ${j ? esc(j.title) : "Job"}`;
+      return `<a href="#jobs">Briefs</a> / ${j ? esc(j.title) : "Brief"}`;
     },
     nav: "jobs",
     render(el, id) {
@@ -33,7 +33,7 @@
         j = K.job(id);
       if (!j) {
         el.innerHTML = `<div class="view-in"><div class="empty"><img src="assets/step-01-envelope.svg" width="160" height="117" alt="">
-          <p class="t-h2">This job is gone.</p><p class="muted">It may have been deleted. Your other jobs are safe.</p><a class="lq lq-p" href="#jobs">See all jobs</a></div></div>`;
+          <p class="t-h2">This brief is gone.</p><p class="muted">It may have been deleted. Your other briefs are safe.</p><a class="lq lq-p" href="#jobs">See all briefs</a></div></div>`;
         return;
       }
       const u = K.ui("job");
@@ -76,14 +76,15 @@
           inCmp = cmp().includes(b.id),
           c0 = b.status === "hired" && S().campaigns.find(x => x.job === j.id && x.creator === b.creator);
         const acts = [];
+        /* bid actions stay secondary: the confirm sheet carries the one primary (and the trust line) */
         if (b.status === "hired")
-          acts.push(c0 ? `<a class="lq lq-p lq-sm" href="#campaign-${esc(c0.id)}">Open campaign</a>` : "");
+          acts.push(c0 ? `<a class="lq lq-s lq-sm" href="#campaign-${esc(c0.id)}">Open deal</a>` : "");
         else if (b.status === "declined") {
           if (canHire())
             acts.push(`<button class="btn-q" type="button" data-undo="${esc(b.id)}">Undo decline</button>`);
         } else if (canHire()) {
           acts.push(
-            `<button class="lq lq-p lq-sm" type="button" data-hire="${esc(b.id)}">Confirm ${esc(K.first(c))}</button>`,
+            `<button class="lq lq-s lq-sm" type="button" data-hire="${esc(b.id)}">Confirm ${esc(K.first(c))}</button>`,
           );
           acts.push(
             `<button class="chip jd-short" type="button" data-short="${esc(b.id)}" aria-pressed="${b.status === "shortlisted"}">${ic("bookmark")}<span>${b.status === "shortlisted" ? "Shortlisted" : "Shortlist"}</span></button>`,
@@ -113,7 +114,7 @@
           </div>
           <blockquote class="jd-pitch"><p>“${esc(b.pitch || "No note.")}”</p></blockquote>
           ${(b.links || []).length ? `<ul class="jd-links">${b.links.map(x => `<li>${ic("link")}<span>${esc(x)}</span></li>`).join("")}</ul>` : ""}
-          <p class="jd-sent">Sent ${esc(L.ago(b.sent))}${b.closedWithJob ? " · declined when the job closed" : ""}</p>
+          <p class="jd-sent">Sent ${esc(L.ago(b.sent))}${b.closedWithJob ? " · declined when the brief closed" : ""}</p>
           ${acts.filter(Boolean).length ? `<div class="jd-acts">${acts.join("")}</div>` : ""}
         </article>`;
       }
@@ -123,14 +124,14 @@
           hiddenCount = Math.max(0, (j.bids || 0) - all.length);
         const counts = FILTERS.reduce((o, k) => ((o[k] = all.filter(b => b.status === k).length), o), {});
         if (j.status === "draft")
-          return `<div class="empty jd-empty"><p class="t-h2">No bids on a draft.</p><p class="muted">Publish the job and creators who fit can bid on it.</p><a class="lq lq-p" href="#post-${esc(j.id)}">Finish and publish</a></div>`;
+          return `<div class="empty jd-empty"><p class="t-h2">No bids on a draft.</p><p class="muted">Publish the brief and creators who fit can bid on it.</p><a class="lq lq-p" href="#post-${esc(j.id)}">Finish and publish</a></div>`;
         if (!all.length) {
           const c = K.campOfJob(j.id),
             k = c && K.cr(c.creator);
           return `<div class="empty jd-empty">${
             j.bids
-              ? `<p class="t-h2">${j.bids} bids came in.</p><p class="muted">${k ? `You hired ${esc(k.name)}. The other bids closed with the job.` : "They closed with the job."}</p>${c ? `<a class="lq lq-p" href="#campaign-${esc(c.id)}">Open campaign</a>` : ""}`
-              : `<p class="t-h2">No bids yet.</p><p class="muted">New jobs usually get their first bids within a day. You get a notification for each one.</p>`
+              ? `<p class="t-h2">${j.bids} bids came in.</p><p class="muted">${k ? `You hired ${esc(k.name)}. The other bids closed with the brief.` : "They closed with the brief."}</p>${c ? `<a class="lq lq-s" href="#campaign-${esc(c.id)}">Open deal</a>` : ""}`
+              : `<p class="t-h2">No bids yet.</p><p class="muted">New briefs usually get their first bids within a day. You get a notification for each one.</p>`
           }</div>`;
         }
         const list = sorted(u.f ? all.filter(b => b.status === u.f) : all);
@@ -170,8 +171,8 @@
             </dl>
             ${all.length ? `<ul class="jd-tally">${FILTERS.map(k => `<li class="is-${k}"><span class="dot" aria-hidden="true"></span>${K.BST[k].label}<b class="num">${n(k)}</b></li>`).join("")}</ul>` : ""}
             <p class="jd-payline">You pay the agreed price into escrow when you confirm a creator. No platform fee. <span class="muted">Taxes as per confirmed rules.</span></p>
-            ${c ? `<a class="lq lq-p jd-side-btn" href="#campaign-${esc(c.id)}">Open campaign</a>` : ""}
-            ${j.status === "open" || j.status === "draft" ? `<a class="lq ${c ? "lq-s" : "lq-s"} jd-side-btn" href="#post-${esc(j.id)}">${ic("edit")}${j.status === "draft" ? "Continue editing" : "Edit job"}</a>` : ""}
+            ${c ? `<a class="lq lq-p jd-side-btn" href="#campaign-${esc(c.id)}">Open deal</a>` : ""}
+            ${j.status === "open" || j.status === "draft" ? `<a class="lq ${c ? "lq-s" : "lq-s"} jd-side-btn" href="#post-${esc(j.id)}">${ic("edit")}${j.status === "draft" ? "Continue editing" : "Edit brief"}</a>` : ""}
           </div>`;
       }
 
@@ -184,16 +185,16 @@
               : "";
         const fol = j.minFollowers ? L.compact(j.minFollowers) + "+ followers" : "No minimum";
         el.innerHTML = `<div class="view-in jd">
-          <a class="btn-q jd-back" href="#jobs">${ic("back")}All jobs</a>
+          <a class="btn-q jd-back" href="#jobs">${ic("back")}All briefs</a>
           <div class="jd-layout">
             <article class="jd-main" aria-labelledby="jdH">
               <header class="jd-h">
                 <div class="bk-src"><span class="bk-plat">${K.glyph(j.platform)}<span>${esc(K.plat(j.platform))} ${esc(j.format)} · ${esc(j.category)}</span></span>${K.pill(K.JST, j.status)}</div>
                 <h1 class="t-h1" id="jdH">${esc(j.title)}</h1>
                 <p class="muted t-small">${j.posted ? "Posted " + esc(L.ago(j.posted)) : "Not posted yet"} · <span class="sample">Sample brief</span></p>
-                <div class="jd-tools-h" role="group" aria-label="Job actions">
+                <div class="jd-tools-h" role="group" aria-label="Brief actions">
                   ${j.status === "open" || j.status === "draft" ? `<a class="chip" href="#post-${esc(j.id)}">${ic("edit")}<span>Edit</span></a>` : ""}
-                  ${j.status === "open" || j.status === "hired" ? `<button class="chip" type="button" data-closejob>${ic("close")}<span>${j.status === "hired" ? "Close listing" : "Close job"}</span></button>` : ""}
+                  ${j.status === "open" || j.status === "hired" ? `<button class="chip" type="button" data-closejob>${ic("close")}<span>${j.status === "hired" ? "Close listing" : "Close brief"}</span></button>` : ""}
                   ${S().campaigns.some(c => c.job === j.id) ? "" : `<button class="chip" type="button" data-deljob>${ic("trash")}<span>Delete</span></button>`}
                 </div>
               </header>
@@ -499,13 +500,14 @@
           no: "Not yet",
           mini: `<div class="jl-mini">${K.crChip(c)}<p class="t-money jl-mini-p">${L.inr(b.price)}</p><p class="t-small muted">${esc(j.title)} · post by ${esc(L.fmtDate(b.postDate || j.deadline))}</p></div>`,
           bullets: [
-            `A campaign starts at Accepted for ${L.inr(b.price)}, the agreed price.`,
+            `A deal starts at Accepted for ${L.inr(b.price)}, the agreed price.`,
             `Next you pay ${L.inr(b.price)} into escrow. Linkloom holds it until you approve the work.`,
             `Chat with ${K.first(c)} opens once you pay. No platform fee.`,
           ],
           extra: others
-            ? `<label class="check jd-close-others"><input type="checkbox" checked data-closeothers> Close the job and decline the other ${others} open bid${others === 1 ? "" : "s"}</label>`
+            ? `<label class="check jd-close-others"><input type="checkbox" checked data-closeothers> Close the brief and decline the other ${others} open bid${others === 1 ? "" : "s"}</label>`
             : "",
+          trust: "Held safely until you approve.",
           onYes(body) {
             if (L.live) {
               L.live.selectBid(j.id, bid).then(

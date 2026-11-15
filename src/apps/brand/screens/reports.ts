@@ -277,7 +277,7 @@
       mr = 56,
       iw = Math.max(40, w - mr);
     const max = Math.max(...items.map(d => d.value), 1);
-    let g = `<svg class="rp-svg" width="${w}" height="${H}" viewBox="0 0 ${w} ${H}" role="group" aria-label="Views by campaign">`;
+    let g = `<svg class="rp-svg" width="${w}" height="${H}" viewBox="0 0 ${w} ${H}" role="group" aria-label="Views by deal">`;
     items.forEach((d, i) => {
       const y0 = i * row,
         bw = (d.value / max) * iw;
@@ -336,9 +336,28 @@
     `<span class="rp-stars" aria-hidden="true">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= Math.round(r) ? "on" : ""}">${ic("star")}</i>`).join("")}</span>`;
   const plat = p => (p === "youtube" ? "YouTube" : "Instagram");
 
+  /* B11: with no hired or live deal (and no payment) there is nothing to report yet, so one next step instead of charts of zeros */
+  const NOT_HIRED = ["invited", "declined", "cancelled"];
+  const hasDeals = s =>
+    (s.campaigns || []).some(c => !NOT_HIRED.includes(c.stage)) || (s.payments || []).length > 0;
+  function renderStart(el) {
+    const waiting = (L.store.s.campaigns || []).filter(c => c.stage === "invited").length;
+    el.innerHTML = `<div class="view-in rp">
+        <div class="earnings-top rp-top"><h1 class="t-h1">Reports</h1></div>
+        <div class="empty rp-start">
+          <img src="assets/step-06-coins.svg" width="220" height="160" alt="">
+          <p class="t-h2">Reports start after your first live post</p>
+          <p class="muted">Once you hire a creator and their post goes live, this page shows what you spent, the views you got and the cost per 1,000 views.</p>
+          <div class="row wrap rp-start-a"><a class="lq lq-p" href="#post">Post a brief</a>${waiting ? `<a class="lq lq-s" href="#campaigns">See your ${waiting === 1 ? "invitation" : waiting + " invitations"}</a>` : ""}</div>
+        </div>
+      </div>`;
+    L.liquid(el);
+  }
+
   function render(el) {
     const s = L.store.s,
       ui = s.ui.reports || (s.ui.reports = {});
+    if (!hasDeals(s)) return renderStart(el);
     let per = PERIODS.some(p => p[0] === ui.period) ? ui.period : "fy";
     let ro = null,
       first = true;
@@ -372,11 +391,11 @@
           <h2 class="rp-h" id="rpOvH">Overview</h2>
           <div class="rp-tiles">
             <div class="rp-tile"><p class="rp-tile-l">Total spent</p><p class="t-money rp-tile-v" data-v="spent">${L.inr(m.spent)}</p><p class="rp-tile-s">Paid into escrow, minus refunds</p></div>
-            <div class="rp-tile"><p class="rp-tile-l">Total views</p><p class="t-money rp-tile-v" data-v="views">${num(m.views)}</p><p class="rp-tile-s">${m.viewed.length} live campaign${m.viewed.length === 1 ? "" : "s"}</p></div>
-            <div class="rp-tile"><p class="rp-tile-l">Campaigns</p><p class="t-money rp-tile-v" data-v="camps">${m.camps.length}</p><p class="rp-tile-s">${[m.running && m.running + " running", m.done && m.done + " done", m.waiting && m.waiting + " waiting", m.refundedN && m.refundedN + " refunded"].filter(Boolean).join(" · ") || "None in this period"}</p></div>
-            <div class="rp-tile"><p class="rp-tile-l">Cost per 1,000 views</p><p class="t-money rp-tile-v">${m.cpm == null ? "—" : L.inr(m.cpm * 1)}</p><p class="rp-tile-s">${m.cpm == null ? "Shows once a campaign is live" : "On campaigns with views"}</p></div>
+            <div class="rp-tile"><p class="rp-tile-l">Total views</p><p class="t-money rp-tile-v" data-v="views">${num(m.views)}</p><p class="rp-tile-s">${m.viewed.length} live deal${m.viewed.length === 1 ? "" : "s"}</p></div>
+            <div class="rp-tile"><p class="rp-tile-l">Deals</p><p class="t-money rp-tile-v" data-v="camps">${m.camps.length}</p><p class="rp-tile-s">${[m.running && m.running + " running", m.done && m.done + " done", m.waiting && m.waiting + " waiting", m.refundedN && m.refundedN + " refunded"].filter(Boolean).join(" · ") || "None in this period"}</p></div>
+            <div class="rp-tile"><p class="rp-tile-l">Cost per 1,000 views</p><p class="t-money rp-tile-v">${m.cpm == null ? "—" : L.inr(m.cpm * 1)}</p><p class="rp-tile-s">${m.cpm == null ? "Shows once a deal is live" : "On deals with views"}</p></div>
           </div>
-          ${empty ? `<div class="empty rp-empty"><p class="t-h2">Nothing in this period</p><p class="muted">No campaigns were hired or paid between these dates. Try a longer period.</p><button class="lq lq-s" type="button" data-p="all">See all time</button></div>` : ""}
+          ${empty ? `<div class="empty rp-empty"><p class="t-h2">Nothing in this period</p><p class="muted">No deals were hired or paid between these dates. Try a longer period.</p><button class="lq lq-s" type="button" data-p="all">See all time</button></div>` : ""}
         </section>
 
         <div class="rp-grid2">
@@ -416,10 +435,10 @@
           ${
             views.length
               ? `<figure class="rp-fig" data-chart="views"><div class="rp-svgw" data-draw="views"></div><div class="rp-tip" role="presentation" hidden></div>
-            <figcaption class="sr-only">${esc("Views by campaign: " + views.map(c => `${c.title} by ${L.creator(c.creator).name}, ${num(c.views)} views`).join("; ") + ".")}</figcaption></figure>
-            <details class="rp-tbl"><summary>Show as a table</summary><table><thead><tr><th scope="col">Campaign</th><th scope="col">Creator</th><th scope="col">Views</th><th scope="col">Per 1,000 views</th></tr></thead>
+            <figcaption class="sr-only">${esc("Views by deal: " + views.map(c => `${c.title} by ${L.creator(c.creator).name}, ${num(c.views)} views`).join("; ") + ".")}</figcaption></figure>
+            <details class="rp-tbl"><summary>Show as a table</summary><table><thead><tr><th scope="col">Deal</th><th scope="col">Creator</th><th scope="col">Views</th><th scope="col">Per 1,000 views</th></tr></thead>
             <tbody>${views.map(c => `<tr><th scope="row">${esc(c.title)}</th><td>${esc(L.creator(c.creator).name)}</td><td>${num(c.views)}</td><td>${L.inr((c.price / c.views) * 1000)}</td></tr>`).join("")}</tbody></table></details>`
-              : `<p class="muted rp-none">No campaign in this period is live with views yet.</p>`
+              : `<p class="muted rp-none">No deal in this period is live with views yet.</p>`
           }
           ${m.notLive.length ? `<div class="rp-pending"><p class="rp-pending-h">${ic("clock")}Views appear once these go live</p><ul>${m.notLive.map(c => `<li><a href="#campaign-${esc(c.id)}"><b>${esc(c.title)}</b><span>${esc(L.creator(c.creator).name)} · ${esc(plat(c.platform))} ${esc(c.format)}</span></a></li>`).join("")}</ul></div>` : ""}
         </section>
@@ -453,12 +472,12 @@
           ${
             m.creators.length
               ? `<div class="rp-tw"><table class="rp-cwt">
-            <thead><tr><th scope="col">Creator</th><th scope="col">Campaigns</th><th scope="col">Spent</th><th scope="col">Views</th><th scope="col">Per 1,000 views</th><th scope="col">Rating given</th></tr></thead>
+            <thead><tr><th scope="col">Creator</th><th scope="col">Deals</th><th scope="col">Spent</th><th scope="col">Views</th><th scope="col">Per 1,000 views</th><th scope="col">Rating given</th></tr></thead>
             <tbody>${m.creators
               .map(
                 r => `<tr>
               <th scope="row" data-l="Creator"><a class="rp-who" href="#creator-${esc(r.cr.id)}"><span class="avatar msg-av${r.cr.tone === "b" ? " is-b" : ""}" aria-hidden="true">${esc(L.initials(r.cr.name))}</span><span><b>${esc(r.cr.name)}</b><span>${esc(r.cr.handle)}</span></span></a></th>
-              <td data-l="Campaigns"><b class="num">${r.n}</b>${r.running || r.done ? `<span class="rp-cell-s">${[r.running && r.running + " running", r.done && r.done + " done"].filter(Boolean).join(" · ")}</span>` : ""}</td>
+              <td data-l="Deals"><b class="num">${r.n}</b>${r.running || r.done ? `<span class="rp-cell-s">${[r.running && r.running + " running", r.done && r.done + " done"].filter(Boolean).join(" · ")}</span>` : ""}</td>
               <td data-l="Spent" class="num">${r.spent ? L.inr(r.spent) : `<span class="rp-cell-s">${s.campaigns.some(c => c.creator === r.cr.id && c.stage === "refunded") ? "Refunded" : "Not paid yet"}</span>`}</td>
               <td data-l="Views" class="num">${r.views ? num(r.views) : '<span class="rp-cell-s">Not live yet</span>'}</td>
               <td data-l="Per 1,000 views" class="num">${r.cpm == null ? "—" : L.inr(r.cpm)}</td>
@@ -466,7 +485,7 @@
             </tr>`,
               )
               .join("")}</tbody>
-            <tfoot><tr><th scope="row">All creators</th><td data-l="Campaigns" class="num">${sum(m.creators, r => r.n)}</td><td data-l="Spent" class="num">${L.inr(sum(m.creators, r => r.spent))}</td><td data-l="Views" class="num">${num(sum(m.creators, r => r.views))}</td><td data-l="Per 1,000 views" class="num">${m.cpm == null ? "—" : L.inr(m.cpm)}</td><td></td></tr></tfoot>
+            <tfoot><tr><th scope="row">All creators</th><td data-l="Deals" class="num">${sum(m.creators, r => r.n)}</td><td data-l="Spent" class="num">${L.inr(sum(m.creators, r => r.spent))}</td><td data-l="Views" class="num">${num(sum(m.creators, r => r.views))}</td><td data-l="Per 1,000 views" class="num">${m.cpm == null ? "—" : L.inr(m.cpm)}</td><td></td></tr></tfoot>
           </table></div>`
               : `<p class="muted rp-none">No creators were hired in this period.</p>`
           }

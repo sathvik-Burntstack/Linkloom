@@ -35,6 +35,16 @@
   };
   const LIVE = ["invited", "accepted", "funded", "in_progress", "submitted", "revision"];
   const first = n => String(n || "").split(/\s+/)[0];
+  /* the creator's own account on the platform: the stored link, else one built from the handle, else none */
+  const profileUrl = p => {
+    const u = String(p.url || "").trim();
+    if (u) return /^https?:\/\//i.test(u) ? u : "https://" + u.replace(/^\/+/, "");
+    const h = String(p.handle || "")
+      .trim()
+      .replace(/^@/, "");
+    if (!/^[\w.-]{1,60}$/.test(h)) return "";
+    return p.p === "youtube" ? `https://www.youtube.com/@${h}` : `https://www.instagram.com/${h}`;
+  };
   const stars = r =>
     `<span class="creator-stars" aria-hidden="true">${[1, 2, 3, 4, 5].map(i => `<i class="${r >= i - 0.25 ? "is-on" : ""}">${L.icon("star")}</i>`).join("")}</span>`;
 
@@ -75,11 +85,19 @@
         <header class="creator-mast">
           <div class="creator-photo" aria-hidden="true"><span>${esc(c.name.trim()[0].toUpperCase())}</span></div>
           <div class="creator-id">
-            <p class="t-eyebrow">Creator · ${esc(c.city)}, ${esc(c.state)}</p>
+            <p class="t-eyebrow">${esc(["Creator", [c.city, c.state].filter(Boolean).join(", ")].filter(Boolean).join(" · "))}</p>
             <h1 class="t-display creator-name">${esc(c.name)}${c.verified ? `<span class="creator-ver" title="Verified by Linkloom">${L.icon("verified")}<span class="sr-only">, verified</span></span>` : ""}</h1>
-            <ul class="creator-handles">${c.platforms.map(p => `<li>${K.glyph(p.p)}<span>${esc(p.handle)}</span><span class="sr-only"> on ${P[p.p].name}</span></li>`).join("")}</ul>
-            <p class="creator-bio">${esc(c.bio)}</p>
-            <p class="creator-meta">${c.categories.map(x => `<span class="pill pill-line">${esc(x)}</span>`).join("")}<span class="creator-langs">Creates in ${esc(c.languages.join(", "))}</span></p>
+            <ul class="creator-handles">${c.platforms
+              .map(p => {
+                const url = profileUrl(p),
+                  h = p.handle ? `<span class="creator-handle">${esc(p.handle)}</span>` : "";
+                return url
+                  ? `<li><a class="creator-ext" href="${esc(url)}" target="_blank" rel="noopener">${K.glyph(p.p)}<span>View on ${P[p.p].name}</span><span class="sr-only">, opens in a new tab</span></a>${h}</li>`
+                  : `<li>${K.glyph(p.p)}<span>${esc(p.handle || P[p.p].name)}</span>${p.handle ? `<span class="sr-only"> on ${P[p.p].name}</span>` : ""}</li>`;
+              })
+              .join("")}</ul>
+            ${c.bio ? `<p class="creator-bio">${esc(c.bio)}</p>` : ""}
+            <p class="creator-meta">${c.categories.map(x => `<span class="pill pill-line">${esc(x)}</span>`).join("")}${(c.languages || []).length ? `<span class="creator-langs">Creates in ${esc(c.languages.join(", "))}</span>` : ""}</p>
           </div>
           <div class="creator-act">
             ${K.availPill(c)}
@@ -88,7 +106,7 @@
               <button class="lq lq-s" type="button" data-cart></button>
               <button class="lq lq-p" type="button" data-invite>Invite now</button>
             </div>
-            ${live.length ? `<p class="creator-live">${L.icon("info")}<span>${esc(live[0].title)}: ${esc((STAGE[live[0].stage] || STAGE.invited)[2].toLowerCase())}. A new invitation is a separate campaign.</span></p>` : ""}
+            ${live.length ? `<p class="creator-live">${L.icon("info")}<span>${esc(live[0].title)}: ${esc((STAGE[live[0].stage] || STAGE.invited)[2].toLowerCase())}. A new invitation is a separate deal.</span></p>` : ""}
           </div>
         </header>
 
@@ -112,8 +130,8 @@
                 .map(
                   p => `
                 <li class="creator-plat" data-st>
-                  <span class="creator-plat-ic">${K.glyph(p.p)}</span>
-                  <div class="creator-plat-id"><p class="t-h3">${P[p.p].name}</p><p class="creator-plat-h">${esc(p.handle)}</p></div>
+                  ${profileUrl(p) ? `<a class="creator-plat-ic" href="${esc(profileUrl(p))}" target="_blank" rel="noopener" aria-label="View on ${P[p.p].name}, opens in a new tab">${K.glyph(p.p)}</a>` : `<span class="creator-plat-ic">${K.glyph(p.p)}</span>`}
+                  <div class="creator-plat-id"><p class="t-h3">${P[p.p].name}</p>${p.handle ? `<p class="creator-plat-h">${esc(p.handle)}</p>` : ""}</div>
                   <dl class="creator-plat-n">
                     <div><dt>${P[p.p].unit}</dt><dd class="t-money">${esc(L.compact(p.followers))}</dd></div>
                     <div><dt>Avg views</dt><dd class="t-money">${esc(L.compact(p.avgViews))}</dd></div>

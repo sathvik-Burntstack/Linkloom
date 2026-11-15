@@ -210,7 +210,10 @@
 
       <footer class="cart-row-f">
         <p class="cart-sum" data-sum>${sumLine(c, d)}</p>
-        <button class="lq lq-p cart-send" type="button" data-send>${L.icon("send", "ic")}Send invitation</button>
+        <div class="cart-send-w">
+          <button class="lq lq-p cart-send" type="button" data-send>${L.icon("send", "ic")}Send invitation</button>
+          <p class="ll-trust">${L.icon("lock")}Held safely until you approve.</p>
+        </div>
       </footer>
     </article>`;
   }
@@ -218,7 +221,7 @@
       <span class="cart-slip-ic">${L.icon("check")}</span>
       <div class="cart-slip-t"><p><b>Invitation sent to ${esc(c.name)}</b></p>
         <p class="muted">${esc(camp.title)} · ${esc(camp.items.length === 1 ? camp.items[0].count + " " + plural(camp.items[0].count, camp.items[0].format) : camp.items.length + " deliverables")} · due ${esc(L.fmtDate(camp.due))}. You pay <span class="num">${L.inr(camp.price)}</span> into escrow if ${esc(first(c.name))} accepts.</p></div>
-      <a class="btn-q" href="#campaign-${esc(camp.id)}">View in Campaigns${L.icon("arrow")}</a>
+      <a class="btn-q" href="#campaign-${esc(camp.id)}">View in Deals${L.icon("arrow")}</a>
     </div>`;
 
   L.register("cart", {
@@ -287,7 +290,7 @@
         e.hidden = !none;
         if (!none) return;
         e.innerHTML = sent.length
-          ? `<img src="assets/step-02-plane.svg" width="72" height="72" alt=""><p class="t-h2">Everyone is invited.</p><p class="muted">You will get a notification when they reply. Pay into escrow from Campaigns once they accept.</p><div class="row wrap cart-empty-a"><button class="lq lq-p" type="button" data-go="#campaigns">Go to Campaigns</button><button class="lq lq-s" type="button" data-go="#creators">Find more creators</button></div>`
+          ? `<img src="assets/step-02-plane.svg" width="72" height="72" alt=""><p class="t-h2">Everyone is invited.</p><p class="muted">You will get a notification when they reply. Pay into escrow from Deals once they accept.</p><div class="row wrap cart-empty-a"><button class="lq lq-p" type="button" data-go="#campaigns">Go to Deals</button><button class="lq lq-s" type="button" data-go="#creators">Find more creators</button></div>`
           : `<img src="assets/step-01-envelope.svg" width="160" height="117" alt=""><p class="t-h2">Your cart is empty.</p><p class="muted">Add creators from Find creators or their profile, then set deliverables and a due date here.</p><div class="row wrap cart-empty-a"><button class="lq lq-p" type="button" data-go="#creators">Find creators</button>${S().favorites.length ? '<button class="lq lq-s" type="button" data-go="#saved">Open saved creators</button>' : ""}</div>`;
         L.liquid(e);
       }

@@ -195,7 +195,7 @@
       <div class="cg-tk-a">
         ${K().cav(k)}
         <div class="cg-tk-tx">
-          <p class="cg-tk-brand">${esc(k.name)}<span aria-hidden="true">·</span>${K().glyph(c.platform)}<span>${esc(c.format || "")}</span><span aria-hidden="true">·</span><span>${c.source === "job" ? "From a job" : "Direct invite"}</span></p>
+          <p class="cg-tk-brand">${esc(k.name)}<span aria-hidden="true">·</span>${K().glyph(c.platform)}<span>${esc(c.format || "")}</span><span aria-hidden="true">·</span><span>${c.source === "job" ? "From a brief" : "Direct invite"}</span></p>
           <h3 class="cg-tk-t"><a class="cg-tk-link" href="#campaign-${esc(c.id)}">${esc(c.title)}</a></h3>
           <p class="cg-tk-next">${esc(next(c))}</p>
         </div>
@@ -217,10 +217,10 @@
     const s = S(),
       u = K().ui("camps");
     if (!s.campaigns.length) {
-      el.innerHTML = `<div class="view-in cg"><header class="cg-head"><div class="cg-head-t"><h1 class="t-h1">Campaigns</h1></div></header>
+      el.innerHTML = `<div class="view-in cg"><header class="cg-head"><div class="cg-head-t"><h1 class="t-h1">Deals</h1></div></header>
         <div class="empty cg-empty"><img src="assets/trust-lock-coin.svg" width="200" height="140" alt="">
-          <p class="t-h2">No campaigns yet</p><p class="muted">When you hire from a job or a creator accepts your invitation, it lands here with its stage, payment and chat.</p>
-          <div class="row wrap cg-empty-cta"><a class="lq lq-p" href="#creators">Find creators</a><a class="lq lq-s" href="#post">Post a job</a></div></div></div>`;
+          <p class="t-h2">No deals yet</p><p class="muted">When you hire from a brief or a creator accepts your invitation, it lands here with its stage, payment and chat.</p>
+          <div class="row wrap cg-empty-cta"><a class="lq lq-p" href="#creators">Find creators</a><a class="lq lq-s" href="#post">Post a brief</a></div></div></div>`;
       L.liquid(el);
       return;
     }
@@ -230,15 +230,19 @@
     const count = k => (k === "all" ? list.length : list.filter(c => who(c) === k).length);
     el.innerHTML = `<div class="view-in cg">
       <header class="cg-head">
-        <div class="cg-head-t"><h1 class="t-h1">Campaigns</h1>
-          <p class="muted">Every hire, from your jobs and direct invitations. ${count("you")} need${count("you") === 1 ? "s" : ""} you. <span class="sample">Sample data</span></p></div>
-        <div class="cg-held">
+        <div class="cg-head-t"><h1 class="t-h1">Deals</h1>
+          <p class="muted">Every hire, from your briefs and direct invitations. ${count("you") ? `${count("you")} need${count("you") === 1 ? "s" : ""} you.` : "Nothing needs you right now."} <span class="sample">Sample data</span></p></div>
+        ${
+          held
+            ? `<div class="cg-held">
           <span class="cg-coin" aria-hidden="true">₹</span>
           <p><span class="cg-held-l">Held in escrow</span><b class="t-money" data-held>${L.inr(held)}</b></p>
           <p class="t-note cg-held-note" aria-hidden="true">released only when you approve</p>
-        </div>
+        </div>`
+            : ""
+        }
       </header>
-      <div class="seg cg-seg" role="group" aria-label="Filter campaigns">${FILTERS.map(([k, n]) => `<button type="button" data-f="${k}" aria-pressed="${k === f}">${n}<span class="cg-seg-n">${count(k)}</span></button>`).join("")}</div>
+      <div class="seg cg-seg" role="group" aria-label="Filter deals">${FILTERS.map(([k, n]) => `<button type="button" data-f="${k}" aria-pressed="${k === f}">${n}<span class="cg-seg-n">${count(k)}</span></button>`).join("")}</div>
       <div class="cg-groups">${GROUPS.map(([k, n]) => {
         const rows = list.filter(c => who(c) === k);
         return rows.length
@@ -274,7 +278,7 @@
       L.$$(".cg-tk", el).filter(r => !r.closest("[hidden]")),
     );
   }
-  L.register("campaigns", { title: "Campaigns", nav: "campaigns", render: renderList });
+  L.register("campaigns", { title: "Deals", nav: "campaigns", render: renderList });
 
   /* ====================================================================================
      #campaign-<id>: the production board for one hire
@@ -328,7 +332,7 @@
           state = i < cur || (end && i === cur) ? "done" : i === cur ? "current stage" : "not yet";
         if (i <= cur && dateOf[st.k]) sub = (i === cur && !end ? "Now · " : "") + L.fmtDate(dateOf[st.k]);
         else if (i === cur && !end) sub = "Now";
-        else if (i < cur && st.k === "invited" && c.source === "job") sub = "From your job";
+        else if (i < cur && st.k === "invited" && c.source === "job") sub = "From your brief";
         else sub = i < cur ? "Done" : ahead[st.k] || "";
         if (st.k === "revision" && i !== cur) {
           if (used) {
@@ -424,6 +428,7 @@
           <p class="cw-now-p">${esc(f)} ${c.source === "job" ? "is confirmed" : "accepted"}. Pay the agreed price into escrow. Linkloom holds it, ${esc(f)} sees it is paid and starts, and it is released only when you approve.</p>
           <p class="cw-due"><span class="t-money" data-amt>${L.inr(c.price)}</span><span class="muted">No platform fee. Taxes as per confirmed rules.</span></p>
           <button class="lq lq-p" type="button" data-payescrow>${ic("lock")}Pay ${L.inr(c.price)} into escrow</button>
+          <p class="ll-trust">${ic("lock")}Held safely until you approve.</p>
           <p class="help cw-chatlock">${ic("chat")}Chat with ${esc(f)} opens once you pay.</p>`;
       case "funded":
       case "in_progress":
@@ -490,7 +495,7 @@
     const s = S(),
       c = s.campaigns.find(x => x.id === id);
     if (!c) {
-      el.innerHTML = `<div class="view-in"><div class="empty"><img src="assets/step-05-stamp.svg" width="200" height="146" alt=""><p class="t-h2">This campaign isn’t here</p><p class="muted">The link may be old. Your other campaigns are safe.</p><a class="lq lq-p" href="#campaigns">Back to campaigns</a></div></div>`;
+      el.innerHTML = `<div class="view-in"><div class="empty"><img src="assets/step-05-stamp.svg" width="200" height="146" alt=""><p class="t-h2">This deal isn’t here</p><p class="muted">The link may be old. Your other deals are safe.</p><a class="lq lq-p" href="#campaigns">Back to deals</a></div></div>`;
       L.liquid(el);
       return;
     }
@@ -512,10 +517,10 @@
       const late = !isEnd(c) && c.stage !== "released" && c.due && K().daysTo(c.due) < 0;
       const prev = seen;
       el.innerHTML = `<div class="view-in cw" data-who="${w}">
-        <a class="btn-q cw-back" href="#campaigns">${ic("back")}<span>Campaigns</span></a>
+        <a class="btn-q cw-back" href="#campaigns">${ic("back")}<span>Deals</span></a>
         <header class="cw-head">
           <div class="cw-head-t">
-            <p class="cw-brand">${K().cav(k)}<span><b>${esc(k.name)}${K().ver(k)}</b><span class="muted">${K().glyph(c.platform)}${esc(K().plat(c.platform))} ${esc(c.format || "")} · ${c.source === "job" ? "hired from a job" : "direct invite"}</span></span><span class="sample">Sample</span></p>
+            <p class="cw-brand">${K().cav(k)}<span><b>${esc(k.name)}${K().ver(k)}</b><span class="muted">${K().glyph(c.platform)}${esc(K().plat(c.platform))} ${esc(c.format || "")} · ${c.source === "job" ? "hired from a brief" : "direct invite"}</span></span><span class="sample">Sample</span></p>
             <h1 class="t-h1">${esc(c.title)}</h1>
           </div>
           <div class="cw-head-m">
@@ -525,7 +530,7 @@
         </header>
 
         <section class="card cw-board" aria-labelledby="cwBoardH">
-          <h2 class="sr-only" id="cwBoardH">Where this campaign stands</h2>
+          <h2 class="sr-only" id="cwBoardH">Where this deal stands</h2>
           <div class="cw-lane"><p class="cw-lane-h">Work</p>
             <ol class="cw-rail" style="--n:8">${rail(c, prev)}</ol></div>
           <div class="cw-lane cw-lane-m"><p class="cw-lane-h">Money <span>tracked apart from the work</span></p>
@@ -557,7 +562,7 @@
                 ${d.usage ? `<div><dt>Usage rights</dt><dd>${esc(d.usage)}</dd></div>` : ""}
               </dl>
               ${d.items.length ? `<ol class="cw-dl">${d.items.map((x, i) => `<li class="${c.stage === "released" || c.stage === "approved" ? "is-ok" : ""}"><span class="cw-dl-n" aria-hidden="true">0${i + 1}</span><span class="cw-dl-t">${x.p ? K().glyph(x.p) : ""}<span>${esc(x.t)}${x.sub ? `<span class="muted">${esc(x.sub)}</span>` : ""}</span></span>${c.stage === "released" || c.stage === "approved" ? '<span class="pill pill-ok">Approved</span>' : ""}</li>`).join("")}</ol>` : ""}
-              ${c.job ? `<a class="btn-q" href="#job-${esc(c.job)}">Open the job${ic("arrow")}</a>` : ""}
+              ${c.job ? `<a class="btn-q" href="#job-${esc(c.job)}">Open the brief${ic("arrow")}</a>` : ""}
             </section>
             <section class="cw-sec" aria-labelledby="cwFilesH">
               <h2 class="cw-sec-h" id="cwFilesH">Deliveries</h2>
@@ -587,7 +592,7 @@
             ${
               t
                 ? `<a class="cw-chat" href="#chat-${esc(t.id)}">${K().cav(k)}<span class="cw-chat-t"><b>Chat with ${esc(f)}</b><span class="muted">${last ? esc((last.from === "brand" ? "You: " : "") + (last.text || (last.file ? last.file.name : ""))) : "Say hello"}</span></span>${t.unread ? `<span class="cw-chat-n" aria-label="${t.unread} unread">${t.unread}</span>` : ic("chevron")}</a>`
-                : `<div class="cw-chat is-locked"><span class="cw-lockic" aria-hidden="true">${ic("lock")}</span><span class="cw-chat-t"><b>Chat opens after payment</b><span class="muted">${isEnd(c) ? "This campaign closed before any payment." : c.stage === "invited" ? `Once ${esc(f)} accepts and you pay into escrow, you can message and share files here.` : `Pay into escrow and you can message ${esc(f)} and share files here.`}</span></span></div>`
+                : `<div class="cw-chat is-locked"><span class="cw-lockic" aria-hidden="true">${ic("lock")}</span><span class="cw-chat-t"><b>Chat opens after payment</b><span class="muted">${isEnd(c) ? "This deal closed before any payment." : c.stage === "invited" ? `Once ${esc(f)} accepts and you pay into escrow, you can message and share files here.` : `Pay into escrow and you can message ${esc(f)} and share files here.`}</span></span></div>`
             }
             <section class="cw-sec" aria-labelledby="cwDatesH">
               <h2 class="cw-sec-h" id="cwDatesH">Dates</h2>
@@ -993,12 +998,12 @@
   L.register("campaign", {
     title: p => {
       const c = S().campaigns.find(x => x.id === p);
-      return c ? c.title : "Campaign";
+      return c ? c.title : "Deal";
     },
     crumb: p => {
       const c = S().campaigns.find(x => x.id === p),
         k = c && L.creator(c.creator);
-      return '<a href="#campaigns">Campaigns</a>' + (k ? " / " + esc(k.name) : "");
+      return '<a href="#campaigns">Deals</a>' + (k ? " / " + esc(k.name) : "");
     },
     nav: "campaigns",
     render: renderCampaign,
@@ -1014,8 +1019,9 @@
       L.openSheet({
         title: "Pay into escrow",
         body: `<div class="stack pe"><p class="t-h2">Escrow payments open soon</p>
-          <p class="muted">Online payment into escrow is being switched on. Our team will contact you at ${esc(S().me.email || "your registered email")} to collect ${c ? esc(L.inr(c.price)) : "the agreed price"} for this hire, and the campaign moves to In escrow as soon as it lands.</p>
-          <div class="row wrap"><a class="lq lq-p" href="mailto:support@linkloom.in?subject=${encodeURIComponent("Escrow payment" + (c ? ": " + c.title : ""))}">Email support</a><button class="lq lq-s" type="button" data-no>Close</button></div></div>`,
+          <p class="muted">Online payment into escrow is being switched on. Our team will contact you at ${esc(S().me.email || "your registered email")} to collect ${c ? esc(L.inr(c.price)) : "the agreed price"} for this hire, and the deal moves to In escrow as soon as it lands.</p>
+          <div class="row wrap"><a class="lq lq-p" href="mailto:support@linkloom.in?subject=${encodeURIComponent("Escrow payment" + (c ? ": " + c.title : ""))}">Email support</a><button class="lq lq-s" type="button" data-no>Close</button></div>
+          <p class="ll-trust">${ic("lock")}Held safely until you approve.</p></div>`,
         onMount(b, close) {
           b.querySelector("[data-no]").addEventListener("click", () => close());
         },
@@ -1024,7 +1030,7 @@
     }
     const c = S().campaigns.find(x => x.id === cid);
     if (!c) {
-      L.toast("That campaign could not be found", "alert");
+      L.toast("That deal could not be found", "alert");
       return;
     }
     const k = K().cr(c.creator),
@@ -1035,9 +1041,9 @@
       const paid = payState(c) !== "none";
       L.openSheet({
         title: "Pay into escrow",
-        body: `<div class="stack pe"><p class="t-h2">${paid ? "This campaign is already paid." : `Waiting for ${esc(f)} to accept.`}</p>
-        <p class="muted">${paid ? "The money is in escrow or already released. See the campaign for where it stands." : "You pay only after the creator accepts. You get a notification when they do."}</p>
-        <div class="row wrap"><a class="lq lq-p" href="#campaign-${esc(c.id)}" data-close-go>Open campaign</a></div></div>`,
+        body: `<div class="stack pe"><p class="t-h2">${paid ? "This deal is already paid." : `Waiting for ${esc(f)} to accept.`}</p>
+        <p class="muted">${paid ? "The money is in escrow or already released. See the deal for where it stands." : "You pay only after the creator accepts. You get a notification when they do."}</p>
+        <div class="row wrap"><a class="lq lq-p" href="#campaign-${esc(c.id)}" data-close-go>Open deal</a></div></div>`,
         onMount(b, close) {
           b.querySelector("[data-close-go]").addEventListener("click", () => close(true));
         },
@@ -1061,6 +1067,7 @@
         <ul class="jl-conseq pe-rules"><li>Linkloom holds the money. ${esc(f)} sees it is paid and starts.</li><li>It is released only when you approve the delivery.</li><li>Refunded in full if ${esc(f)} cannot deliver.</li></ul>
         <p class="err" id="peErr" role="alert"></p>
         <div class="row wrap pe-acts"><button class="lq lq-p" type="button" data-paynow>${ic("lock")}Pay ${L.inr(c.price)}</button><button class="lq lq-s" type="button" data-no>Not now</button></div>
+        <p class="ll-trust">${ic("lock")}Held safely until you approve.</p>
       </div>`,
       onMount(b, close) {
         const btn = b.querySelector("[data-paynow]"),
@@ -1081,7 +1088,7 @@
           }
           const cur = S().campaigns.find(x => x.id === cid);
           if (!cur || cur.stage !== "accepted") {
-            err.textContent = "This campaign changed. Close this and check it again.";
+            err.textContent = "This deal changed. Close this and check it again.";
             return;
           }
           err.textContent = "";
@@ -1152,7 +1159,7 @@
                 <dl class="pe-kv"><div class="kv"><dt>Paid with</dt><dd>${esc(method)}</dd></div><div class="kv"><dt>Invoice</dt><dd>${esc(inv)}</dd></div><div class="kv"><dt>Date</dt><dd>${esc(L.fmtDate(at, { year: true }))}</dd></div></dl>
               </div>
               <p class="pe-ok">${ic("chat")}<span>Chat with ${esc(f)} is open. ${esc(f)} has been told to start.</span></p>
-              <div class="row wrap pe-acts">${t ? `<a class="lq lq-p" href="#chat-${esc(t.id)}" data-go-close>Open chat</a>` : ""}${here ? "" : `<a class="lq lq-s" href="#campaign-${esc(c.id)}" data-go-close>Open campaign</a>`}<button class="lq lq-s" type="button" data-done>Done</button></div>
+              <div class="row wrap pe-acts">${t ? `<a class="lq lq-p" href="#chat-${esc(t.id)}" data-go-close>Open chat</a>` : ""}${here ? "" : `<a class="lq lq-s" href="#campaign-${esc(c.id)}" data-go-close>Open deal</a>`}<button class="lq lq-s" type="button" data-done>Done</button></div>
             </div>`;
               L.liquid(b);
               L.$$("[data-go-close]", b).forEach(a => a.addEventListener("click", () => close(true)));

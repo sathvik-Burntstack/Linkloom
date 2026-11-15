@@ -51,6 +51,7 @@ function render(el: HTMLElement): () => void {
     const doneN = [steps.pan, steps.id, steps.bank].filter(done).length;
     const row = (label: string, value: string) =>
       `<div class="kv"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`;
+    const trust = `<p class="ll-trust">${icon("lock")}Encrypted. Never shown to creators.</p>`;
     const sec = (id: string, title: string, isDone: boolean, summary: string, form: string) => `
       <section class="card stack" aria-labelledby="bk-${id}-h" data-sec="${id}">
         <div class="row between wrap"><h2 class="t-h3" id="bk-${id}-h">${esc(title)}</h2>${isDone ? `<span class="pill pill-ok">${icon("check")}Saved</span>` : ""}</div>
@@ -86,7 +87,7 @@ function render(el: HTMLElement): () => void {
               `<div class="field"><label for="bkPan">PAN number</label><input class="input" id="bkPan" maxlength="10" autocomplete="off" spellcheck="false" placeholder="ABCDE1234F"><p class="help">Your company PAN, or your own if you're a sole proprietor.</p></div>
                <div class="field"><label for="bkPanName">Name as printed on the PAN</label><input class="input" id="bkPanName" autocomplete="organization" value="${esc(steps.pan?.nameOnPan || "")}"></div>
                <p class="err" data-err="pan" aria-live="assertive"></p>
-               <button class="lq lq-p lq-sm" type="button" data-save="pan">Save PAN</button>`,
+               <button class="lq lq-p lq-sm" type="button" data-save="pan">Save PAN</button>${trust}`,
             )}
             ${sec(
               "id",
@@ -96,7 +97,7 @@ function render(el: HTMLElement): () => void {
               `<div class="field"><label for="bkIdType">Document type</label><select class="select" id="bkIdType">${ID_TYPES.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join("")}</select></div>
                <div class="field"><label for="bkIdFile">Photo or PDF of the front side</label><input class="input" id="bkIdFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"><p class="help">JPG, PNG, WebP or PDF, up to 10 MB. All four corners in frame.</p></div>
                <p class="err" data-err="id" aria-live="assertive"></p>
-               <button class="lq lq-p lq-sm" type="button" data-save="id">Upload and save</button>`,
+               <button class="lq lq-p lq-sm" type="button" data-save="id">Upload and save</button>${trust}`,
             )}
             ${sec(
               "bank",
@@ -108,7 +109,7 @@ function render(el: HTMLElement): () => void {
                <div class="field"><label for="bkIfsc">IFSC</label><input class="input" id="bkIfsc" maxlength="11" autocomplete="off" placeholder="HDFC0001234"></div>
                <div class="field"><label for="bkHolder">Account holder name</label><input class="input" id="bkHolder" autocomplete="organization" value="${esc(steps.bank?.accountHolderName || "")}"><p class="help">Refunds from escrow go back to this account.</p></div>
                <p class="err" data-err="bank" aria-live="assertive"></p>
-               <button class="lq lq-p lq-sm" type="button" data-save="bank">Save bank account</button>`,
+               <button class="lq lq-p lq-sm" type="button" data-save="bank">Save bank account</button>${trust}`,
             )}
           </div>
           <p class="profile-formerr" role="alert" data-ferr hidden></p>

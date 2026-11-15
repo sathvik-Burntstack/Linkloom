@@ -135,12 +135,12 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
 </style></head><body>
 <div class="bar"><button type="button" onclick="window.print()">Print or save as PDF</button></div>
 <main class="inv">
-  <header class="top"><div class="logo">Linkloom<small>Creator marketplace · escrow-backed campaigns</small></div>
+  <header class="top"><div class="logo">Linkloom<small>Creator marketplace · escrow-backed deals</small></div>
     <div class="doc"><h1>${x(doc)}</h1><p>No. <b>${x(r.invoice)}</b></p><p>Date <b>${x(when)}</b></p><p>Payment ID ${x(r.id.toUpperCase())}</p></div></header>
   <section class="cols">
     <div><p class="k">Billed to</p><p><b>${x(b.legal || me.brand)}</b><br>${x(b.address || "")}<br>GSTIN ${x(b.gstin || "not added")}<br>${x(b.email || me.email)}<br>Attn. ${x(me.name)}, ${x(me.role || "")}</p></div>
     <div><p class="k">Creator</p><p><b>${x(cr.name || "")}</b><br>${x(cr.handle || "")}<br>${x([cr.city, cr.state].filter(Boolean).join(", "))}</p></div>
-    <div><p class="k">Campaign</p><p><b>${x(c.title || "")}</b><br>${x([plat, c.format].filter(Boolean).join(" · "))}<br>${c.source === "job" ? "Hired from a job post" : "Direct hire"} · ${x((c.id || "").toUpperCase())}</p></div>
+    <div><p class="k">Deal</p><p><b>${x(c.title || "")}</b><br>${x([plat, c.format].filter(Boolean).join(" · "))}<br>${c.source === "job" ? "Hired from a brief" : "Direct hire"} · ${x((c.id || "").toUpperCase())}</p></div>
     <div><p class="k">Payment</p><p><b>${x(KINDL[r.kind] || "")}</b><br>${x(r.method || "")}<br>Status: ${x({ held: "Held in escrow", released: "Released", refunded: "Refunded" }[r.status] || r.status)}</p></div>
   </section>
   <table><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody>
@@ -150,7 +150,7 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
     <tr class="tot"><td>${x(totalL)}</td><td>${x(L.inr(r.amount, { dec: true }))}</td></tr>
   </tbody></table>
   <p class="note">${x(note)}</p>
-  <footer class="foot"><span>${x(plan ? plan.name + " · renews " + L.fmtDate(plan.renews, { year: true }) : "")}. No per-campaign fee.</span><span>Computer-generated document. Sample data.</span></footer>
+  <footer class="foot"><span>${x(plan ? plan.name + " · renews " + L.fmtDate(plan.renews, { year: true }) : "")}. No per-deal fee.</span><span>Computer-generated document. Sample data.</span></footer>
 </main></body></html>`;
   };
   D.downloadInvoice = r => {
@@ -245,7 +245,7 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
         <div class="earnings-hero-a">
           <h2 class="earnings-hero-l pay-hero-l" id="payHeldH">${ic("lock")}Held in escrow</h2>
           <p class="earnings-ready"><span class="earnings-rs">₹</span><span data-held>${L.inr(m.held).slice(1)}</span></p>
-          <p class="earnings-ready-sub">For ${live} running campaign${live === 1 ? "" : "s"}. Linkloom holds it until you approve the work, and refunds it if the creator rejects after payment or doesn’t deliver.</p>
+          <p class="earnings-ready-sub">${live ? `For ${live} running deal${live === 1 ? "" : "s"}. ` : ""}Linkloom holds it until you approve the work, and refunds it if the creator rejects after payment or doesn’t deliver.</p>
           <div class="earnings-cta">
             <a class="lq lq-p lq-xl" href="#campaigns">Review deliveries</a>
             <span class="earnings-to">No platform fee. Taxes as per confirmed rules.</span>

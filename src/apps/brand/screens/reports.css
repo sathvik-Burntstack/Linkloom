@@ -120,6 +120,18 @@
 .rp-empty {
   margin-top: 8px;
 }
+/* no hired or live deal yet: one next step instead of charts of zeros */
+.rp-start {
+  gap: 16px;
+  padding: 64px 24px;
+}
+.rp-start .muted {
+  max-width: 52ch;
+}
+.rp-start-a {
+  justify-content: center;
+  margin-top: 8px;
+}
 
 /* spent: the equation row, like the Earnings reconciliation */
 .rp-eq {

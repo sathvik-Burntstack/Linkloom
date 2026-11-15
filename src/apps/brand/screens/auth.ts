@@ -305,7 +305,7 @@
       out: [
         "info",
         "logout",
-        "You're signed out on this device. Your jobs, campaigns and escrow are unchanged.",
+        "You're signed out on this device. Your briefs, deals and escrow are unchanged.",
       ],
       new: [
         "ok",
