@@ -1,20 +1,38 @@
 // @ts-nocheck
-/* My Bids (#bids): bid slips grouped into a status board, each with its own progress rail.
-   Statuses: submitted, viewed, accepted, rejected, withdrawn (shows who), completed (feedback). Owner: Builder B. */
+/* My Bids (#bids): bid slips in three tabs, each slip with its own progress rail.
+   Tabs (C8): Active (sent, viewed, shortlisted), Won (accepted), Closed (not selected, withdrawn, completed). A tab
+   with nothing in it is hidden, except Active. The Filter menu narrows to one exact status.
+   Statuses: submitted, viewed (+ shortlisted, a flag from the live layer), accepted, rejected, withdrawn (shows who),
+   completed (feedback). Owner: Builder B.
+   TODO(backend): record brand view/shortlist/decline on bids and send a notification the same day. */
+import { KYC_AFTER_ACCEPT, kycOwed, openKyc } from "../../core/kyc-gate";
+
 (() => {
   const L = window.LLD,
     esc = L.esc;
-  const GROUPS = [
-    { key: "open", title: "Waiting on brands", statuses: ["submitted", "viewed"] },
-    { key: "won", title: "Won", statuses: ["accepted", "completed"] },
-    { key: "closed", title: "Closed", statuses: ["rejected", "withdrawn"] },
+  /* the exact statuses the Filter menu offers; "shortlisted" is a viewed bid the brand shortlisted */
+  const KINDS = ["submitted", "viewed", "shortlisted", "accepted", "rejected", "withdrawn", "completed"];
+  const TABS = [
+    { key: "active", title: "Active", kinds: ["submitted", "viewed", "shortlisted"] },
+    { key: "won", title: "Won", kinds: ["accepted"] },
+    { key: "closed", title: "Closed", kinds: ["rejected", "withdrawn", "completed"] },
   ];
-  const ORDER = ["submitted", "viewed", "accepted", "rejected", "withdrawn", "completed"];
+  const LABEL = {
+    submitted: "Sent",
+    viewed: "Viewed",
+    shortlisted: "Shortlisted",
+    accepted: "Accepted",
+    rejected: "Not selected",
+    withdrawn: "Withdrawn",
+    completed: "Completed",
+  };
+  const kindOf = b => (b.status === "viewed" && b.shortlisted ? "shortlisted" : b.status);
+  const tabOf = k => TABS.find(t => t.kinds.includes(k)) || TABS[0];
   const WHO = { you: "you", brand: "the brand", linkloom: "Linkloom, under the cancellation rule" };
 
-  /* rail: Sent → Viewed → Accepted → Completed, with a branch end for rejected and withdrawn */
+  /* rail: Sent → Viewed (or Shortlisted) → Accepted → Completed, with a branch end for rejected and withdrawn */
   function rail(b) {
-    const steps = ["Sent", "Viewed", "Accepted", "Completed"];
+    const steps = ["Sent", b.shortlisted ? "Shortlisted" : "Viewed", "Accepted", "Completed"];
     const at = { submitted: 0, viewed: 1, accepted: 2, completed: 3 }[b.status];
     if (at !== undefined) {
       return `<ol class="bids-rail" aria-label="Progress">${steps.map((t, i) => `<li class="${i < at ? "is-done" : i === at ? "is-now" : "is-next"}"${i === at ? ' aria-current="step"' : ""}><span>${t}</span></li>`).join("")}</ol>`;
@@ -38,13 +56,16 @@
         s = K.ensure();
       s.bidsUI = s.bidsUI || { status: "" };
       const ui = s.bidsUI;
+      /* ui.status is the exact status from the Filter menu (a KINDS value); ui.tab the tab it sits in */
+      if (ui.status && !KINDS.includes(ui.status)) ui.status = "";
+      if (!TABS.some(t => t.key === ui.tab)) ui.tab = ui.status ? tabOf(ui.status).key : "active";
 
       const info = b => {
         const j = K.job(b.job);
         return {
           brand: j ? j.brand : b.brand || "Brand",
           bi: j ? j.bi : L.initials(b.brand || "B"),
-          title: j ? j.title : b.title || "Job",
+          title: j ? j.title : b.title || "Brief",
           platform: j ? j.platform : b.platform || "instagram",
           format: j ? j.format : b.format || "",
           job: j,
@@ -62,15 +83,26 @@
             by === "you"
               ? `You withdrew this bid${b.at ? " on " + L.fmtDate(b.at) : ""}.`
               : `Cancelled by ${WHO[by] || by}${b.at ? " on " + L.fmtDate(b.at) : ""}.`;
+        /* C10 trial: the bid went out before the ID check, so an accepted bid waits on it */
+        const owed = b.status === "accepted" && kycOwed();
+        if (owed) note = KYC_AFTER_ACCEPT;
         const actions = [];
         if (b.status === "submitted" || b.status === "viewed") {
           actions.push(
             `<button class="lq lq-s lq-sm" type="button" data-withdraw="${esc(b.id)}">Withdraw bid</button>`,
           );
           if (m.job) actions.push(`<a class="btn-q" href="#job-${esc(m.job.id)}">View brief</a>`);
+        } else if (owed) {
+          actions.push(
+            `<button class="lq lq-p lq-sm" type="button" data-verify>${L.icon("shield")}Verify ID</button>`,
+          );
+          if (thread)
+            actions.push(
+              `<a class="btn-q" href="#chat-${esc(thread.id)}">${L.icon("chat")}Message ${esc(m.brand)}</a>`,
+            );
         } else if (b.status === "accepted") {
           actions.push(
-            `<a class="lq lq-p lq-sm" href="${act ? "#work-" + esc(act.id) : "#active"}">Open active job</a>`,
+            `<a class="lq lq-p lq-sm" href="${act ? "#work-" + esc(act.id) : "#active"}">Open your deal</a>`,
           );
           if (thread)
             actions.push(
@@ -88,7 +120,7 @@
           actions.push(`<a class="btn-q" href="#earnings">See payout</a>`);
         } else if (b.status === "rejected") {
           actions.push(
-            `<button class="btn-q" type="button" data-similar="${esc(m.job ? m.job.category : "")}">Find similar jobs${L.icon("arrow")}</button>`,
+            `<button class="btn-q" type="button" data-similar="${esc(m.job ? m.job.category : "")}">Find similar briefs${L.icon("arrow")}</button>`,
           );
         } else if (b.status === "withdrawn" && m.job) {
           actions.push(`<a class="btn-q" href="#job-${esc(m.job.id)}">Open brief to bid again</a>`);
@@ -102,7 +134,7 @@
           <div class="bids-body">
             <div class="bids-top">
               <span class="jobs-brand"><span class="jobs-bi" aria-hidden="true">${esc(m.bi)}</span><span class="jobs-bn">${esc(m.brand)}</span></span>
-              ${K.pill(b.status, b.status === "withdrawn" ? (by === "you" ? "Withdrawn by you" : "Cancelled") : "")}
+              ${b.shortlisted && b.status === "viewed" ? `<span class="pill pill-info">${L.icon("flag")}Shortlisted</span>` : K.pill(b.status, b.status === "withdrawn" ? (by === "you" ? "Withdrawn by you" : "Cancelled") : b.status === "rejected" ? "Not selected" : "")}
             </div>
             <h3 class="bids-t" id="bt-${esc(b.id)}">${esc(m.title)}</h3>
             <p class="bids-sub">${K.glyph(m.platform)}<span>${esc(K.platName(m.platform))} ${esc(m.format)}${b.postDate ? ` · post date ${esc(L.fmtDate(b.postDate))}` : ""}</span></p>
@@ -114,88 +146,149 @@
       }
 
       const counts = () =>
-        ORDER.reduce((o, k) => ((o[k] = s.bids.filter(b => b.status === k).length), o), {});
+        KINDS.reduce((o, k) => ((o[k] = s.bids.filter(b => kindOf(b) === k).length), o), {});
+      const tabCount = (t, c = counts()) => t.kinds.reduce((n, k) => n + c[k], 0);
+      /* Active always shows; Won and Closed only once they have something in them */
+      const shownTabs = (c = counts()) => TABS.filter(t => t.key === "active" || tabCount(t, c) > 0);
 
       function summary() {
         const c = counts();
-        const open = c.submitted + c.viewed,
-          won = c.accepted + c.completed,
-          closed = c.rejected + c.withdrawn;
-        return `${open} waiting on brands, ${won} won, ${closed} closed.`;
+        const parts = [
+          [tabCount(TABS[0], c), "waiting on brands"],
+          [tabCount(TABS[1], c), "won"],
+          [tabCount(TABS[2], c), "closed"],
+        ].filter(([n]) => n > 0);
+        return parts.length ? parts.map(([n, t]) => `${n} ${t}`).join(" · ") : "Bids you send show up here.";
       }
 
       function board() {
-        const list = ui.status ? s.bids.filter(b => b.status === ui.status) : s.bids;
         if (!s.bids.length) {
           return `<div class="empty bids-empty"><img src="assets/step-02-plane.svg" width="72" height="72" alt="">
             <p class="t-h2">No bids yet.</p><p class="muted">Find a brief that fits and send your first bid. It takes about a minute.</p>
-            <a class="lq lq-p" href="#jobs">Find jobs</a></div>`;
+            <a class="lq lq-p" href="#jobs">Find briefs</a></div>`;
         }
+        const tab = TABS.find(t => t.key === ui.tab) || TABS[0];
+        const list = s.bids
+          .filter(b => (ui.status ? kindOf(b) === ui.status : tab.kinds.includes(kindOf(b))))
+          .sort((a, b) => L.D(b.sent) - L.D(a.sent));
         if (!list.length) {
-          return `<div class="empty bids-empty"><p class="t-h2">No ${esc(K.STATUS[ui.status].label.toLowerCase())} bids.</p><button class="lq lq-s" type="button" data-status="">Show all bids</button></div>`;
+          return ui.status
+            ? `<div class="empty bids-empty"><p class="t-h2">No ${esc(LABEL[ui.status].toLowerCase())} bids.</p><button class="lq lq-s" type="button" data-kind="">Show every ${esc(tab.title.toLowerCase())} bid</button></div>`
+            : `<div class="empty bids-empty"><img src="assets/step-02-plane.svg" width="72" height="72" alt="">
+            <p class="t-h2">No bids waiting on brands.</p><p class="muted">Your other bids are under ${shownTabs()
+              .filter(t => t.key !== "active")
+              .map(t => esc(t.title))
+              .join(" and ")}. Find a brief that fits and send a new one.</p>
+            <a class="lq lq-p" href="#jobs">Find briefs</a></div>`;
         }
-        const sortT = (a, b) => L.D(b.sent) - L.D(a.sent);
-        return GROUPS.map(g => {
-          const rows = list.filter(b => g.statuses.includes(b.status)).sort(sortT);
-          if (!rows.length) return "";
-          return `<section class="bids-group" aria-labelledby="bg-${g.key}">
-            <h2 class="bids-gh" id="bg-${g.key}"><span class="t-h2">${g.title}</span><span class="bids-gn num">${rows.length}</span></h2>
-            <div class="bids-list">${rows.map(slip).join("")}</div>
-          </section>`;
-        }).join("");
+        return `<div class="bids-list">${list.map(slip).join("")}</div>`;
       }
 
-      function filters() {
+      function tabs() {
         const c = counts();
-        return (
-          `<button class="chip" type="button" data-status="" aria-pressed="${!ui.status}">All <span class="bids-cn">${s.bids.length}</span></button>` +
-          ORDER.map(
-            k =>
-              `<button class="chip" type="button" data-status="${k}" aria-pressed="${ui.status === k}" ${c[k] ? "" : "disabled"}>${esc(K.STATUS[k].label)} <span class="bids-cn">${c[k]}</span></button>`,
-          ).join("")
-        );
+        return shownTabs(c)
+          .map(
+            t =>
+              `<button class="chip bids-tab" type="button" role="tab" id="bids-tab-${t.key}" data-tab="${t.key}" aria-selected="${ui.tab === t.key}" aria-controls="bidsBoard" tabindex="${ui.tab === t.key ? 0 : -1}">${esc(t.title)} <span class="bids-cn">${tabCount(t, c)}</span></button>`,
+          )
+          .join("");
       }
+
+      function filter() {
+        const c = counts();
+        return `<label class="bids-fl" for="bidsKind">Filter</label>
+          <select class="select bids-kind" id="bidsKind" data-kindsel>
+            <option value="" ${ui.status ? "" : "selected"}>Any status</option>
+            ${KINDS.map(k => `<option value="${k}" ${ui.status === k ? "selected" : ""} ${c[k] ? "" : "disabled"}>${esc(LABEL[k])} · ${c[k]}</option>`).join("")}
+          </select>`;
+      }
+
+      if (s.justSent) {
+        ui.tab = "active"; // a bid just sent is waiting on the brand: open where it is
+        ui.status = "";
+      }
+      if (!shownTabs().some(t => t.key === ui.tab)) ui.tab = "active";
 
       el.innerHTML = `<div class="view-in bids">
         <header class="bids-head">
           <div class="bids-head-t"><h1 class="t-h1">My bids</h1><p class="muted" id="bidsSum">${esc(summary())} <span class="sample">Sample data</span></p></div>
-          <a class="lq lq-s" href="#jobs">${L.icon("search")}Find more jobs</a>
+          <a class="lq lq-s" href="#jobs">${L.icon("search")}Find more briefs</a>
         </header>
-        <div class="chips bids-filter" role="group" aria-label="Filter by status">${filters()}</div>
+        ${
+          s.bids.length
+            ? `<div class="bids-bar">
+          <div class="chips bids-tabs" role="tablist" aria-label="Bids by stage">${tabs()}</div>
+          <div class="bids-filter">${filter()}</div>
+        </div>`
+            : ""
+        }
         <p class="sr-only" id="bidsLive" aria-live="polite"></p>
-        <div class="bids-board" id="bidsBoard">${board()}</div>
+        <div class="bids-board" id="bidsBoard" ${s.bids.length ? `role="tabpanel" aria-labelledby="bids-tab-${ui.tab}"` : ""}>${board()}</div>
       </div>`;
       L.liquid(el);
 
       const $ = q => el.querySelector(q);
-      const refresh = (animate = true, msg) => {
+      /* keepFilter: the Filter menu itself changed, so it is left alone (re-rendering it would drop its focus) */
+      const refresh = (animate = true, msg, keepFilter = false) => {
         const nodes = () => L.$$(".bids-slip", el); // live list: slips are re-rendered, matched by data-id
         const mutate = () => {
+          if (!shownTabs().some(t => t.key === ui.tab)) ui.tab = "active";
           $("#bidsBoard").innerHTML = board();
-          $(".bids-filter").innerHTML = filters();
+          $("#bidsBoard").setAttribute("aria-labelledby", "bids-tab-" + ui.tab);
+          if ($(".bids-tabs")) $(".bids-tabs").innerHTML = tabs();
+          if ($(".bids-filter") && !keepFilter) $(".bids-filter").innerHTML = filter();
           $("#bidsSum").innerHTML = `${esc(summary())} <span class="sample">Sample data</span>`;
           L.liquid($("#bidsBoard"));
         };
         animate ? K.flip(mutate, nodes) : mutate();
         if (msg) $("#bidsLive").textContent = msg;
       };
+      const pickTab = (key, focus) => {
+        ui.tab = key;
+        ui.status = "";
+        const t = TABS.find(x => x.key === key);
+        refresh(true, `Showing ${t.title.toLowerCase()} bids`);
+        const same = el.querySelector(`.bids-tabs [data-tab="${key}"]`);
+        if (same && focus) {
+          same.focus();
+          K.settle && K.settle(same);
+        }
+      };
+
+      el.firstElementChild.addEventListener("change", e => {
+        if (!e.target.matches("[data-kindsel]")) return;
+        const k = e.target.value;
+        ui.status = k;
+        if (k) ui.tab = tabOf(k).key;
+        refresh(true, k ? `Showing ${LABEL[k].toLowerCase()} bids` : "Showing every status", true);
+      });
+      el.firstElementChild.addEventListener("keydown", e => {
+        const t = e.target.closest && e.target.closest("[data-tab]");
+        if (!t || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+        const all = L.$$(".bids-tabs [data-tab]", el);
+        const i = all.indexOf(t);
+        const n =
+          e.key === "Home"
+            ? 0
+            : e.key === "End"
+              ? all.length - 1
+              : (i + (e.key === "ArrowRight" ? 1 : -1) + all.length) % all.length;
+        e.preventDefault();
+        pickTab(all[n].dataset.tab, true);
+      });
 
       el.firstElementChild.addEventListener("click", e => {
         // on this render's root, not the shared #view outlet
         const t = e.target.closest("button");
         if (!t || !el.contains(t)) return;
-        if (t.dataset.status !== undefined) {
-          ui.status = t.dataset.status;
-          refresh(
-            true,
-            ui.status ? `Showing ${K.STATUS[ui.status].label.toLowerCase()} bids` : "Showing all bids",
-          );
-          const same = el.querySelector(`.bids-filter [data-status="${ui.status}"]`);
-          if (same) {
-            same.focus();
-            K.settle && K.settle(same);
-          }
-        } else if (t.dataset.withdraw) withdraw(t.dataset.withdraw);
+        if (t.dataset.tab) pickTab(t.dataset.tab, true);
+        else if (t.dataset.kind !== undefined) {
+          ui.status = "";
+          refresh(true, "Showing every status");
+          const sel = el.querySelector("[data-kindsel]");
+          sel && sel.focus();
+        } else if (t.hasAttribute("data-verify")) openKyc("#bids");
+        else if (t.dataset.withdraw) withdraw(t.dataset.withdraw);
         else if (t.dataset.feedback) feedback(t.dataset.feedback);
         else if (t.dataset.similar !== undefined) {
           Object.assign(s.jobsUI, {

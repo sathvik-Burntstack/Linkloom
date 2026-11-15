@@ -25,10 +25,38 @@
   width: 16px;
   height: 16px;
 }
-.bids-filter .chip[disabled] {
-  opacity: 0.45;
-  cursor: default;
-  pointer-events: none;
+/* tabs (Active · Won · Closed) on the left, the exact-status Filter on the right; wraps instead of running past the edge */
+.bids-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  min-width: 0;
+}
+.bids-tabs {
+  min-width: 0;
+}
+.bids-tabs .chip[aria-selected="true"] {
+  background: var(--ll-ink-text);
+  color: #fff;
+  box-shadow: none;
+}
+.bids-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.bids-fl {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-slate);
+}
+.bids-filter .select,
+.bids-filter .ui-sel {
+  min-width: 184px;
 }
 .bids-cn {
   display: inline-grid;
@@ -43,7 +71,7 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.bids-filter .chip[aria-pressed="true"] .bids-cn {
+.bids-tabs .chip[aria-selected="true"] .bids-cn {
   background: var(--ll-butter);
 }
 
@@ -51,6 +79,9 @@
   display: flex;
   flex-direction: column;
   gap: 48px;
+}
+.bids-board:focus {
+  outline: 0;
 }
 .bids-group {
   display: flex;
@@ -466,18 +497,7 @@
   .bids-board {
     gap: 32px;
   }
-  .bids-filter {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin: -4px calc(-1 * var(--gutr)) 0 calc(-1 * var(--gut));
-    padding: 4px var(--gutr) 8px var(--gut);
-    scroll-padding-inline: var(--gut);
-    scrollbar-width: none;
-  }
-  .bids-filter::-webkit-scrollbar {
-    display: none;
-  }
-  .bids-filter .chip {
+  .bids-tabs .chip {
     flex: none;
   }
   .bids-head .lq {

@@ -1,0 +1,350 @@
+/* The shared brief card (.jobs-card) from brief-card.ts, used on Home and Find briefs. Tokens from core.css only.
+   Brand chip and platform glyph (.jobs-brand, .jobs-plat) stay in jobs.css: My bids and Bid use them too. */
+
+.jobs-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 24px 24px 16px;
+  border-radius: var(--r-lg);
+  background: var(--ll-white);
+  box-shadow: var(--ll-shadow-card);
+  touch-action: pan-y;
+  transition:
+    box-shadow 0.35s var(--ll-ease),
+    transform 0.35s var(--ll-ease);
+}
+.jobs-card:hover {
+  box-shadow: var(--ll-shadow-pin);
+}
+.jobs-card:has(.jobs-card-link:focus-visible) {
+  outline: 2px solid var(--ll-ink-text);
+  outline-offset: 3px;
+}
+.jobs-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.jobs-card-t {
+  font-weight: 600;
+  font-size: 19px;
+  line-height: 25px;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.jobs-card-link {
+  color: var(--ll-ink-text);
+}
+.jobs-card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+}
+.jobs-card-link:focus-visible {
+  outline: 0;
+}
+.jobs-cat {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: -12px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-slate);
+}
+
+/* money first, location directly below the price */
+.jobs-money {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.jobs-price {
+  font-size: 40px;
+  line-height: 1.05;
+  color: var(--ll-ink-text);
+}
+.jobs-loc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-ink-text);
+}
+.jobs-loc svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--ll-slate);
+}
+
+/* field tiles, as on the homepage "Post a brief" step card */
+.jobs-meta {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+}
+.jobs-meta > div {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  background: var(--ll-paper);
+}
+.jobs-meta dt {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ll-slate);
+}
+.jobs-meta dd {
+  margin: 0;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+.jobs-meta dd .muted {
+  font-weight: 500;
+}
+
+/* match % with its reasons; "Best fit" only from BEST_FIT_MIN (brief-card.ts) */
+.jobs-match {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.jobs-best {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 12px;
+  border-radius: var(--r-full);
+  background: var(--ll-ink-text);
+  color: var(--ll-white);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.jobs-pct {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 12px 3px 8px;
+  border-radius: var(--r-full);
+  background: var(--ll-butter);
+  color: var(--ll-ink-text);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.jobs-pct b {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.jobs-why {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.jobs-why li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px 3px 8px;
+  border-radius: var(--r-full);
+  background: var(--ll-paper);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ll-ink-text);
+}
+.jobs-why li::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--ll-coral);
+}
+
+/* actions: Bid on the left, Save and Hide on the right, pinned to the card's foot so rows line up */
+.jobs-acts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--ll-rule);
+}
+.jobs-acts > button,
+.jobs-acts > a {
+  position: relative;
+  z-index: 1;
+}
+.jobs-acts-grow {
+  flex: 1;
+}
+.jobs-acts .chip {
+  padding: 0 12px;
+}
+.jobs-acts .chip svg,
+.jobs-acts .btn-q svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.jobs-save[aria-pressed="true"] {
+  background: var(--ll-ink-text);
+  border-color: var(--ll-ink-text);
+  color: var(--ll-white);
+}
+.jobs-save[aria-pressed="true"] svg path {
+  fill: currentColor;
+}
+.jobs-card .pill {
+  position: relative;
+  z-index: 1;
+}
+.jobs-card.is-hidden-job {
+  opacity: 0.6;
+}
+
+/* feature variant (top match on Home, only when it is a best fit): the money sits in a coral-tinted bid box */
+.jobs-card--feature {
+  gap: 16px;
+  padding: 32px 32px 24px;
+  box-shadow: var(--ll-shadow-pin);
+}
+.jobs-card--feature .jobs-card-t {
+  font-size: 26px;
+  line-height: 32px;
+}
+.jobs-card--feature .jobs-money {
+  padding: 16px 24px;
+  border-radius: var(--r-md);
+  background: var(--ll-coral-subtle);
+}
+.jobs-card--feature .jobs-price {
+  font-size: clamp(48px, 4.4vw, 60px);
+  line-height: 1;
+}
+.jobs-mlab {
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ll-slate);
+  margin-bottom: 4px;
+}
+.jobs-net {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ll-rule);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-ink-text);
+  text-wrap: pretty;
+}
+.jobs-net b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.jobs-net span {
+  color: var(--ll-slate);
+}
+
+@media (max-width: 900px) {
+  .jobs-card {
+    padding: 24px 16px 16px;
+  }
+  .jobs-price {
+    font-size: 36px;
+  }
+  .jobs-card--feature {
+    padding: 24px 16px 16px;
+  }
+  .jobs-card--feature .jobs-card-t {
+    font-size: 22px;
+    line-height: 28px;
+  }
+  .jobs-card--feature .jobs-money {
+    padding: 16px;
+  }
+}
+@media (max-width: 420px) {
+  .jobs-card-top {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+}
+
+/* match ring: fills to the score once, as the card arrives. Transforms/stroke only */
+.jobs-ring {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  transform: rotate(-90deg);
+}
+.jobs-ring circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+.jobs-ring circle:first-child {
+  stroke: rgba(18, 18, 18, 0.14);
+}
+.jobs-ring-v {
+  stroke: var(--ll-ink-text);
+  stroke-dasharray: 100;
+  stroke-linecap: round;
+  animation: jobsRing 0.48s cubic-bezier(0.16, 1, 0.3, 1) 0.24s backwards;
+}
+@keyframes jobsRing {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+.is-settled .jobs-ring-v {
+  animation: none;
+}
+/* saved: the bookmark is stitched shut, dashes close into a line, then it fills */
+.jobs-save.is-stitch svg path,
+.job-save.is-stitch svg path {
+  animation: jobsStitch 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes jobsStitch {
+  0% {
+    stroke-dasharray: 2 2.6;
+    stroke-dashoffset: 9;
+    fill-opacity: 0;
+  }
+  70% {
+    stroke-dasharray: 2 2.6;
+    stroke-dashoffset: 0;
+    fill-opacity: 0;
+  }
+  100% {
+    stroke-dasharray: 4.6 0;
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jobs-ring-v,
+  .is-stitch svg path {
+    animation: none !important;
+  }
+}

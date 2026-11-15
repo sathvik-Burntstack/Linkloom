@@ -1,6 +1,7 @@
-/* Home: greeting, today strip, KYC nudge, Best Match, notifications sheet. Owner: Builder B. */
+/* Home: greeting, ID check bar, today strip, "Briefs for you" and "Your bids" panels, notifications sheet.
+   Panels, stack and spacing tokens come from the shared layout sheet (.ll-*); only Home's own pieces are here. Owner: Builder B. */
 .home {
-  gap: 32px;
+  gap: var(--space-title, 24px);
 }
 
 /* greeting */
@@ -215,61 +216,133 @@
   color: var(--ll-mist);
 }
 
-/* KYC nudge */
-.home-kyc {
+/* ID check: one quiet line with its progress; never the loudest thing on the page (C1) */
+.home-kyc-bar {
   display: flex;
   align-items: center;
-  gap: 16px 24px;
-  padding: 16px 24px 16px 16px;
-  border-radius: var(--r-lg);
-  background: var(--ll-butter);
+  gap: 8px 16px;
+  min-height: 48px;
+  padding: 8px 16px;
+  border-radius: var(--r-md);
+  background: var(--ll-white);
+  box-shadow: inset 0 0 0 1px var(--ll-rule);
+  font-size: 14px;
+  line-height: 20px;
   color: var(--ll-ink-text);
 }
-.home-kyc img {
-  width: 96px;
-  height: auto;
+.home-kyc-bar > svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--ll-slate);
+}
+.home-kyc-bar.is-warn > svg {
+  color: var(--ll-warn-fg);
+}
+.home-kyc-bar.is-err > svg {
+  color: var(--ll-err-fg);
+}
+.home-kyc-bar-t {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-kyc-bar-t b {
+  font-weight: 600;
+}
+.home-kyc-bar-t span {
+  color: var(--ll-slate);
+}
+.home-kyc-prog {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ll-ink-text);
+  font-variant-numeric: tabular-nums;
+}
+.home-kyc-meter {
+  display: inline-flex;
+  gap: 3px;
+}
+.home-kyc-meter i {
+  width: 20px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--ll-paper-raised);
+}
+.home-kyc-meter i.is-done {
+  background: var(--ll-ok-fg);
+}
+.home-kyc-bar .ll-trust {
   flex: none;
 }
-.home-kyc-t {
+.home-kyc-bar .ll-trust svg {
+  width: 14px;
+  height: 14px;
+}
+.home-kyc-go {
+  flex: none;
+}
+.home-kyc-go svg {
+  width: 16px;
+  height: 16px;
+}
+/* ID under review: how long it should take, and a way to keep going meanwhile */
+.home-kyc-wait {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 16px 16px 20px;
+  border-radius: var(--r-lg);
+  background: var(--ll-white);
+  box-shadow: inset 0 0 0 1px var(--ll-rule);
+}
+.home-kyc-ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ll-paper-raised);
+  color: var(--ll-ink-text);
+}
+.home-kyc-ic svg {
+  width: 20px;
+  height: 20px;
+}
+.home-kyc-wait-t {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
   text-wrap: pretty;
 }
-.home-kyc-h {
+.home-kyc-wait-h {
   font-weight: 600;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 24px;
-  letter-spacing: -0.01em;
 }
-.home-kyc .lq {
+.home-kyc-wait .lq {
   flex: none;
 }
 
-/* Best Match */
-.home-match {
+/* Briefs for you / Your bids panels: heading block, then content, --space-items apart */
+.home-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-items, 16px);
 }
-.home-match-h {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.home-match-h > div {
+.home-ph {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-.home-match-h .btn-q svg {
-  width: 16px;
-  height: 16px;
+  gap: var(--space-inside, 8px);
 }
 .home-hint {
   display: none;
@@ -289,36 +362,87 @@
 .home-match-grid {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-items, 16px);
 }
 .home-feat {
   position: relative;
 }
-/* the aside sits in the bid box's top-right corner, opposite the Budget label */
 .home-feat .jobs-money {
   position: relative;
 }
-.home-note {
-  position: absolute;
-  right: 24px;
-  top: 12px;
-  z-index: 1;
-  font-size: 20px;
-  line-height: 24px;
-  transform: rotate(-3deg);
-  transform-origin: right center;
-  color: var(--ll-coral-deep);
-  pointer-events: none;
-  white-space: nowrap;
+/* inside a white panel the cards keep a hairline instead of a lifted shadow */
+.home-panel .jobs-card {
+  box-shadow: inset 0 0 0 1px var(--ll-rule);
+}
+.home-panel .jobs-card:hover {
+  box-shadow:
+    inset 0 0 0 1px var(--ll-rule),
+    var(--ll-shadow-card);
 }
 .home-more {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-items, 16px);
   align-items: stretch;
 }
 .home-more:empty {
   display: none;
+}
+
+/* Your bids: one row per bid, newest first */
+.home-bids-list {
+  display: flex;
+  flex-direction: column;
+}
+.home-bids-list li + li {
+  border-top: 1px solid var(--ll-rule);
+}
+.home-bid {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 64px;
+  padding: 12px 0;
+  color: var(--ll-ink-text);
+}
+.home-bid:hover .home-bid-n {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.home-bid-t {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.home-bid-n {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 22px;
+}
+.home-bid-s {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ll-slate);
+}
+.home-bid-p {
+  flex: none;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.home-bid .pill {
+  flex: none;
+}
+.home-bids-none {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-slate);
 }
 .home-hidden {
   display: flex;
@@ -490,24 +614,15 @@
     flex: 0 0 min(86%, 340px);
     scroll-snap-align: start;
   }
-  .home-kyc {
+  .home-kyc-bar {
     flex-wrap: wrap;
-    align-items: flex-start;
+  }
+  .home-kyc-wait {
+    flex-wrap: wrap;
     padding: 16px;
   }
-  .home-kyc img {
-    width: 72px;
-  }
-  .home-kyc-t {
-    flex-basis: calc(100% - 96px);
-  }
-  .home-kyc .lq {
-    width: 100%;
-  }
-  .home-note {
-    right: 16px;
-    top: 12px;
-    font-size: 18px;
+  .home-kyc-wait-t {
+    flex-basis: calc(100% - 56px);
   }
   .home-more {
     grid-template-columns: minmax(0, 1fr);

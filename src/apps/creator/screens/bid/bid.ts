@@ -1,6 +1,11 @@
 // @ts-nocheck
 /* Bid form (#bid-<id>): a bid slip with live payout receipt, every validation, final summary sheet.
-   Sending needs verified KYC; the draft survives the KYC detour in LLD_DATA.bidDrafts. Owner: Builder B. */
+   Sending needs verified KYC; the draft survives the KYC detour in LLD_DATA.bidDrafts. Owner: Builder B.
+   C10 trial (flags.ts BID_BEFORE_KYC): the bid is sent without the ID check, which is asked for once a brand accepts.
+   TODO(backend): accept bids from unverified creators; block payout until the ID check is approved. */
+import { BID_BEFORE_KYC } from "../../flags";
+import { openKyc } from "../../core/kyc-gate";
+
 (() => {
   const L = window.LLD,
     esc = L.esc;
@@ -91,8 +96,8 @@
     crumb: id => {
       const j = L.jobkit && L.jobkit.job(id);
       return j
-        ? `<a href="#jobs">Find jobs</a> / <a href="#job-${L.esc(j.id)}">${L.esc(j.title)}</a> / Your bid`
-        : '<a href="#jobs">Find jobs</a> / Your bid';
+        ? `<a href="#jobs">Find briefs</a> / <a href="#job-${L.esc(j.id)}">${L.esc(j.title)}</a> / Your bid`
+        : '<a href="#jobs">Find briefs</a> / Your bid';
     },
     nav: "jobs",
     render(el, id) {
@@ -102,7 +107,7 @@
         R = s.bidRules;
       if (!j) {
         el.innerHTML = `<div class="view-in"><div class="empty"><img src="assets/step-01-envelope.svg" width="160" height="117" alt="">
-          <p class="t-h2">This brief is no longer open.</p><p class="muted">Nothing to bid on here.</p><a class="lq lq-p" href="#jobs">See open jobs</a></div></div>`;
+          <p class="t-h2">This brief is no longer open.</p><p class="muted">Nothing to bid on here.</p><a class="lq lq-p" href="#jobs">See open briefs</a></div></div>`;
         return;
       }
       const existing = K.openBid(j.id);
@@ -128,7 +133,7 @@
         (s.bidDrafts[j.id] = { price: "", why: "", views: "", postDate: "", links: [""] });
       if (!d.links || !d.links.length) d.links = [""];
       const kyc = s.kyc.status,
-        verified = kyc === "verified";
+        verified = kyc === "verified" || BID_BEFORE_KYC; // the trial asks for the ID check after acceptance instead
       const kb = KYC_BANNER[kyc] || KYC_BANNER.not_started;
       const touched = new Set();
       let tried = false;
@@ -202,7 +207,7 @@
                 <ul class="bid-links" id="bidLinks" aria-labelledby="bidLinksL"></ul>
                 <div class="bid-links-f">
                   <button class="btn-q" type="button" data-addlink>${L.icon("plus")}Add link</button>
-                  <span class="help" id="bidLinksMax">Up to ${R.maxLinks}. Reels, videos or campaign pages.</span>
+                  <span class="help" id="bidLinksMax">Up to ${R.maxLinks}. Reels, videos or pages from past deals.</span>
                 </div>
                 ${portfolio.length ? `<div class="bid-port"><p class="help">From your profile</p><div class="chips" id="bidPort"></div></div>` : ""}
                 <p class="err" id="bidLinksErr"></p>
@@ -565,7 +570,8 @@
         const links = d.links.map(checkUrl).filter(c => c.ok);
         const uniq = [...new Map(links.map(c => [c.href, c])).values()];
         const kycNow = LLD_DATA.kyc.status,
-          ok = kycNow === "verified";
+          ok = kycNow === "verified" || BID_BEFORE_KYC,
+          later = kycNow !== "verified"; // only reachable unverified with the C10 trial on
         const lead = daysBetween(pd, maxDate);
         L.openSheet({
           title: "Check your bid",
@@ -589,7 +595,7 @@
               <p class="bid-rv-s">The agreed price, in full. Tax as per confirmed rules.</p>
             </div>
             <p class="help bid-rv-rule">${L.icon("info")}You can withdraw until the brand accepts. Once accepted, the price and post date are locked.</p>
-            ${ok ? `<p class="bid-rv-kyc is-ok">${L.icon("check")}ID verified</p>` : `<div class="bid-rv-kyc is-no">${L.icon("shield")}<span>Verify your ID to send. Your draft is saved.</span><button class="lq lq-s lq-sm" type="button" data-kyc2>Verify ID</button></div>`}
+            ${ok && later ? `<p class="bid-rv-kyc is-ok">${L.icon("info")}No ID check needed to send. If the brand accepts, you verify your ID once (about 4 minutes) to start.</p>` : ok ? `<p class="bid-rv-kyc is-ok">${L.icon("check")}ID verified</p>` : `<div class="bid-rv-kyc is-no">${L.icon("shield")}<span>Verify your ID to send. Your draft is saved.</span><button class="lq lq-s lq-sm" type="button" data-kyc2>Verify ID</button></div>`}
             <p class="err" id="bidSendErr" aria-live="assertive"></p>
             <div class="bid-rv-acts">
               <button class="lq lq-p" type="button" data-send ${ok ? "" : 'disabled aria-disabled="true"'}>${L.icon("send")}Send bid</button>
@@ -606,7 +612,7 @@
               });
             const sendBtn = b.querySelector("[data-send]");
             sendBtn.addEventListener("click", () => {
-              if (LLD_DATA.kyc.status !== "verified") {
+              if (LLD_DATA.kyc.status !== "verified" && !BID_BEFORE_KYC) {
                 b.querySelector("#bidSendErr").textContent = "Verify your ID before sending.";
                 return;
               }
@@ -648,8 +654,11 @@
                     sendBtn.removeAttribute("aria-busy");
                     save();
                     if (er && er.code === "KYC_REQUIRED") {
+                      /* the server still wants the ID check first (with the C10 trial on, until the backend allows it):
+                         straight to #kyc, not through the gate, which would open this form again */
                       close(true);
-                      L.kycGate(j.id);
+                      if (BID_BEFORE_KYC) L.toast("Verify your ID to send this bid. Your draft is saved.", "shield");
+                      openKyc("#bid-" + j.id);
                       return;
                     }
                     errEl.textContent = L.live.errorText(er);

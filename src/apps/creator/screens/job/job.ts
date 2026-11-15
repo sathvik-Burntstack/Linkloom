@@ -1,6 +1,8 @@
 // @ts-nocheck
-/* Job detail (#job-<id>): full brief, why it matches, save/share/report, sticky Bid through LLD.kycGate.
+/* Brief detail (#job-<id>): the brief in three blocks (What, Who, Match), save/share/report, sticky Bid through LLD.kycGate.
    Owner: Builder B. Uses LLD.jobkit from jobs.js. */
+import { fitChip } from "../../ui/brief-card";
+
 (() => {
   const L = window.LLD,
     esc = L.esc;
@@ -15,11 +17,11 @@
   L.register("job", {
     title: id => {
       const j = L.jobkit && L.jobkit.job(id);
-      return j ? j.title : "Job";
+      return j ? j.title : "Brief";
     },
     crumb: id => {
       const j = L.jobkit && L.jobkit.job(id);
-      return `<a href="#jobs">Find jobs</a> / ${j ? L.esc(j.title) : "Brief"}`;
+      return `<a href="#jobs">Find briefs</a> / ${j ? L.esc(j.title) : "Brief"}`;
     },
     nav: "jobs",
     render: function render(el, id) {
@@ -40,7 +42,7 @@
         el.innerHTML = `<div class="view-in"><div class="empty">
           <img src="assets/step-01-envelope.svg" width="160" height="117" alt="">
           <p class="t-h2">This brief is no longer open.</p><p class="muted">The brand may have closed it or picked a creator.</p>
-          <a class="lq lq-p" href="#jobs">See open jobs</a></div></div>`;
+          <a class="lq lq-p" href="#jobs">See open briefs</a></div></div>`;
         return;
       }
       const dl = K.daysTo(j.deadline),
@@ -53,57 +55,70 @@
 
       const act = bid && bid.status === "accepted" ? s.active.find(a => a.job === j.id) : null;
       const mineHref = act ? "#work-" + act.id : "#bids";
-      const mineLabel = act ? "Open active job" : "See it in My Bids";
+      const mineLabel = act ? "Open the deal" : "See it in My Bids";
       const bidBlock = bid
         ? `<div class="job-mine">
              <p class="row wrap">${K.pill(bid.status)}<span class="t-small">You bid <b class="num">${L.inr(bid.price)}</b> on ${esc(L.fmtDate(bid.sent))}</span></p>
-             <p class="help">${esc(j.status === "hired" ? "You are hired on this job. Work and chat live in Active jobs." : bid.note || "")}</p>
+             <p class="help">${esc(j.status === "hired" ? "You're hired on this brief. Work and chat live in Active deals." : bid.note || "")}</p>
              <a class="lq lq-p job-bid-btn" href="${esc(mineHref)}">${mineLabel}</a>
            </div>`
         : `${prev ? `<p class="help job-prev">You withdrew a ${L.inr(prev.price)} bid. You can bid again.</p>` : ""}
-           <button class="lq lq-p job-bid-btn" type="button" data-bidnow>Bid on this job</button>
+           <button class="lq lq-p job-bid-btn" type="button" data-bidnow>Bid on this brief</button>
            <p class="job-kyc help">${L.icon(verified ? "check" : "shield")}${verified ? "ID verified. You can send bids." : "ID is checked once, at your first bid. Brands never see it."}</p>`;
 
+      /* a row only renders when it has a value (C4) */
+      const kv = rows =>
+        rows
+          .filter(r => r[1])
+          .map(([k, v]) => `<div class="kv"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`)
+          .join("");
+      const whatKv = kv([
+        ["Usage rights", j.usage],
+        ["Post by", j.deadline ? `${L.fmtDate(j.deadline, { year: true })} · ${K.daysTxt(dl)}` : ""],
+      ]);
+      const whoKv = kv([
+        ["Audience", j.min],
+        ["Languages", (j.languages || []).join(", ")],
+        ["City", j.remote ? "Any city, shoot from home" : j.city ? j.city + ", shoot in the city" : ""],
+      ]);
+      const dels = (j.deliverables || []).filter(Boolean);
+      /* the left column: What, Who, Match, split by a hairline plus space */
+      const blocks = [
+        (j.brief || dels.length || whatKv) &&
+          `<section class="job-blk" aria-labelledby="jobWhatH">
+              <h2 class="job-blk-h" id="jobWhatH">What the brand wants</h2>
+              ${j.brief ? `<p class="job-brief">${esc(j.brief)}</p>` : ""}
+              ${dels.length ? `<div class="job-sub"><h3 class="t-eyebrow muted">Deliverables</h3><ol class="job-dels">${dels.map((d, i) => `<li><span class="job-n">${String(i + 1).padStart(2, "0")}</span><span>${esc(d)}</span></li>`).join("")}</ol></div>` : ""}
+              ${whatKv ? `<dl class="job-kv">${whatKv}</dl>` : ""}
+            </section>`,
+        whoKv &&
+          `<section class="job-blk" aria-labelledby="jobWhoH">
+              <h2 class="job-blk-h" id="jobWhoH">Who it's for</h2>
+              <dl class="job-kv">${whoKv}</dl>
+            </section>`,
+        fac.length &&
+          `<section class="job-blk" aria-labelledby="jobFitH">
+              <div class="job-blk-top"><h2 class="job-blk-h" id="jobFitH">Why it is a match</h2><span class="job-fit-pct">${fitChip(j.match)}</span></div>
+              <ul class="job-fit">${fac.map(f => `<li class="${f.ok ? "is-ok" : "is-no"}"><span class="job-fit-i" aria-hidden="true">${L.icon(f.ok ? "check" : "minus")}</span><span class="job-fit-k">${esc(f.k)}</span><span class="job-fit-v">${esc(f.txt)}</span><span class="sr-only">${f.ok ? "fits" : "does not fit"}</span></li>`).join("")}</ul>
+            </section>`,
+      ].filter(Boolean);
+
       el.innerHTML = `<div class="view-in job">
-        <a class="btn-q job-back" href="#jobs">${L.icon("back")}All jobs</a>
+        <a class="btn-q job-back" href="#jobs">${L.icon("back")}All briefs</a>
         <div class="job-layout">
           <article class="job-main" aria-labelledby="jobH">
             <header class="job-h">
-              <div class="job-src">${K.brandChip(j)}<span class="jobs-plat">${K.glyph(j.platform)}<span>${esc(K.platName(j.platform))} ${esc(j.format)} · ${esc(j.category)}</span></span></div>
+              <div class="job-src">${K.brandChip(j)}<span class="jobs-plat">${K.glyph(j.platform)}<span>${esc(K.platName(j.platform))} ${esc(j.format)}${j.category ? ` · ${esc(j.category)}` : ""}</span></span></div>
               <h1 class="t-h1" id="jobH">${esc(j.title)}</h1>
               <p class="muted t-small">Posted ${esc(L.ago(j.posted))} · <span class="sample">Sample brief</span></p>
-              <div class="job-tools" role="group" aria-label="Job actions">
+              <div class="job-tools" role="group" aria-label="Brief actions">
                 <button class="chip job-save" type="button" aria-pressed="${K.isSaved(j.id)}">${L.icon("bookmark")}<span>${K.isSaved(j.id) ? "Saved" : "Save"}</span></button>
                 <button class="chip job-share" type="button">${L.icon("link")}<span>Share</span></button>
                 <button class="chip job-report" type="button" ${reported ? 'aria-disabled="true"' : ""}>${L.icon("flag")}<span>${reported ? "Reported" : "Report"}</span></button>
               </div>
             </header>
 
-            <section class="job-sec" aria-labelledby="jobBriefH">
-              <h2 class="t-eyebrow muted" id="jobBriefH">The brief</h2>
-              <p class="job-brief">${esc(j.brief)}</p>
-            </section>
-
-            <section class="job-sec" aria-labelledby="jobDelH">
-              <h2 class="t-eyebrow muted" id="jobDelH">Deliverables</h2>
-              <ol class="job-dels">${j.deliverables.map((d, i) => `<li><span class="job-n">${String(i + 1).padStart(2, "0")}</span><span>${esc(d)}</span></li>`).join("")}</ol>
-            </section>
-
-            <section class="job-sec" aria-labelledby="jobReqH">
-              <h2 class="t-eyebrow muted" id="jobReqH">Requirements</h2>
-              <dl class="job-kv">
-                <div class="kv"><dt>Audience</dt><dd>${esc(j.min)}</dd></div>
-                <div class="kv"><dt>Languages</dt><dd>${esc(j.languages.join(", "))}</dd></div>
-                <div class="kv"><dt>Location</dt><dd>${esc(j.remote ? "Any city, shoot from home" : j.city + ", shoot in the city")}</dd></div>
-                <div class="kv"><dt>Usage rights</dt><dd>${esc(j.usage)}</dd></div>
-                <div class="kv"><dt>Post by</dt><dd>${esc(L.fmtDate(j.deadline, { year: true }))} · ${esc(K.daysTxt(dl))}</dd></div>
-              </dl>
-            </section>
-
-            <section class="job-sec" aria-labelledby="jobFitH">
-              <div class="row between wrap"><h2 class="t-eyebrow muted" id="jobFitH">Why it is a match</h2>${K.pct(j.match)}</div>
-              <ul class="job-fit">${fac.map(f => `<li class="${f.ok ? "is-ok" : "is-no"}"><span class="job-fit-i" aria-hidden="true">${L.icon(f.ok ? "check" : "minus")}</span><span class="job-fit-k">${esc(f.k)}</span><span class="job-fit-v">${esc(f.txt)}</span><span class="sr-only">${f.ok ? "fits" : "does not fit"}</span></li>`).join("")}</ul>
-            </section>
+            ${blocks.join('\n            <div class="ll-hairline" aria-hidden="true"></div>\n            ')}
           </article>
 
           <aside class="job-side" aria-label="Budget and bid">
@@ -121,9 +136,9 @@
             </div>
           </aside>
         </div>
-        <div class="job-sticky dark" role="region" aria-label="Bid on this job">
+        <div class="job-sticky dark" role="region" aria-label="Bid on this brief">
           <div class="job-sticky-t"><p class="t-money">${L.inr(j.budget)}</p><p class="jobs-loc">${L.icon("pin")}<span>${esc(K.where(j))}</span></p></div>
-          ${bid ? `<a class="lq lq-p" href="${esc(mineHref)}">${mineLabel}</a>` : `<button class="lq lq-p" type="button" data-bidnow>Bid on this job</button>`}
+          ${bid ? `<a class="lq lq-p" href="${esc(mineHref)}">${mineLabel}</a>` : `<button class="lq lq-p" type="button" data-bidnow>Bid on this brief</button>`}
         </div>
       </div>`;
       L.liquid(el);
@@ -147,7 +162,7 @@
       };
       el.addEventListener("click", onClick);
       K.mo("count", $("[data-budget]"), j.budget, L.inr);
-      K.mo("stagger", L.$$(".job-sec, .job-deal", el));
+      K.mo("stagger", L.$$(".job-blk, .job-deal", el));
 
       async function share(btn) {
         const url = location.href.split("#")[0] + "#job-" + j.id;

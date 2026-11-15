@@ -1,6 +1,9 @@
 // @ts-nocheck
-/* Home (#home): IST greeting, "what needs you today" strip of real objects, KYC nudge, Best Match briefs.
+/* Home (#home): IST greeting, the ID check as one slim bar, "what needs you today" strip of real objects,
+   then the "Briefs for you" and "Your bids" panels. Brief cards come from ui/brief-card.ts, shared with #jobs.
    Also owns the notifications sheet opened by the #bell button in the top bar. Owner: Builder B. */
+import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
+
 (() => {
   const L = window.LLD,
     esc = L.esc;
@@ -106,43 +109,79 @@
             : "Up late";
   }
 
-  const KYC_NUDGE = {
-    not_started: [
-      null,
-      "Verify your ID once, before your first bid.",
-      "PAN, an ID and where to pay you. Checked once, never shown to brands.",
-      "Start verification",
-      "",
-    ],
-    in_progress: [
-      "pill-info",
-      "Finish your ID check.",
-      "You started verification. Pick up where you left off.",
-      "Continue",
-      "In progress",
-    ],
-    under_review: [
-      "pill-info",
-      "Your ID is under review.",
-      "You can draft bids now and send them once it clears.",
-      "See status",
-      "Under review",
-    ],
-    action_needed: [
-      "pill-warn",
-      "One detail needs fixing before you can bid.",
-      "Your verification is paused until it is fixed.",
-      "Fix it",
-      "Action needed",
-    ],
-    rejected: [
-      "pill-err",
-      "Verification was not approved.",
-      "See what to change and try again. Brands never see this.",
-      "See why",
-      "Rejected",
-    ],
-  };
+  /* ---------- ID check: one slim bar (C1), or a waiting card while it is under review ---------- */
+  /* The check has three steps on #kyc: PAN, identity proof, payout. Live data carries kyc.steps; the sample derives it. */
+  const KYC_TOTAL = 3;
+  function kycDone(k) {
+    const st = k.steps;
+    if (st) return [st.pan, st.id, st.bank].filter(Boolean).length;
+    const payout =
+      k.payoutMethod === "bank" ? !!(k.bank && k.bank.acc && k.bank.ifsc && k.bank.holder) : !!k.upi;
+    return [!!(k.pan && k.panName), !!k.idDone, payout].filter(Boolean).length;
+  }
+  /* time left on the ID review: the API's estimate when it sends one, otherwise our promise */
+  // TODO(backend): automatic PAN check so most reviews finish within 2 hours; expose an ETA on GET /v1/kyc/
+  // (for example "reviewEtaAt", the ISO time the review should be done), copied onto kyc.reviewEtaAt by live/creator.ts mapKyc.
+  function reviewLeft(k) {
+    const at = k.reviewEtaAt ? new Date(k.reviewEtaAt).getTime() : NaN;
+    if (!Number.isFinite(at)) return "within 2 hours";
+    const min = Math.round((at - Date.now()) / 6e4);
+    if (min <= 1) return "any minute now";
+    if (min < 60) return `about ${min} min left`;
+    return `about ${Math.round(min / 60)} h left`;
+  }
+  function kycBar(k) {
+    if (k.status === "verified") return "";
+    if (k.status === "under_review")
+      return `<section class="home-kyc-wait" aria-labelledby="homeKycH">
+          <span class="home-kyc-ic" aria-hidden="true">${L.icon("clock")}</span>
+          <div class="home-kyc-wait-t">
+            <p class="home-kyc-wait-h" id="homeKycH">We're checking your ID · ${esc(reviewLeft(k))}</p>
+            <p class="t-small muted">Meanwhile, keep browsing briefs. We'll tell you the moment it's done.</p>
+          </div>
+          <a class="lq lq-s lq-sm" href="#jobs">Browse briefs</a>
+        </section>`;
+    let tone = "",
+      ic = "shield",
+      main,
+      rest,
+      cta = "Continue",
+      prog = "";
+    if (k.status === "action_needed") {
+      tone = " is-warn";
+      ic = "alert";
+      main = "One detail in your ID check needs fixing";
+      rest = k.note || "Fix it to keep bidding.";
+      cta = "Fix it";
+    } else if (k.status === "rejected") {
+      tone = " is-err";
+      ic = "alert";
+      main = "Your ID check was not approved";
+      rest = k.note || "See what to change and try again.";
+      cta = "See why";
+    } else {
+      const done = Math.min(kycDone(k), KYC_TOTAL),
+        left = KYC_TOTAL - done;
+      // progress only once something is done: a new creator never sees "0 of 3"
+      if (done)
+        prog = `<span class="home-kyc-prog"><span class="home-kyc-meter" aria-hidden="true">${Array.from({ length: KYC_TOTAL }, (_, i) => `<i${i < done ? ' class="is-done"' : ""}></i>`).join("")}</span>${done} of ${KYC_TOTAL} done</span>`;
+      if (!left) {
+        main = "Your ID check is ready to send";
+        rest = "send it for review";
+      } else {
+        const mins = Math.max(1, Math.round((4 * left) / KYC_TOTAL));
+        main = `${left} ${left === 1 ? "step" : "steps"} to your first payout`;
+        rest = `about ${mins} ${mins === 1 ? "minute" : "minutes"}`;
+      }
+    }
+    return `<section class="home-kyc-bar${tone}" aria-label="ID check">
+        ${L.icon(ic)}
+        <p class="home-kyc-bar-t" title="${esc(main + " · " + rest)}"><b>${esc(main)}</b><span> · ${esc(rest)}</span></p>
+        ${prog}
+        <p class="ll-trust">${L.icon("lock")}Encrypted. Never shown to brands.</p>
+        <a class="btn-q home-kyc-go" href="#kyc">${esc(cta)}${L.icon("arrow")}</a>
+      </section>`;
+  }
 
   L.register("home", {
     title: "Home",
@@ -174,6 +213,10 @@
         when = `${day} · ${time} IST`;
       } catch (e) {}
 
+      /* one primary button per screen: the first real ask on the page gets it, everything after is outlined */
+      let primaryUsed = false;
+      const prim = () => (primaryUsed ? "lq lq-s lq-sm" : ((primaryUsed = true), "lq lq-p lq-sm"));
+
       /* what needs you today: real objects from active work and money */
       const objs = [];
       s.active
@@ -186,7 +229,7 @@
           <p class="home-from"><span class="jobs-bi" aria-hidden="true">${esc(th ? th.bi : L.initials(a.brand))}</span>${esc(a.brand)} asked</p>
           <blockquote class="home-quote">“${esc(a.revision || "Please take another look.")}”</blockquote>
           <p class="home-job">${esc(a.title)}</p>
-          <div class="home-obj-act"><a class="lq lq-p lq-sm" href="#work-${esc(a.id)}">Open the job</a>${th ? `<a class="btn-q" href="#chat-${esc(th.id)}">Reply</a>` : ""}</div>
+          <div class="home-obj-act"><a class="${prim()}" href="#work-${esc(a.id)}">Open the deal</a>${th ? `<a class="btn-q" href="#chat-${esc(th.id)}">Reply</a>` : ""}</div>
         </li>`);
         });
       s.active
@@ -207,81 +250,105 @@
           <p class="home-money-l">Ready to withdraw</p>
           <p class="t-money home-money-v" data-ready>${L.inr(s.readyToWithdraw)}</p>
           <p class="home-money-s">Cleared funds only.${pending ? ` ${L.inr(pending)} still pending is not included.` : ""}</p>
-          <div class="home-obj-act"><a class="lq lq-p lq-sm" href="#earnings">Withdraw</a><span class="home-money-to">to UPI or bank</span></div>
+          <div class="home-obj-act"><a class="${prim()}" href="#earnings">Withdraw</a><span class="home-money-to">to UPI or bank</span></div>
         </li>`);
       }
 
-      const kn = s.kyc.status !== "verified" ? KYC_NUDGE[s.kyc.status] || KYC_NUDGE.not_started : null;
-      const total = K.openJobs().length;
+      /* the lede only says nothing needs you when that is true: no open work, no money waiting, ID check done */
+      const myBids = [...s.bids].sort((a, b) => L.D(b.sent) - L.D(a.sent));
+      const lede = objs.length
+        ? `${WORDS[Math.min(objs.length, 5)]} ${objs.length === 1 ? "needs" : "need"} you today.`
+        : s.kyc.status === "verified"
+          ? "Nothing needs you right now. A good day to find a new brief."
+          : myBids.length
+            ? "Here are the briefs that fit you best."
+            : "Find a brief that fits you and send your first bid.";
+
+      /* Your bids: the latest three that are still in play */
+      const bidRow = b => {
+        const j = K.job(b.job);
+        const brand = j ? j.brand : b.brand || "Brand",
+          title = j ? j.title : b.title || "Brief";
+        const act = b.status === "accepted" ? s.active.find(a => a.job === b.job) : null;
+        return `<li><a class="home-bid" href="${act ? "#work-" + esc(act.id) : "#bids"}">
+            <span class="jobs-bi" aria-hidden="true">${esc(j ? j.bi : L.initials(brand))}</span>
+            <span class="home-bid-t"><span class="home-bid-n">${esc(title)}</span><span class="home-bid-s">${esc(brand)} · sent ${esc(L.fmtDate(b.sent))}</span></span>
+            <span class="home-bid-p">${L.inr(b.price)}</span>
+            ${K.pill(b.status)}
+          </a></li>`;
+      };
+      const shownBids = myBids.filter(b => b.status !== "withdrawn").slice(0, 3);
+      const bidsBody = shownBids.length
+        ? `<ul class="home-bids-list">${shownBids.map(bidRow).join("")}</ul>`
+        : `<p class="home-bids-none">${myBids.length ? "No bids in play right now. Your earlier bids are in My bids." : "No bids yet. Pick a brief above and send your first bid. It takes about a minute."}</p>`;
 
       el.innerHTML = `<div class="view-in home">
         <header class="home-hi">
           <h1 class="home-greet">${esc(greeting(now))}, ${esc(first)}.</h1>
-          <p class="home-lede">${objs.length ? `${WORDS[Math.min(objs.length, 5)]} ${objs.length === 1 ? "needs" : "need"} you today.` : "Nothing needs you right now. A good day to find a new brief."} <span class="sample">Sample data</span></p>
+          <p class="home-lede">${lede} <span class="sample">Sample data</span></p>
         </header>
 
-        ${
-          objs.length
-            ? `<section class="home-today" aria-labelledby="homeTodayH">
-          <h2 class="sr-only" id="homeTodayH">What needs you today</h2>
-          <ul class="home-strip">${objs.join("")}</ul>
-        </section>`
-            : ""
-        }
+        ${kycBar(s.kyc)}
 
-        ${
-          kn
-            ? `<section class="home-kyc" aria-label="ID verification">
-          <img src="assets/trust-id-card.svg" width="96" height="74" alt="">
-          <div class="home-kyc-t">${kn[0] ? `<span class="pill ${kn[0]}">${kn[0] === "pill-err" ? L.icon("alert") : ""}${esc(kn[4])}</span>` : ""}<p class="home-kyc-h">${esc(kn[1])}</p><p class="t-small">${esc((/action_needed|rejected/.test(s.kyc.status) && s.kyc.note) || kn[2])}</p></div>
-          <a class="lq lq-p" href="#kyc">${esc(kn[3])}</a>
-        </section>`
-            : ""
-        }
+        <div class="ll-stack home-stack">
+          ${
+            objs.length
+              ? `<section class="home-today" aria-labelledby="homeTodayH">
+            <h2 class="sr-only" id="homeTodayH">What needs you today</h2>
+            <ul class="home-strip">${objs.join("")}</ul>
+          </section>`
+              : ""
+          }
 
-        <section class="home-match" aria-labelledby="homeMatchH">
-          <div class="home-match-h">
-            <div><h2 class="t-h2" id="homeMatchH">Best match for you</h2><p class="muted t-small">Ranked on platform, niche, language, city, budget and deadline.</p></div>
-            <a class="btn-q" href="#jobs">All ${total} jobs${L.icon("arrow")}</a>
-          </div>
-          <p class="home-hint help">${L.icon("info")}Swipe a brief right to save it, left to hide it. The buttons do the same.</p>
-          <div class="home-match-grid" id="homeGrid"></div>
-          <p class="home-hidden" aria-live="polite"></p>
-        </section>
+          <section class="ll-panel home-panel home-match" aria-labelledby="homeMatchH">
+            <div class="home-ph">
+              <div class="ll-panel-head">
+                <h2 class="ll-panel-h" id="homeMatchH">Briefs for you</h2>
+                <a class="ll-panel-more" href="#jobs" aria-label="See all briefs">See all →</a>
+              </div>
+              <p class="ll-panel-sub">Ranked on platform, niche, language, city, budget and deadline.</p>
+            </div>
+            <p class="home-hint help">${L.icon("info")}Swipe a brief right to save it, left to hide it. The buttons do the same.</p>
+            <div class="home-match-grid" id="homeGrid"></div>
+            <p class="home-hidden" aria-live="polite"></p>
+          </section>
+
+          <section class="ll-panel home-panel home-bids" aria-labelledby="homeBidsH">
+            <div class="ll-panel-head">
+              <h2 class="ll-panel-h" id="homeBidsH">Your bids</h2>
+              ${myBids.length ? '<a class="ll-panel-more" href="#bids" aria-label="See all your bids">See all →</a>' : ""}
+            </div>
+            ${bidsBody}
+          </section>
+        </div>
       </div>`;
       L.liquid(el);
 
       const grid = el.querySelector("#homeGrid");
+      const lead = !primaryUsed; // nothing above needs you, so the top brief's Bid is the one primary button
       let wired = null;
       function picks() {
         return K.openJobs()
           .filter(j => !K.isHidden(j.id) && !K.openBid(j.id))
-          .sort((a, b) => b.match - a.match)
-          .slice(0, 4);
+          .sort((a, b) => b.match - a.match);
       }
       function paint() {
-        const p = picks();
+        const all = picks();
+        // the big card is only for a real best fit (C5); otherwise four equal cards
+        const feat = all.length && all[0].match >= BEST_FIT_MIN ? all[0] : null;
+        const rest = all.slice(feat ? 1 : 0, feat ? 3 : 4);
         if (wired) {
           wired.cleanup();
           grid.classList.add("is-settled");
         } // match rings fill once per visit, not on every repaint
-        grid.innerHTML = p.length
-          ? `<div class="home-feat">${K.card(p[0], { variant: "feature", ctx: "home" })}</div>
-          <div class="home-more">${p
-            .slice(1)
-            .map(j => K.card(j, { ctx: "home" }))
-            .join("")}</div>`
-          : `<div class="empty home-empty"><img src="assets/step-04-orbit.svg" width="160" height="117" alt=""><p class="t-h2">No new matches right now.</p><p class="muted">You have bid on or hidden every brief that fits. New ones arrive most days.</p><a class="lq lq-p" href="#jobs">Browse all jobs</a></div>`;
-        // the handwritten aside sits inside the bid box, so it can never collide with the section header
-        const box = grid.querySelector(".home-feat .jobs-money");
-        if (box)
-          box.insertAdjacentHTML(
-            "afterbegin",
-            '<span class="t-note home-note" aria-hidden="true">your best fit this week</span>',
-          );
+        const anyOpen = K.openJobs().length > 0;
+        grid.innerHTML =
+          feat || rest.length
+            ? `${feat ? `<div class="home-feat">${briefCard(feat, { variant: "feature", ctx: "home", primary: lead })}</div>` : ""}
+          <div class="home-more">${rest.map((j, i) => briefCard(j, { ctx: "home", primary: lead && !feat && i === 0 })).join("")}</div>`
+            : `<div class="empty home-empty"><img src="assets/step-04-orbit.svg" width="160" height="117" alt=""><p class="t-h2">No new matches right now.</p><p class="muted">${anyOpen ? "You have bid on or hidden every brief that fits. New ones arrive most days." : "New briefs arrive most days. The ones that fit you will show up here."}</p>${anyOpen ? `<a class="lq ${lead ? "lq-p" : "lq-s"}" href="#jobs">See all briefs</a>` : ""}</div>`;
         L.liquid(grid);
         wired = K.wire(grid, { onHide: id => hidden(id) });
-        return p;
       }
       function hidden(id) {
         const j = K.job(id);

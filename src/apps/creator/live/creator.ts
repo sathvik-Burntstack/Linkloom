@@ -42,6 +42,7 @@ import {
   toneOf,
   usageText,
 } from "../../../shared/live";
+import { KYC_AFTER_ACCEPT, kycOwed } from "../core/kyc-gate";
 
 /* ---------- backend rows (only the fields the app reads) ---------- */
 
@@ -62,17 +63,26 @@ export interface ApiCampaign extends Obj {
   createdAt: string;
 }
 
-/** What the creator keeps on this device because the backend has no field for it yet. */
+/** What the creator keeps on this device because the backend has no field for it yet: private details brands never
+    see, and list helpers. Everything a brand sees about the creator (platforms, handles, followers, languages, city)
+    is read from and saved to /v1/creators/me/ only, so the own profile, "See what brands see" and the brand's
+    #creator-<id> show the same values (C6).
+    TODO(backend): date of birth, gender and portfolio links on /v1/creators/me/. */
 export interface CreatorExtras {
   dob: string;
   gender: string;
-  languages: string[];
-  region: string;
-  platforms: Me["platforms"];
   portfolio: Me["portfolio"];
   hiddenJobs: string[];
   saved: string[];
 }
+
+/** Keys earlier builds kept on the device for profile fields brands see. Dropped on load, never read (C6). */
+const DEVICE_ONLY_RETIRED = ["languages", "region", "platforms"] as const;
+
+/** A bid with the brand's reply. `status` stays one of the six the screens key off; "shortlisted" is a flag on a
+    viewed bid so Find briefs and Home keep working unchanged.
+    TODO(backend): record brand view/shortlist/decline on bids and send a notification the same day. */
+export type LiveBid = Bid & { shortlisted?: boolean };
 
 /* ---------- the empty state ---------- */
 
@@ -240,15 +250,20 @@ function scoreJob(j: Job, me: Me): void {
   j.reasons = reasons;
 }
 
-export function mapBid(b: Obj, jobs: Job[]): Bid {
+export function mapBid(b: Obj, jobs: Job[]): LiveBid {
   const camp = (b.campaign && typeof b.campaign === "object" ? b.campaign : null) as ApiCampaign | null;
   const jobId = idOf(b.campaign) || String(b.campaignId || "");
   const j = jobs.find(x => x.id === jobId);
-  const status = BID_STATUS[String(b.status || "pending").toLowerCase()] || "submitted";
+  const raw = String(b.status || "pending").toLowerCase();
+  let status = BID_STATUS[raw] || "submitted";
+  /* the brand's reply: a status of its own, or a timestamp on a bid that is otherwise still pending */
+  const shortlisted = raw === "shortlisted" || b.shortlisted === true || !!b.shortlistedAt;
+  if (status === "submitted" && (shortlisted || b.viewedAt || b.viewed === true)) status = "viewed";
+  const brand = j?.brand || nameOf(camp?.brand, "") || nameOf(b.brand, "") || "The brand";
   const sent = isoOr(b.createdAt || b.sentAt, nowIso());
   const deliveryDays = Number(b.deliveryDays) || 0;
   const message = String(b.message || "");
-  const out: Bid = {
+  const out: LiveBid = {
     id: String(b.id),
     job: jobId,
     price: amount(b.price as never),
@@ -257,13 +272,17 @@ export function mapBid(b: Obj, jobs: Job[]): Bid {
     note:
       status === "submitted"
         ? "Waiting for the brand to review."
-        : status === "accepted"
-          ? "The brand picked your bid."
-          : status === "rejected"
-            ? "The brand went with another creator."
-            : status === "withdrawn"
-              ? "You withdrew this bid."
-              : "",
+        : status === "viewed"
+          ? shortlisted
+            ? "You're shortlisted. The brand is choosing now."
+            : `${brand} viewed your bid.`
+          : status === "accepted"
+            ? "The brand picked your bid."
+            : status === "rejected"
+              ? "Not selected this time. The brand went with another creator."
+              : status === "withdrawn"
+                ? "You withdrew this bid."
+                : "",
     postDate: deliveryDays ? addDaysIso(sent, deliveryDays) : j?.deadline || day(sent),
     views: b.expectedViews == null ? null : Number(b.expectedViews),
     why: message,
@@ -284,6 +303,7 @@ export function mapBid(b: Obj, jobs: Job[]): Bid {
     out.by = "you";
     out.at = isoOr(b.updatedAt, sent);
   }
+  if (status === "viewed" && shortlisted) out.shortlisted = true;
   return out;
 }
 
@@ -393,16 +413,55 @@ const NOTIF_GO: Record<string, (d: Obj) => string> = {
   order_approved: () => "#earnings",
 };
 
+/** Bid replies by notification type, so the bell says what happened in plain words.
+    TODO(backend): record brand view/shortlist/decline on bids and send a notification the same day. */
+const BID_REPLY: Record<string, "viewed" | "shortlisted" | "declined" | "accepted"> = {
+  bid_viewed: "viewed",
+  bid_seen: "viewed",
+  bid_shortlisted: "shortlisted",
+  bid_rejected: "declined",
+  bid_declined: "declined",
+  bid_not_selected: "declined",
+  bid_selected: "accepted",
+  bid_accepted: "accepted",
+  bid_hired: "accepted",
+};
+
+/** The brand and brief a bid notification is about, from its data or from what is already loaded. */
+function bidContext(d: Obj): { brand: string; title: string } {
+  const s = store?.s;
+  const jobId = String(d.campaignId || idOf(d.campaign) || "");
+  const bid = s?.bids.find(b => b.id === String(d.bidId || "") || (!!jobId && b.job === jobId));
+  const job = s?.jobs.find(j => j.id === (jobId || bid?.job));
+  return {
+    brand: nameOf(d.brandName || d.brand, "") || job?.brand || bid?.brand || "",
+    title: String(d.campaignTitle || d.briefTitle || "") || job?.title || bid?.title || "",
+  };
+}
+
 export function mapNotification(n: Obj): Notification {
   const data = (n.data || {}) as Obj;
   const type = String(n.type || "");
-  const go =
+  let go =
     NOTIF_GO[type]?.(data) ||
     (data.orderId ? "#work-" + data.orderId : data.campaignId ? "#job-" + data.campaignId : "#home");
+  let text = String(n.title || n.text || n.body || "Update");
+  const reply = BID_REPLY[type];
+  if (reply) {
+    const { brand, title } = bidContext(data);
+    go = "#bids";
+    if (reply === "viewed") text = `${brand || "A brand"} viewed your bid${title ? ` for ${title}` : ""}`;
+    else if (reply === "shortlisted") text = `You're shortlisted${title ? ` for ${title}` : ""}`;
+    else if (reply === "declined") text = `Not selected this time${title ? ` · ${title}` : ""}`;
+    else if (kycOwed()) {
+      text = KYC_AFTER_ACCEPT;
+      go = "#kyc";
+    } else text = `${brand || "The brand"} accepted your bid${title ? ` for ${title}` : ""}`;
+  }
   return {
     id: String(n.id),
     at: isoOr(n.createdAt || n.at, nowIso()),
-    text: String(n.title || n.text || n.body || "Update"),
+    text,
     go,
     read: !!n.read,
   };
@@ -420,8 +479,19 @@ export function mapKyc(k: Obj, prev: Kyc): Kyc {
     driving_licence: "Driving licence",
   };
   const status = KYC_STATUS[String(k.status || "not_started")] || "not_started";
+  /* How long the review should take, when the API says (#kyc and Home show "about 2 h left"; else "within 2 hours").
+     TODO(backend): automatic PAN check; expose an ETA on GET /v1/kyc/. */
+  const etaAt = [k.reviewEtaAt, k.etaAt, k.estimatedCompletionAt, k.eta].find(
+    v => typeof v === "string" && Number.isFinite(Date.parse(v)),
+  ) as string | undefined;
+  const etaMin = Number(k.etaMinutes ?? k.reviewEtaMinutes);
+  const reviewEtaAt =
+    status !== "under_review"
+      ? undefined
+      : etaAt || (etaMin > 0 ? new Date(Date.now() + etaMin * 60000).toISOString() : undefined);
   return {
     ...prev,
+    ...({ reviewEtaAt } as object),
     status,
     pan: pan.done ? `•••••${String(pan.panLast4 || "").padStart(4, "•")}` : "",
     panName: String(pan.nameOnPan || ""),
@@ -443,39 +513,77 @@ export function mapKyc(k: Obj, prev: Kyc): Kyc {
   };
 }
 
+/** The creator's platforms exactly as the server has them, which is also what brands get. Today GET /v1/creators/me/
+    carries primaryPlatform and followerCount (the brand's #creator-<id> reads the same two); a `platforms` object
+    ({ instagram, youtube } with handle, url, followers, avgViews, er) is read as soon as the backend sends one.
+    TODO(backend): store each platform's handle, link, followers, average views and engagement on /v1/creators/me/
+    (PATCH `instagram` / `youtube` as in docs/api/openapi.yaml PlatformUpdate) and return them to brands too. */
+function serverPlatforms(c: Obj): Me["platforms"] {
+  const out: Me["platforms"] = {};
+  const updated = day(c.updatedAt) || todayIst();
+  const given = (c.platforms && typeof c.platforms === "object" ? c.platforms : {}) as Record<string, Obj | null>;
+  for (const key of ["instagram", "youtube"] as const) {
+    const p = given[key];
+    if (!p || typeof p !== "object") continue;
+    const handle = String(p.handle || "");
+    const followers = Number(p.followers ?? p.followerCount) || 0;
+    if (!handle && !followers) continue;
+    out[key] = {
+      handle: handle && !handle.startsWith("@") && key === "instagram" ? "@" + handle : handle,
+      url: String(p.url || ""),
+      followers,
+      avgViews: Number(p.avgViews) || 0,
+      er: Number(p.er ?? p.engagementRate) || 0,
+      updated: day(p.updated || p.updatedAt) || updated,
+      source: String(p.source || "Self-reported"),
+    };
+  }
+  const primary = platformOf(c.primaryPlatform);
+  const followers = Number(c.followerCount) || 0;
+  if (out[primary]) {
+    if (!out[primary].followers && followers) out[primary].followers = followers;
+  } else if (followers)
+    out[primary] = { handle: "", url: "", followers, avgViews: 0, er: 0, updated, source: "Self-reported" };
+  return out;
+}
+
+/** Profile fields brands see come from the server only (C6). Private details the backend has no field for yet
+    (date of birth, gender) and portfolio links still come from the device until it does. */
 function mapMe(c: Obj, user: ApiUser | null, x: Partial<CreatorExtras>, prev: Me): Me {
   const [city, region] = splitLocation(c.location);
   const name = String(c.displayName || user?.fullName || prev.name || "Creator");
-  const primary = platformOf(c.primaryPlatform);
-  const platforms: Me["platforms"] = { ...(x.platforms || {}) };
-  if (!platforms[primary] && c.followerCount)
-    platforms[primary] = {
-      handle: "",
-      url: "",
-      followers: Number(c.followerCount) || 0,
-      avgViews: 0,
-      er: 0,
-      updated: todayIst(),
-      source: "Self-reported",
-    };
+  const platforms = serverPlatforms(c);
   const handle =
     platforms.instagram?.handle ||
     platforms.youtube?.handle ||
     (c.slug ? "@" + String(c.slug).replace(/-[a-z0-9]{6}$/, "") : "");
+  const portfolio = Array.isArray(c.portfolio)
+    ? (c.portfolio as Obj[]).map(w => ({
+        title: String(w.title || "Work"),
+        url: String(w.url || ""),
+        platform: /instagram\.com/i.test(String(w.url))
+          ? ("instagram" as const)
+          : /youtube\.com|youtu\.be/i.test(String(w.url))
+            ? ("youtube" as const)
+            : ("web" as const),
+        format: String(w.format || ""),
+        ...(w.views ? { views: Number(w.views) || 0 } : {}),
+      }))
+    : x.portfolio || prev.portfolio;
   return {
     ...prev,
     name,
     handle,
-    city: city || prev.city,
-    region: region || x.region || prev.region,
-    dob: x.dob || prev.dob,
-    gender: x.gender || prev.gender,
-    languages: x.languages || prev.languages,
+    city,
+    region,
+    dob: String(c.dob || c.dateOfBirth || x.dob || ""),
+    gender: String(c.gender || x.gender || ""),
+    languages: Array.isArray(c.languages) ? (c.languages as string[]) : [],
     categories: Array.isArray(c.categories) ? (c.categories as string[]) : prev.categories,
     bio: String(c.bio ?? prev.bio),
     photo: (c.avatarUrl as string) || null,
     platforms,
-    portfolio: x.portfolio || prev.portfolio,
+    portfolio,
   };
 }
 
@@ -485,7 +593,33 @@ type Store = { s: State; set(fn: (s: State) => void, why?: string): void };
 let store: Store;
 let creatorId = "";
 let userId = "";
+/** The fields the last GET /v1/creators/me/ returned: a profile field is only sent back when the server has it. */
+let serverKeys = new Set<string>();
+/** Fields the server refused on PATCH this visit (unknown or read-only), so they are not sent again. */
+const refused = new Set<string>();
 const ex = () => extras<CreatorExtras>("creator", userId || "anon");
+
+/** Removes device copies of profile fields brands see, written by earlier builds (C6). */
+function dropRetiredExtras(): void {
+  const x = ex().get() as Record<string, unknown>;
+  if (!DEVICE_ONLY_RETIRED.some(k => k in x)) return;
+  const keep = { ...x };
+  DEVICE_ONLY_RETIRED.forEach(k => delete keep[k]);
+  try {
+    localStorage.setItem(`ll-extra-creator-${userId || "anon"}`, JSON.stringify(keep));
+  } catch {
+    /* storage blocked: nothing to clean */
+  }
+}
+
+/** Reads the profile back from the server, so the screen shows exactly what brands see. */
+async function refreshProfile(): Promise<void> {
+  const cme = await api<Obj>("/v1/creators/me/");
+  serverKeys = new Set(Object.keys(cme || {}));
+  store.set(s => {
+    s.me = mapMe(cme || {}, storedUser(), ex().get(), s.me);
+  }, "profile-live");
+}
 
 /** Loads only what a signed-out visitor may see. */
 export async function loadGuest(st: Store): Promise<void> {
@@ -525,6 +659,8 @@ export async function loadCreator(st: Store): Promise<ApiUser> {
   if (user.role === "brand") return user; // the session sends a brand account to its own dashboard
   const [cme, kyc, camps, myBids, orders, convs, notifs, earnings] = await wave;
   creatorId = String(cme.id || "");
+  serverKeys = new Set(Object.keys(cme));
+  dropRetiredExtras();
   const x = ex().get();
   if (creatorId && creatorId !== knownCreator)
     extras<{ creatorId: string }>("creator", userId).set({ creatorId });
@@ -834,6 +970,10 @@ export const creatorApi = {
   },
 
   /* profile */
+  /** Saves to /v1/creators/me/ and reads the profile back, so the screen shows what brands will see (C6). Fields brands
+      see are never kept on the device. Returns the ones the server has no place for yet, for the screen to say so.
+      TODO(backend): `languages` and per-platform `instagram` / `youtube` (handle, followers, avgViews, er) on
+      PATCH /v1/creators/me/, returned on GET /v1/creators/me/ and /v1/creators/<id>/. */
   async saveProfile(p: {
     name?: string;
     bio?: string;
@@ -841,17 +981,71 @@ export const creatorApi = {
     city?: string;
     region?: string;
     primaryPlatform?: "instagram" | "youtube";
+    languages?: string[];
+    platforms?: Me["platforms"];
     extras?: Partial<CreatorExtras>;
-  }): Promise<void> {
-    const body: Obj = {};
-    if (p.name !== undefined) body.displayName = p.name.trim();
-    if (p.bio !== undefined) body.bio = p.bio.trim();
-    if (p.categories !== undefined) body.categories = p.categories;
-    if (p.city !== undefined)
-      body.location = [p.city.trim(), (p.region || "").trim()].filter(Boolean).join(", ");
-    if (p.primaryPlatform) body.primaryPlatform = p.primaryPlatform;
-    if (Object.keys(body).length) await api("/v1/creators/me/", { method: "PATCH", body });
+  }): Promise<{ unsaved: string[] }> {
     if (p.extras) ex().set(p.extras);
+    if (!serverKeys.size) await refreshProfile().catch(() => undefined);
+    const core: Obj = {};
+    if (p.name !== undefined) core.displayName = p.name.trim();
+    if (p.bio !== undefined) core.bio = p.bio.trim();
+    if (p.categories !== undefined) core.categories = p.categories;
+    if (p.city !== undefined)
+      core.location = [p.city.trim(), (p.region || "").trim()].filter(Boolean).join(", ");
+    if (p.primaryPlatform) core.primaryPlatform = p.primaryPlatform;
+    /* fields brands see that only some backend builds store: sent only when the server returned them */
+    const wanted: Obj = {};
+    if (p.languages !== undefined) wanted.languages = p.languages;
+    if (p.platforms) {
+      const num = (n: unknown) => Math.max(0, Math.round(Number(n) || 0));
+      (["instagram", "youtube"] as const).forEach(k => {
+        const x = p.platforms?.[k];
+        wanted[k] = x?.handle
+          ? { handle: x.handle, followers: num(x.followers), avgViews: num(x.avgViews), er: Number(x.er) || 0 }
+          : null;
+      });
+      const primary =
+        p.primaryPlatform ||
+        (p.platforms.instagram?.handle ? "instagram" : p.platforms.youtube?.handle ? "youtube" : "instagram");
+      const f = p.platforms[primary]?.followers;
+      if (f !== undefined) wanted.followerCount = num(f);
+    }
+    const has = (k: string) => (k === "instagram" || k === "youtube" ? serverKeys.has("platforms") : serverKeys.has(k));
+    const ext: Obj = {};
+    const unsaved = new Set<string>();
+    for (const [k, v] of Object.entries(wanted)) {
+      if (has(k) && !refused.has(k)) ext[k] = v;
+      else unsaved.add(k);
+    }
+    const patch = (body: Obj) => api("/v1/creators/me/", { method: "PATCH", body });
+    if (Object.keys(ext).length) {
+      try {
+        await patch({ ...core, ...ext });
+      } catch (e) {
+        /* the server refused a field it does not take (yet): save the rest, and say what was left out */
+        if (!(e instanceof ApiError) || e.status !== 400) throw e;
+        const named = Object.keys(ext).filter(k => e.field(k));
+        const blame = named.length
+          ? named
+          : /unknown|read.?only|not allowed/i.test(e.message)
+            ? Object.keys(ext)
+            : [];
+        if (!blame.length) throw e;
+        blame.forEach(k => {
+          refused.add(k);
+          unsaved.add(k);
+          delete ext[k];
+        });
+        if (Object.keys(core).length + Object.keys(ext).length) await patch({ ...core, ...ext });
+      }
+    } else if (Object.keys(core).length) await patch(core);
+    await refreshProfile();
+    const words = new Set<string>();
+    unsaved.forEach(k =>
+      words.add(k === "languages" ? "languages" : k === "followerCount" ? "follower numbers" : "platform handles"),
+    );
+    return { unsaved: [...words] };
   },
   async uploadAvatar(file: Blob): Promise<string | null> {
     const r = await uploadFile("avatar", file);

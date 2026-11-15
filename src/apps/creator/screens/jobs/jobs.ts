@@ -1,6 +1,8 @@
 // @ts-nocheck
-/* Find Jobs (#jobs) and the shared brief-card kit (LLD.jobkit) used by Home, Job detail, Bid and My Bids.
-   Owner: Builder B. Card classes are .jobs-*; styles in jobs.css. */
+/* Find briefs (#jobs) and the brief kit (LLD.jobkit) used by Home, Job detail, Bid and My Bids.
+   Owner: Builder B. The card markup is ui/brief-card.ts (shared with Home); classes are .jobs-*. */
+import { briefCard } from "../../ui/brief-card";
+
 (() => {
   const L = window.LLD,
     esc = L.esc;
@@ -126,15 +128,18 @@
       ? Math.round(myBids.reduce((n, b) => n + b.price, 0) / myBids.length / 10000) * 10000
       : 0;
     const dl = daysTo(j.deadline);
+    /* a line only exists when the brief asks for it: no category or language on the brief, no line (C4) */
     return [
       {
         k: "Platform",
         ok: !!pf && have >= need,
         txt: pf
-          ? `${platName(j.platform)} ${L.compact(have)} · brand asks ${L.compact(need)}+`
+          ? need
+            ? `${platName(j.platform)} ${L.compact(have)} · brand asks ${L.compact(need)}+`
+            : `You post on ${platName(j.platform)}`
           : `You have not added ${platName(j.platform)}`,
       },
-      {
+      j.category && {
         k: "Category",
         ok: catHit,
         txt: me.categories.includes(j.category)
@@ -143,7 +148,11 @@
             ? `${j.category}, close to your niches`
             : `${j.category} is outside your niches`,
       },
-      { k: "Language", ok: langs.length > 0, txt: langs.length ? langs.join(" or ") : "No shared language" },
+      j.languages.length > 0 && {
+        k: "Language",
+        ok: langs.length > 0,
+        txt: langs.length ? langs.join(" or ") : "No shared language",
+      },
       {
         k: "City",
         ok: cityHit,
@@ -159,53 +168,18 @@
         txt: avg ? `${L.inr(j.budget)} vs your average bid ${L.inr(avg)}` : L.inr(j.budget),
       },
       { k: "Deadline", ok: dl >= 7, txt: `${L.fmtDate(j.deadline)}, ${daysTxt(dl)}` },
-    ];
+    ].filter(Boolean);
   }
 
   /* match % chip with a 12px ring that fills to the score once (CSS, see .jobs-ring) */
   const pct = m =>
     `<span class="jobs-pct" style="--m:${Number(m) || 0}"><svg class="jobs-ring" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" pathLength="100"/><circle class="jobs-ring-v" cx="8" cy="8" r="6" pathLength="100" style="stroke-dashoffset:${100 - (Number(m) || 0)}"/></svg><b>${Number(m) || 0}%</b> match</span>`;
 
-  /* ---------- the brief card ---------- */
+  /* ---------- the brief card: one component for Home and #jobs, see ui/brief-card.ts ---------- */
   function brandChip(j) {
     return `<span class="jobs-brand"><span class="jobs-bi" aria-hidden="true">${esc(brandInitials(j))}</span><span class="jobs-bn">${esc(j.brand)}</span></span>`;
   }
-  function card(j, o = {}) {
-    const feat = o.variant === "feature";
-    const saved = isSaved(j.id),
-      mine = openBid(j.id),
-      dl = daysTo(j.deadline);
-    const reasons = (j.reasons || []).slice(0, feat ? 3 : 2);
-    const tid = `jc-${o.ctx || "x"}-${j.id}`;
-    return `<article class="jobs-card${feat ? " jobs-card--feature" : ""}${saved ? " is-saved" : ""}" data-id="${esc(j.id)}" aria-labelledby="${tid}">
-      <div class="jobs-card-top">
-        ${brandChip(j)}
-        <span class="jobs-plat">${glyph(j.platform)}<span>${esc(platName(j.platform))} ${esc(j.format)}</span></span>
-      </div>
-      <h3 class="jobs-card-t" id="${tid}"><a class="jobs-card-link" href="#job-${esc(j.id)}">${esc(j.title)}</a></h3>
-      <p class="jobs-cat">${esc(j.category)}${mine ? ` · ${pill(mine.status, "You bid · " + STATUS[mine.status].label)}` : ""}</p>
-      <div class="jobs-money">
-        ${feat ? '<p class="jobs-mlab">Budget</p>' : ""}
-        <p class="jobs-price t-money">${L.inr(j.budget)}</p>
-        <p class="jobs-loc">${L.icon("pin")}<span>${esc(where(j))}</span></p>
-        ${feat ? `<p class="jobs-net">Bid the budget and you receive <b>${L.inr(L.payout(j.budget).net)}</b>, the agreed price. <span>Tax as per confirmed rules.</span></p>` : ""}
-      </div>
-      <dl class="jobs-meta">
-        <div><dt>Deadline</dt><dd>${esc(L.fmtDate(j.deadline))} <span class="muted">· ${esc(daysShort(dl))}</span></dd></div>
-        <div><dt>Bids</dt><dd>${j.bids}</dd></div>
-      </dl>
-      <div class="jobs-match">
-        ${pct(j.match)}
-        <ul class="jobs-why" aria-label="Why it matches">${reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>
-      </div>
-      <div class="jobs-acts">
-        ${feat && !mine ? `<button class="lq lq-p lq-sm jobs-bid" type="button" data-bid="${esc(j.id)}">Bid on this</button>` : ""}
-        <span class="jobs-acts-grow"></span>
-        <button class="ibtn jobs-save" type="button" aria-pressed="${saved}" aria-label="${saved ? "Saved" : "Save"}: ${esc(j.title)}" title="Save (or swipe right)">${L.icon("bookmark")}</button>
-        <button class="ibtn jobs-hide" type="button" aria-label="Hide: ${esc(j.title)}" title="Hide (or swipe left)">${L.icon("close")}</button>
-      </div>
-    </article>`;
-  }
+  const card = (j, o = {}) => briefCard(j, o);
 
   /* ---------- save / hide ---------- */
   function setSaved(id, on) {
@@ -224,6 +198,8 @@
       if (b) {
         b.setAttribute("aria-pressed", on);
         b.setAttribute("aria-label", `${on ? "Saved" : "Save"}: ${j ? j.title : ""}`);
+        const l = b.querySelector(".jobs-act-l");
+        if (l) l.textContent = on ? "Saved" : "Save";
         stitch(b, on);
       }
     });
@@ -405,7 +381,7 @@
 
   /* ---------- #jobs ---------- */
   L.register("jobs", {
-    title: "Find jobs",
+    title: "Find briefs",
     nav: "jobs",
     render(el) {
       const s = ensure(),
@@ -417,11 +393,11 @@
       el.innerHTML = `<div class="view-in jobs">
         <header class="jobs-head">
           <div class="jobs-head-t">
-            <h1 class="t-h1">Find jobs</h1>
-            <p class="muted">${open} brands want creators this week. <span class="sample">Sample data</span></p>
+            <h1 class="t-h1">Find briefs</h1>
+            <p class="muted">${open ? `${open} ${open === 1 ? "brand wants" : "brands want"} creators this week. Bid on the ones that fit you.` : "No open briefs right now. New ones arrive most days."} <span class="sample">Sample data</span></p>
           </div>
           <div class="jobs-search">
-            <label class="sr-only" for="jobsQ">Search jobs</label>
+            <label class="sr-only" for="jobsQ">Search briefs</label>
             ${L.icon("search")}
             <input class="input" id="jobsQ" type="search" autocomplete="off" placeholder="Search brand, product, city" value="${esc(ui.q)}">
           </div>
@@ -439,19 +415,19 @@
               <div class="chips" role="group" aria-labelledby="jobsCatL">${cats.map(c => `<button class="chip" type="button" data-cat="${esc(c)}">${esc(c)}</button>`).join("")}</div></div>
             <div class="field"><span class="lab" id="jobsMinL">Minimum budget</span>
               <div class="chips" role="group" aria-labelledby="jobsMinL">${BUDGETS.map(b => `<button class="chip" type="button" data-min="${b}">${budgetLabel(b)}</button>`).join("")}</div></div>
-            <label class="check jobs-saved-only"><input type="checkbox" id="jobsSaved"> Saved jobs only</label>
+            <label class="check jobs-saved-only"><input type="checkbox" id="jobsSaved"> Saved briefs only</label>
           </aside>
-          <section class="jobs-results" aria-label="Jobs">
+          <section class="jobs-results" aria-label="Briefs">
             <div class="jobs-bar">
               <p class="jobs-count" id="jobsCount" aria-live="polite"></p>
               <button class="lq lq-s lq-sm jobs-ftoggle" type="button" aria-expanded="false" aria-controls="jobsFilters">Filters</button>
-              <div class="jobs-sort"><label class="sr-only" for="jobsSort">Sort jobs</label>
+              <div class="jobs-sort"><label class="sr-only" for="jobsSort">Sort briefs</label>
                 <select class="select" id="jobsSort">${Object.entries(SORTS)
                   .map(([k, v]) => `<option value="${k}">${v}</option>`)
                   .join("")}</select></div>
             </div>
             <p class="jobs-live help">${L.icon("info")}Bid counts are live and leave out withdrawn bids.</p>
-            <p class="jobs-offline" role="status" hidden>${L.icon("alert")}You are offline. These are the jobs from your last visit.</p>
+            <p class="jobs-offline" role="status" hidden>${L.icon("alert")}You are offline. These are the briefs from your last visit.</p>
             <div class="jobs-list" id="jobsList">${pool.map(j => card(j, { ctx: "list" })).join("")}</div>
             <div class="empty jobs-empty" hidden>
               <img src="assets/step-01-envelope.svg" width="160" height="117" alt="">
@@ -518,7 +494,7 @@
         list.hidden = !ids.length;
         const hl = $(".jobs-hidden-line");
         hl.innerHTML = hiddenCount
-          ? `${hiddenCount} hidden ${hiddenCount === 1 ? "job" : "jobs"} · <button class="btn-q" type="button" data-showhidden>${ui.showHidden ? "Hide them again" : "Show"}</button>`
+          ? `${hiddenCount} hidden ${hiddenCount === 1 ? "brief" : "briefs"} · <button class="btn-q" type="button" data-showhidden>${ui.showHidden ? "Hide them again" : "Show"}</button>`
           : "";
         syncControls();
         persistUI();

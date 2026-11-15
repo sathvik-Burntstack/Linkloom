@@ -1,4 +1,4 @@
-/* Job detail (#job-<id>). Owner: Builder B. Card bits (.jobs-*) come from jobs.css. */
+/* Brief detail (#job-<id>). Owner: Builder B. Card bits (.jobs-*) come from jobs.css and ui/brief-card.css. */
 .job {
   gap: 24px;
 }
@@ -60,12 +60,35 @@
   box-shadow: inset 0 0 0 1.5px var(--ll-rule);
 }
 
-.job-sec {
+/* the left column reads as three blocks (What, Who, Match); .ll-hairline between them gives rule plus space */
+.job-blk {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 24px 0;
-  border-top: 1px solid var(--ll-rule);
+  gap: var(--space-items, 16px);
+}
+.job-blk-h {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  color: var(--ll-ink-text);
+}
+.job-blk-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.job-fit-pct {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.job-sub {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-inside, 8px);
 }
 .job-brief {
   max-width: 62ch;
