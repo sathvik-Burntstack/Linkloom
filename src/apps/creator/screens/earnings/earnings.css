@@ -74,6 +74,9 @@
   width: 18px;
   height: 18px;
 }
+.earnings-cta .earnings-trust {
+  flex-basis: 100%;
+}
 .earnings-to {
   font-size: 14px;
   line-height: 20px;

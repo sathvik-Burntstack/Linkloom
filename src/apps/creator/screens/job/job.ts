@@ -2,6 +2,7 @@
 /* Brief detail (#job-<id>): the brief in three blocks (What, Who, Match), save/share/report, sticky Bid through LLD.kycGate.
    Owner: Builder B. Uses LLD.jobkit from jobs.js. */
 import { fitChip } from "../../ui/brief-card";
+import { skeletonHtml } from "@/shared/ux";
 
 (() => {
   const L = window.LLD,
@@ -31,7 +32,7 @@ import { fitChip } from "../../ui/brief-card";
       if (!j && L.live && !L.live.guest && !render.tried?.[id]) {
         /* a link to a brief that isn't in the open list (closed, or opened from a notification) */
         (render.tried = render.tried || {})[id] = true;
-        el.innerHTML = `<div class="view-in"><div class="empty" role="status"><p class="t-h2">Loading the brief…</p></div></div>`;
+        el.innerHTML = skeletonHtml("Loading the brief", false); // F4: page-shaped placeholder, not a blank area
         L.live.fetchJob(id).then(
           () => L.current()?.name === "job" && L.route(),
           () => L.current()?.name === "job" && L.route(),

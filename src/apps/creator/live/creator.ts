@@ -521,7 +521,10 @@ export function mapKyc(k: Obj, prev: Kyc): Kyc {
 function serverPlatforms(c: Obj): Me["platforms"] {
   const out: Me["platforms"] = {};
   const updated = day(c.updatedAt) || todayIst();
-  const given = (c.platforms && typeof c.platforms === "object" ? c.platforms : {}) as Record<string, Obj | null>;
+  const given = (c.platforms && typeof c.platforms === "object" ? c.platforms : {}) as Record<
+    string,
+    Obj | null
+  >;
   for (const key of ["instagram", "youtube"] as const) {
     const p = given[key];
     if (!p || typeof p !== "object") continue;
@@ -599,12 +602,23 @@ let serverKeys = new Set<string>();
 const refused = new Set<string>();
 const ex = () => extras<CreatorExtras>("creator", userId || "anon");
 
-/** Removes device copies of profile fields brands see, written by earlier builds (C6). */
-function dropRetiredExtras(): void {
+/** Device copies of profile fields brands see, written by earlier builds (C6). They are never shown any more; a copy is
+    removed only once the server holds that field, so nothing is lost while the backend has no field for it.
+    TODO(backend): store languages and platform handles on /v1/creators/me/, then send these copies up once. */
+function dropRetiredExtras(cme: Obj): void {
   const x = ex().get() as Record<string, unknown>;
-  if (!DEVICE_ONLY_RETIRED.some(k => k in x)) return;
+  const filled = (v: unknown) =>
+    (Array.isArray(v) ? v.length > 0 : v != null && v !== "" && typeof v !== "object") ||
+    (!!v && typeof v === "object" && Object.keys(v).length > 0);
+  const held: Record<(typeof DEVICE_ONLY_RETIRED)[number], boolean> = {
+    languages: filled(cme.languages),
+    region: filled(cme.location),
+    platforms: filled(cme.platforms),
+  };
+  const drop = DEVICE_ONLY_RETIRED.filter(k => k in x && held[k]);
+  if (!drop.length) return;
   const keep = { ...x };
-  DEVICE_ONLY_RETIRED.forEach(k => delete keep[k]);
+  drop.forEach(k => delete keep[k]);
   try {
     localStorage.setItem(`ll-extra-creator-${userId || "anon"}`, JSON.stringify(keep));
   } catch {
@@ -660,7 +674,7 @@ export async function loadCreator(st: Store): Promise<ApiUser> {
   const [cme, kyc, camps, myBids, orders, convs, notifs, earnings] = await wave;
   creatorId = String(cme.id || "");
   serverKeys = new Set(Object.keys(cme));
-  dropRetiredExtras();
+  dropRetiredExtras(cme);
   const x = ex().get();
   if (creatorId && creatorId !== knownCreator)
     extras<{ creatorId: string }>("creator", userId).set({ creatorId });
@@ -1002,7 +1016,12 @@ export const creatorApi = {
       (["instagram", "youtube"] as const).forEach(k => {
         const x = p.platforms?.[k];
         wanted[k] = x?.handle
-          ? { handle: x.handle, followers: num(x.followers), avgViews: num(x.avgViews), er: Number(x.er) || 0 }
+          ? {
+              handle: x.handle,
+              followers: num(x.followers),
+              avgViews: num(x.avgViews),
+              er: Number(x.er) || 0,
+            }
           : null;
       });
       const primary =
@@ -1011,7 +1030,8 @@ export const creatorApi = {
       const f = p.platforms[primary]?.followers;
       if (f !== undefined) wanted.followerCount = num(f);
     }
-    const has = (k: string) => (k === "instagram" || k === "youtube" ? serverKeys.has("platforms") : serverKeys.has(k));
+    const has = (k: string) =>
+      k === "instagram" || k === "youtube" ? serverKeys.has("platforms") : serverKeys.has(k);
     const ext: Obj = {};
     const unsaved = new Set<string>();
     for (const [k, v] of Object.entries(wanted)) {
@@ -1043,7 +1063,9 @@ export const creatorApi = {
     await refreshProfile();
     const words = new Set<string>();
     unsaved.forEach(k =>
-      words.add(k === "languages" ? "languages" : k === "followerCount" ? "follower numbers" : "platform handles"),
+      words.add(
+        k === "languages" ? "languages" : k === "followerCount" ? "follower numbers" : "platform handles",
+      ),
     );
     return { unsaved: [...words] };
   },

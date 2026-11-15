@@ -134,7 +134,7 @@ import { KYC_AFTER_ACCEPT, kycOwed, openKyc } from "../../core/kyc-gate";
           <div class="bids-body">
             <div class="bids-top">
               <span class="jobs-brand"><span class="jobs-bi" aria-hidden="true">${esc(m.bi)}</span><span class="jobs-bn">${esc(m.brand)}</span></span>
-              ${b.shortlisted && b.status === "viewed" ? `<span class="pill pill-info">${L.icon("flag")}Shortlisted</span>` : K.pill(b.status, b.status === "withdrawn" ? (by === "you" ? "Withdrawn by you" : "Cancelled") : b.status === "rejected" ? "Not selected" : "")}
+              ${b.shortlisted && b.status === "viewed" ? `<span class="pill pill-info">${L.icon("flag")}Shortlisted</span>` : K.pill(b.status, b.status === "withdrawn" ? (by === "you" ? "Withdrawn by you" : "Cancelled") : LABEL[b.status] || "")}
             </div>
             <h3 class="bids-t" id="bt-${esc(b.id)}">${esc(m.title)}</h3>
             <p class="bids-sub">${K.glyph(m.platform)}<span>${esc(K.platName(m.platform))} ${esc(m.format)}${b.postDate ? ` · post date ${esc(L.fmtDate(b.postDate))}` : ""}</span></p>

@@ -1,6 +1,8 @@
-/* profile screen styles (Builder A). Classes are prefixed .profile- */
+/* profile screen styles (Builder A). Classes are prefixed .profile-
+   Layout: header, then section panels (.ll-panel, src/shared/layout.css) --space-section apart:
+   Audience · Work · Reviews · Private to you (brief: creator profile layout). */
 .profile {
-  gap: 48px;
+  gap: var(--space-section, 48px);
 }
 .profile-bv {
   display: flex;
@@ -120,6 +122,10 @@
   line-height: 20px;
   color: var(--ll-slate);
 }
+.profile-addlang {
+  margin-left: 8px;
+  font-size: 14px;
+}
 .profile-act {
   display: flex;
   flex-direction: column;
@@ -173,31 +179,7 @@
   background: var(--ll-ink-text);
 }
 
-/* audience band (ink) */
-.profile-band {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  padding: 32px;
-  border-radius: var(--r-lg);
-  background: var(--ll-ink-900);
-  color: var(--ll-white);
-}
-.profile-band-h {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px 24px;
-}
-.profile-band .t-eyebrow {
-  color: var(--ll-mist);
-}
-.profile-src {
-  font-size: 13px;
-  line-height: 18px;
-  color: var(--ll-mist);
-}
+/* audience panel: the three headline numbers, then platforms and geography side by side */
 .profile-nums {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -208,7 +190,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 0 24px;
-  border-left: 1px solid var(--ll-ink-700);
+  border-left: 1px solid var(--ll-rule);
   min-width: 0;
 }
 .profile-nums > div:first-child {
@@ -219,50 +201,46 @@
   font-weight: 600;
   font-size: 13px;
   line-height: 18px;
-  color: var(--ll-mist);
+  color: var(--ll-slate);
 }
 .profile-nums dd {
   margin: 0;
-  font-size: clamp(56px, 6vw, 92px);
+  font-size: clamp(48px, 5vw, 72px);
   line-height: 1;
-  color: var(--ll-white);
+  color: var(--ll-ink-text);
 }
 .profile-nums p {
   font-size: 13px;
   line-height: 18px;
-  color: var(--ll-mist);
-}
-.profile-band-empty {
-  color: var(--ll-mist);
-}
-.profile-band-empty .btn-q {
-  color: var(--ll-butter);
+  color: var(--ll-slate);
 }
 
-/* two columns */
-.profile-grid {
+/* two blocks side by side inside a panel (platforms | geography, selected work | track record) */
+.profile-aud-g,
+.profile-work-g {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: 48px;
+  gap: var(--space-items, 16px) 40px;
   align-items: start;
+  padding-top: var(--space-items, 16px);
+  border-top: 1px solid var(--ll-rule);
 }
-.profile-col {
+.profile-sub {
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  gap: 12px;
   min-width: 0;
 }
-.profile-sec {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
+.profile-sub-h {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  color: var(--ll-ink-text);
 }
-.profile-card {
-  padding: var(--pad-card);
-  border-radius: var(--r-lg);
-  background: #fff;
-  box-shadow: var(--ll-shadow-card);
+.profile-revs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-items, 16px);
 }
 
 /* platform rows */
@@ -498,28 +476,16 @@
   color: var(--ll-slate);
 }
 
-/* private panel */
+/* private panel (a .ll-panel; the avatar menu's Settings scrolls here via [data-settings]) */
 .profile-priv {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 32px;
-  border-radius: var(--r-lg);
-  background: var(--ll-paper-raised);
+  scroll-margin-top: 24px;
 }
-.profile-priv-h {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-}
-.profile-priv-h h2 {
+.profile-priv-t {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
-.profile-priv-h svg {
+.profile-priv-t svg {
   width: 18px;
   height: 18px;
 }
@@ -659,7 +625,8 @@
     justify-content: space-between;
     flex-wrap: wrap;
   }
-  .profile-grid {
+  .profile-aud-g,
+  .profile-work-g {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -691,10 +658,6 @@
   .profile-act .lq {
     flex: 1;
   }
-  .profile-band {
-    padding: 24px;
-    gap: 24px;
-  }
   .profile-nums {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
@@ -708,7 +671,7 @@
     row-gap: 0;
     padding: 0 0 16px;
     border-left: 0;
-    border-bottom: 1px solid var(--ll-ink-700);
+    border-bottom: 1px solid var(--ll-rule);
   }
   .profile-nums > div:last-child {
     border-bottom: 0;
@@ -753,9 +716,6 @@
   .profile-geo li {
     grid-template-columns: 92px minmax(0, 1fr) 40px;
     gap: 10px;
-  }
-  .profile-priv {
-    padding: 24px;
   }
   .profile-pe-add {
     grid-template-columns: minmax(0, 1fr);

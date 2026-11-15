@@ -4,7 +4,16 @@
    action_needed and rejected lead back into in_progress for the flagged step only, then to review again.
    Steps: PAN, identity proof, selfie (only for document uploads), payout (UPI or bank), GST (optional), review.
    The selected job (kyc.returnTo) is kept throughout; once verified the creator goes straight back to it.
-   Privacy: raw numbers live only in this module's draft while typing. The store keeps masked values only. */
+   Privacy: raw numbers live only in this module's draft while typing. The store keeps masked values only.
+   C9: one headline (the form's h1), the rail and the "what you need" list show the same steps (plus Review), and
+   "About 4 minutes" sits beside Start verification. Every button that asks for PAN, ID or bank details has a lock and
+   a trust line directly under it. While under review the screen is a waiting card with the time left (kycWaitText). */
+import { kycWaitText } from "../../core/kyc-gate";
+import { BID_BEFORE_KYC } from "../../flags";
+
+/** The trust line that sits directly under a button asking for PAN, ID or bank details. */
+const TRUST = "Encrypted. Never shown to brands.";
+
 (() => {
   const { esc, icon, store } = LLD;
   const LIVE = !import.meta.env.VITE_TEST_HOOKS;
@@ -237,7 +246,7 @@
     <div class="focus kyc">
       <section class="focus-art dark kyc-art" aria-label="Verification progress">
         <p class="kyc-brand"><img src="assets/logo-mark.svg" width="28" height="28" alt=""><span>linkloom</span></p>
-        <h2 class="t-display kyc-line">Verify once. Bid on every brief.</h2>
+        <p class="kyc-art-k">Your ID check</p>
         <ol class="kyc-rail" data-rail></ol>
         <img class="kyc-ill" data-ill src="assets/trust-id-card.svg" width="260" height="180" alt="">
       </section>
@@ -245,7 +254,6 @@
         <div class="kyc-in">
           <div data-job></div>
           <div class="kyc-main" data-main></div>
-          <p class="kyc-safe">${icon("lock")}Encrypted, used only to verify you and pay you. Never shown to brands.</p>
           <div class="kyc-sample" data-sample></div>
         </div>
         <p class="sr-only" aria-live="polite" data-live></p>
@@ -272,7 +280,7 @@
                   : "0" + (i + 1);
           return `<li class="kyc-rail-i is-${st}" ${st === "now" ? 'aria-current="step"' : ""}><span class="kyc-rail-n">${n}</span><span class="kyc-rail-t"><b>${esc(s.t)}</b>${sub && st !== "now" ? `<span class="num">${esc(sub)}</span>` : ""}</span></li>`;
         }).join("") +
-        `<li class="kyc-rail-i kyc-rail-end is-${k.status === "verified" ? "done" : k.status === "under_review" ? "now" : "next"}"><span class="kyc-rail-n">${k.status === "verified" ? icon("check") : icon("shield")}</span><span class="kyc-rail-t"><b>${k.status === "verified" ? "Verified" : "Review"}</b><span>${k.status === "under_review" ? "Checking now" : k.status === "verified" ? "You can bid" : "Up to 24 hours"}</span></span></li>`;
+        `<li class="kyc-rail-i kyc-rail-end is-${k.status === "verified" ? "done" : k.status === "under_review" ? "now" : "next"}"><span class="kyc-rail-n">${k.status === "verified" ? icon("check") : icon("shield")}</span><span class="kyc-rail-t"><b>${k.status === "verified" ? "Verified" : "Review"}</b><span>${k.status === "under_review" ? "Checking · " + esc(kycWaitText(k)) : k.status === "verified" ? "You can bid" : "Usually within 2 hours"}</span></span></li>`;
       const step = k.status === "in_progress" && STEPS[k.step];
       const ill = step
         ? step.art
@@ -407,19 +415,23 @@
 
     /* ---------- not started ---------- */
     function vStart() {
-      const need = [
-        ["PAN card", "For payouts and tax records"],
-        ["Aadhaar or another ID", "Shows the PAN is yours"],
-        ["A selfie, only for document uploads", "Matches you to your ID photo"],
-        ["UPI ID or bank account", "Where your money lands"],
-        ["GST number, if you have one", "Optional"],
-      ];
-      if (LIVE) need.splice(1, 4, ["A photo or PDF of your ID", "Aadhaar, passport, voter ID or driving licence"], ["Your bank account", "Where your money lands"]);
+      /* the same steps, in the same order and with the same names, as the rail on the left (C9) */
+      const what = {
+        pan: "Your PAN card, for payouts and tax records",
+        id: LIVE ? "A photo or PDF of your Aadhaar, passport, voter ID or driving licence" : "Aadhaar or another ID, to show the PAN is yours",
+        selfie: "Only for document uploads, to match you to your ID photo",
+        payout: LIVE ? "Your bank account, where your money lands" : "UPI ID or bank account, where your money lands",
+        gst: "Optional, only if you're registered",
+      };
+      const need = [...STEPS.map(s => [s.t, what[s.id] || ""]), ["Review", "We check it, usually within 2 hours"]];
       main.innerHTML = `
         <div class="kyc-head">${statusPill(K())}<h1 class="t-h1" tabindex="-1">Verify once, then bid</h1>
-          <p class="muted">Brands only accept bids from verified creators. It takes about 4 minutes, and you can stop and pick up where you left off.</p></div>
-        <ol class="kyc-need">${need.map((n, i) => `<li data-st><span class="kyc-need-n num">0${i + 1}</span><span><b>${n[0]}</b><span>${n[1]}</span></span></li>`).join("")}</ol>
-        <div class="kyc-actions"><button class="lq lq-p lq-xl" type="button" data-begin>Start verification ${icon("arrow", "ic")}</button><button class="btn-q" type="button" data-leave>Not now</button></div>`;
+          <p class="muted">${BID_BEFORE_KYC ? "You can bid now. Brands need your ID check before a deal starts, and it's needed for your first payout." : "Brands only accept bids from verified creators."} You can stop and pick up where you left off.</p></div>
+        <ol class="kyc-need">${need.map((n, i) => `<li data-st><span class="kyc-need-n num">0${i + 1}</span><span><b>${esc(n[0])}</b><span>${esc(n[1])}</span></span></li>`).join("")}</ol>
+        <div class="kyc-ask">
+          <div class="kyc-actions"><button class="lq lq-p lq-xl" type="button" data-begin>Start verification ${icon("arrow", "ic")}</button><span class="kyc-time">${icon("clock")}About 4 minutes</span><button class="btn-q kyc-exit" type="button" data-leave>Not now</button></div>
+          <p class="ll-trust">${icon("lock")}${TRUST}</p>
+        </div>`;
       main.querySelector("[data-begin]").addEventListener("click", e => {
         press(e.currentTarget);
         set(k => {
@@ -452,10 +464,13 @@
           </div>
           <div class="kyc-fields" data-fields></div>
           <p class="kyc-formerr" role="alert" data-formerr hidden></p>
-          <div class="kyc-actions">
-            <button class="lq lq-p" type="submit" data-next>${D.fixing ? "Save and review" : "Continue"}</button>
-            ${i > 0 && !D.fixing ? `<button class="lq lq-s" type="button" data-back>${icon("back", "ic")}Back</button>` : ""}
-            <button class="btn-q kyc-exit" type="button" data-leave>Save and exit</button>
+          <div class="kyc-ask">
+            <div class="kyc-actions">
+              <button class="lq lq-p" type="submit" data-next>${D.fixing ? "Save and review" : "Continue"}</button>
+              ${i > 0 && !D.fixing ? `<button class="lq lq-s" type="button" data-back>${icon("back", "ic")}Back</button>` : ""}
+              <button class="btn-q kyc-exit" type="button" data-leave>Save and exit</button>
+            </div>
+            ${s.id === "gst" ? "" : `<p class="ll-trust">${icon("lock")}${TRUST}</p>`}
           </div>
         </form>`;
       const box = main.querySelector("[data-fields]");
@@ -1060,7 +1075,10 @@
           <label class="check"><input type="checkbox" id="kyc-agree"><span>These details are mine and correct. I understand they're used only to verify me and pay me.</span></label>
           <p class="err" data-agree-e aria-live="polite"></p>
           <p class="kyc-formerr" role="alert" data-formerr hidden></p>
-          <div class="kyc-actions"><button class="lq lq-p lq-xl" type="submit" data-submit ${mismatch || missing.length ? "disabled" : ""}>Submit for review</button><button class="btn-q kyc-exit" type="button" data-leave>Save and exit</button></div>
+          <div class="kyc-ask">
+            <div class="kyc-actions"><button class="lq lq-p lq-xl" type="submit" data-submit ${mismatch || missing.length ? "disabled" : ""}>Submit for review</button><button class="btn-q kyc-exit" type="button" data-leave>Save and exit</button></div>
+            <p class="ll-trust">${icon("lock")}${TRUST}</p>
+          </div>
         </form>`;
       main.querySelectorAll("[data-edit]").forEach(b =>
         b.addEventListener("click", () => {
@@ -1138,15 +1156,21 @@
     function vReview() {
       const k = K(),
         j = jobOf(k);
+      /* the waiting card: how long is left (the API's estimate, else "within 2 hours"), and something to do meanwhile.
+         Same words as the card on Home. TODO(backend): automatic PAN check; an ETA on GET /v1/kyc/ (reviewEtaAt). */
       main.innerHTML = `
-        <div class="kyc-head">${statusPill(k)}<h1 class="t-h1" tabindex="-1">We're checking your details</h1>
-          <p class="muted">Usually a few minutes, at most 24 hours. We'll send a notification when it's done${j ? ", and bring you straight back to your bid" : ""}.</p></div>
+        <div class="kyc-head">${statusPill(k)}<h1 class="t-h1" tabindex="-1">We're checking your ID <span class="kyc-eta">· ${esc(kycWaitText(k))}</span></h1>
+          <p class="muted">We'll send a notification when it's done${j ? ", and bring you straight back to your bid" : ""}. Nothing else is needed from you.</p></div>
         <ol class="kyc-track" aria-label="Review progress">
           <li class="is-done" data-st><span></span><b>Submitted</b><span class="t-cap muted num">${k.submittedAt ? esc(new Date(k.submittedAt).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" })) + " IST" : "Today"}</span></li>
           <li class="is-now" data-st><span></span><b>Checking</b><span class="t-cap muted">PAN, ID and payout</span></li>
-          <li data-st><span></span><b>Verified</b><span class="t-cap muted">Bids unlock</span></li>
+          <li data-st><span></span><b>Verified</b><span class="t-cap muted">${BID_BEFORE_KYC ? "Deals and payouts unlock" : "Bids unlock"}</span></li>
         </ol>
-        <div class="kyc-actions"><button class="lq lq-s" type="button" data-go="#jobs">Browse jobs meanwhile</button></div>`;
+        <section class="kyc-wait" data-st aria-labelledby="kycWaitH">
+          <span class="kyc-wait-ic" aria-hidden="true">${icon("clock")}</span>
+          <div class="kyc-wait-t"><p class="kyc-wait-h" id="kycWaitH">Meanwhile, keep browsing briefs</p><p class="muted">We'll tell you the moment it's done.</p></div>
+          <button class="lq lq-p" type="button" data-go="#jobs">Browse briefs</button>
+        </section>`;
     }
 
     /* ---------- verified ---------- */
@@ -1160,7 +1184,7 @@
             <p class="muted">You can bid on any brief now. Payouts go to ${k.payoutMethod === "bank" ? 'bank account <b class="num">' + esc(k.bank.acc) + "</b>" : 'UPI <b class="num">' + esc(k.upi) + "</b>"}.</p></div>
         </div>
         <div class="kyc-actions">
-          ${j ? `<button class="lq lq-p lq-xl" type="button" data-return>Back to your bid ${icon("arrow", "ic")}</button>` : `<button class="lq lq-p lq-xl" type="button" data-go="#jobs">Find jobs ${icon("arrow", "ic")}</button>`}
+          ${j ? `<button class="lq lq-p lq-xl" type="button" data-return>Back to your bid ${icon("arrow", "ic")}</button>` : `<button class="lq lq-p lq-xl" type="button" data-go="#jobs">Find briefs ${icon("arrow", "ic")}</button>`}
           <button class="btn-q" type="button" data-go="#profile">View your profile</button>
         </div>`;
       const r = main.querySelector("[data-return]");
@@ -1210,8 +1234,11 @@
           <p class="muted kyc-small">The payout account has to belong to the PAN holder. Correct whichever one is wrong.</p>`
             : ""
         }
-        <div class="kyc-actions">
-          ${fx.map((f, i) => `<button class="lq ${i ? "lq-s" : "lq-p"}" type="button" data-fix="${f}">${f === "payout" ? "Update bank name" : f === "pan" ? "Correct PAN name" : "Fix " + esc(f)}</button>`).join("")}
+        <div class="kyc-ask">
+          <div class="kyc-actions">
+            ${fx.map((f, i) => `<button class="lq ${i ? "lq-s" : "lq-p"}" type="button" data-fix="${f}">${f === "payout" ? "Update bank name" : f === "pan" ? "Correct PAN name" : "Fix " + esc(f)}</button>`).join("")}
+          </div>
+          <p class="ll-trust">${icon("lock")}${TRUST}</p>
         </div>`;
       main.querySelectorAll("[data-fix]").forEach(b =>
         b.addEventListener("click", () => {
@@ -1236,7 +1263,10 @@
         <div class="kyc-head">${statusPill(k)}<h1 class="t-h1" tabindex="-1">We couldn't verify your ID</h1>
           <p class="muted">${esc(k.note || "The check didn't pass. Try again with a clearer photo or a different ID.")}</p></div>
         <div class="kyc-alert kyc-alert-soft" data-st>${icon("info")}<div><p class="t-label">Bids stay paused until this passes</p><p>Your PAN and payout details are kept. Only the ID step needs redoing.</p></div></div>
-        <div class="kyc-actions"><button class="lq lq-p" type="button" data-retry>Try again</button><button class="btn-q" type="button" data-leave>Not now</button></div>`;
+        <div class="kyc-ask">
+          <div class="kyc-actions"><button class="lq lq-p" type="button" data-retry>Try again</button><button class="btn-q" type="button" data-leave>Not now</button></div>
+          <p class="ll-trust">${icon("lock")}${TRUST}</p>
+        </div>`;
       main.querySelector("[data-retry]").addEventListener("click", e => {
         press(e.currentTarget);
         D.fixing = true;

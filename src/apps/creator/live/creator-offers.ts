@@ -54,7 +54,7 @@ async function paintOffers(): Promise<void> {
   sec.setAttribute("aria-labelledby", "offersH");
   sec.className = "bids-group";
   sec.innerHTML = `<h2 class="bids-gh" id="offersH"><span class="t-h2">Direct offers</span><span class="bids-gn num">${offers.length}</span></h2>
-    <p class="muted">Brands that want to hire you without a brief. Accepting starts the job once they pay into escrow.</p>
+    <p class="muted">Brands that want to hire you without a brief. Accepting starts the deal once they pay into escrow.</p>
     <div class="bids-list">${offers.map(card).join("")}</div>`;
   host.after(sec);
   LLD.liquid(sec);
@@ -75,7 +75,7 @@ async function paintOffers(): Promise<void> {
     try {
       await creatorApi.answerOffer(li.dataset.offer!, accept ? "accepted" : "rejected");
       li.remove();
-      LLD.toast(accept ? "Offer accepted. It's in Active jobs once the brand pays in." : "Offer declined", "check");
+      LLD.toast(accept ? "Offer accepted. It's in Active deals once the brand pays in." : "Offer declined", "check");
       if (!sec.querySelector("[data-offer]")) sec.remove();
     } catch (x) {
       li.querySelectorAll("button").forEach(y => (y.disabled = false));

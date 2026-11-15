@@ -601,6 +601,7 @@ import { openKyc } from "../../core/kyc-gate";
               <button class="lq lq-p" type="button" data-send ${ok ? "" : 'disabled aria-disabled="true"'}>${L.icon("send")}Send bid</button>
               <button class="lq lq-s" type="button" data-edit>Keep editing</button>
             </div>
+            <p class="ll-trust bid-rv-trust">${L.icon("lock")}The brand sees your price and note. Never your ID or payout details.</p>
           </div>`,
           onMount(b, close) {
             b.querySelector("[data-edit]").addEventListener("click", () => close());

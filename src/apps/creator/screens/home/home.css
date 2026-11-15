@@ -211,6 +211,21 @@
 .home-money .home-obj-act {
   padding-top: 16px;
 }
+.home-obj.home-money.is-quiet {
+  background: #fff;
+  color: var(--ll-ink-text);
+  box-shadow: inset 0 0 0 1px var(--ll-rule);
+  -webkit-mask: none;
+  mask: none;
+}
+.home-money.is-quiet .home-money-l,
+.home-money.is-quiet .home-money-s,
+.home-money.is-quiet .home-money-to {
+  color: var(--ll-slate);
+}
+.home-money.is-quiet .home-money-v {
+  color: var(--ll-ink-text);
+}
 .home-money-to {
   font-size: 13px;
   color: var(--ll-mist);

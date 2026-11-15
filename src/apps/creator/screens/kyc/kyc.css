@@ -26,9 +26,14 @@
   line-height: 1;
   letter-spacing: -0.02em;
 }
-.kyc-line {
-  max-width: 10ch;
-  font-size: clamp(40px, 4.2vw, 64px);
+/* one headline on the page (the form's h1, C9): the dark panel only names what the rail is */
+.kyc-art-k {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ll-mist);
 }
 .kyc-ill {
   position: absolute;
@@ -207,22 +212,68 @@
   font-size: 14px;
   line-height: 20px;
 }
-.kyc-safe {
+/* the ask: buttons, then the trust line directly under them (brief: trust next to the ask) */
+.kyc-ask {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding-top: 24px;
-  border-top: 1px solid var(--ll-rule);
-  font-size: 13px;
-  line-height: 18px;
-  color: var(--ll-slate);
+  flex-direction: column;
+  gap: var(--space-inside, 8px);
 }
-.kyc-safe svg {
+.kyc-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-slate);
+  white-space: nowrap;
+}
+.kyc-time svg {
   width: 16px;
   height: 16px;
   flex: none;
-  margin-top: 1px;
-  color: var(--ll-escrow-fg);
+}
+/* under review: time left in the headline, then something to do meanwhile */
+.kyc-eta {
+  color: var(--ll-slate);
+}
+.kyc-wait {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border: 1px solid var(--ll-panel-line, #ececef);
+  border-radius: var(--ll-panel-r, 20px);
+  background: #fff;
+}
+.kyc-wait-ic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ll-info-bg);
+  color: var(--ll-info-fg);
+}
+.kyc-wait-ic svg {
+  width: 20px;
+  height: 20px;
+}
+.kyc-wait-t {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.kyc-wait-h {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+}
+.kyc-wait .lq {
+  flex: none;
 }
 .kyc-sample {
   display: flex;
@@ -698,10 +749,6 @@
     min-height: 0;
     gap: 16px;
     padding-bottom: 24px;
-  }
-  .kyc-line {
-    font-size: 30px;
-    max-width: 16ch;
   }
   .kyc-ill {
     display: none;

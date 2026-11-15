@@ -988,16 +988,16 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
         }, "profile-saved");
         if (LLD.live) {
           const me = store.s.me;
-          LLD.live.saveProfile({
-            extras: {
-              dob: me.dob,
-              gender: me.gender,
+          /* languages and platforms go to the server (C6); then reload what it kept */
+          LLD.live
+            .saveProfile({
               languages: me.languages,
-              region: me.region,
               platforms: me.platforms,
-            },
-          });
-          void LLD.live.reload().catch(() => undefined);
+              extras: { dob: me.dob, gender: me.gender },
+            })
+            .catch(() => undefined)
+            .then(() => LLD.live.reload())
+            .catch(() => undefined);
         }
         D = null;
         LLD.toast(message, "check");

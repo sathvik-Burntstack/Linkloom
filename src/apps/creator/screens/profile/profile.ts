@@ -3,7 +3,11 @@
    Header (photo, name, bio, Edit profile), audience numbers with source and last-updated date, platform rows,
    audience geography, track record, selected work, reviews, and a "Private to you" panel.
    "See what brands see" switches to the brand-safe view: no contact details, no date of birth, no KYC or payout data.
-   #profile-brand opens straight in that view. Edit profile opens a sheet (reuses LLA.photo and LLA.V from setup.js). */
+   #profile-brand opens straight in that view. Edit profile opens a sheet (reuses LLA.photo and LLA.V from setup.js).
+   Layout (brief): header, then section panels 48px apart: Audience · Work · Reviews · Private to you.
+   C7: no languages → no "Creates in" for brands; the owner gets an "Add languages" link to the edit sheet. */
+import { kycWaitText } from "../../core/kyc-gate";
+
 (() => {
   const { esc, icon, store } = LLD;
   const pct = n => (Math.round(n * 10) / 10).toFixed(1).replace(/\.0$/, "") + "%";
@@ -14,7 +18,7 @@
   const STATUS = {
     not_started: ["pill-paper", "Not started", "Verify before your first bid"],
     in_progress: ["pill-info", "In progress", "Pick up where you left off"],
-    under_review: ["pill-info", "Under review", "Usually a few minutes"],
+    under_review: ["pill-info", "Under review", "Usually within 2 hours"],
     verified: ["pill-ok", "Verified", "You can bid on any brief"],
     action_needed: ["pill-warn", "Action needed", "Fix one detail to keep bidding"],
     rejected: ["pill-err", "Rejected", "Try again with a different ID"],
@@ -22,7 +26,9 @@
   const initial = n => (String(n || "").trim()[0] || "?").toUpperCase();
 
   function stats(me) {
-    const ps = Object.entries(me.platforms || {}).filter(([, p]) => p && p.handle);
+    /* a platform counts once it has a handle or a follower count: brands see the follower count from
+       /v1/creators/me/ even before a handle is added, so the owner must see it too (C6) */
+    const ps = Object.entries(me.platforms || {}).filter(([, p]) => p && (p.handle || p.followers > 0));
     const f = ps.reduce((n, [, p]) => n + (p.followers || 0), 0);
     const w = k => (f ? ps.reduce((n, [, p]) => n + (p.followers || 0) * (p[k] || 0), 0) / f : 0);
     const upd = ps
@@ -42,7 +48,11 @@
         k = s.kyc,
         sess = s.session,
         st = stats(me);
-      const [kc, kt, kn] = STATUS[k.status] || STATUS.not_started;
+      const [kc, kt, kn0] = STATUS[k.status] || STATUS.not_started;
+      const kn = k.status === "under_review" ? "We're checking · " + kycWaitText(k) : kn0;
+      const langs = me.languages || [];
+      const handles = st.ps.filter(([, p]) => p.handle);
+      const own = brand ? "hidden" : "";
       const payout =
         k.payoutMethod === "bank" && k.bank && k.bank.acc
           ? `Bank account ${k.bank.acc}`
@@ -60,134 +70,141 @@
         <header class="profile-mast">
           <div class="profile-photo">${me.photo ? `<img src="${esc(me.photo)}" alt="${esc(me.name)}">` : `<span aria-hidden="true">${esc(initial(me.name))}</span>`}</div>
           <div class="profile-id">
-            <p class="t-eyebrow">Creator · ${esc(me.city)}${me.region ? ", " + esc(me.region) : ""}</p>
+            <p class="t-eyebrow">${esc(["Creator", [me.city, me.region].filter(Boolean).join(", ")].filter(Boolean).join(" · "))}</p>
             <h1 class="t-display profile-name">${esc(me.name)}</h1>
-            <ul class="profile-handles">${st.ps.map(([key, p]) => `<li><a href="${esc(href(p.url || ""))}" target="_blank" rel="noopener noreferrer">${icon(PLAT[key] ? PLAT[key][1] : "link")}<span>${esc(p.handle)}</span><span class="sr-only"> on ${esc(PLAT[key] ? PLAT[key][0] : key)}, opens in a new tab</span></a></li>`).join("")}</ul>
-            <p class="profile-bio">${esc(me.bio)}</p>
-            <p class="profile-meta">${(me.categories || []).map(c => `<span class="pill pill-line">${esc(c)}</span>`).join("")}<span class="profile-langs">Creates in ${esc((me.languages || []).join(", "))}</span></p>
+            ${handles.length ? `<ul class="profile-handles">${handles.map(([key, p]) => `<li><a href="${esc(href(p.url || ""))}" target="_blank" rel="noopener noreferrer">${icon(PLAT[key] ? PLAT[key][1] : "link")}<span>${esc(p.handle)}</span><span class="sr-only"> on ${esc(PLAT[key] ? PLAT[key][0] : key)}, opens in a new tab</span></a></li>`).join("")}</ul>` : ""}
+            ${me.bio ? `<p class="profile-bio">${esc(me.bio)}</p>` : ""}
+            <p class="profile-meta">${(me.categories || []).map(c => `<span class="pill pill-line">${esc(c)}</span>`).join("")}${
+              langs.length
+                ? `<span class="profile-langs">Creates in ${esc(langs.join(", "))}</span>`
+                : `<button type="button" class="btn-q profile-addlang" data-addlang data-own ${own}>${icon("plus")}Add languages</button>`
+            }</p>
           </div>
           <div class="profile-act">
             <button type="button" class="profile-switch" role="switch" aria-checked="${brand}" data-switch><span class="profile-knob" aria-hidden="true"></span>See what brands see</button>
-            <button class="lq lq-p" type="button" data-edit ${brand ? "hidden" : ""}>Edit profile</button>
+            <button class="lq lq-p" type="button" data-edit ${own}>Edit profile</button>
           </div>
         </header>
 
-        <section class="profile-band" aria-labelledby="profile-aud">
-          <div class="profile-band-h">
-            <h2 class="t-eyebrow" id="profile-aud">Audience</h2>
-            <p class="profile-src">${esc(st.source || "Self-reported")} · updated ${st.updated ? esc(LLD.fmtDate(st.updated, { year: true })) : "never"}${st.ps.length > 1 ? " · views and engagement weighted by followers" : ""} <span class="sample">Sample</span></p>
-          </div>
-          ${
-            st.ps.length
-              ? `<dl class="profile-nums">
-            <div><dt>Followers</dt><dd class="t-money" data-n="${st.followers}" data-f="c">${esc(LLD.compact(st.followers))}</dd><p>${esc(st.ps.map(([key]) => (PLAT[key] ? PLAT[key][0] : key)).join(" and "))}</p></div>
-            <div><dt>Avg views</dt><dd class="t-money" data-n="${st.views}" data-f="c">${st.views ? esc(LLD.compact(st.views)) : "—"}</dd><p>per post</p></div>
-            <div><dt>Engagement</dt><dd class="t-money" data-n="${st.er}" data-f="p">${st.er ? esc(pct(st.er)) : "—"}</dd><p>engagement rate</p></div>
-          </dl>`
-              : `<p class="profile-band-empty">Add Instagram or YouTube in <button type="button" class="btn-q" data-edit2>Edit profile</button> to show your audience here.</p>`
-          }
-        </section>
+        <div class="ll-stack profile-stack">
+          <section class="ll-panel profile-aud" aria-labelledby="profile-aud">
+            <div class="ll-panel-head"><div>
+              <h2 class="ll-panel-h" id="profile-aud">Audience</h2>
+              <p class="ll-panel-sub">${esc(st.source || "Self-reported")} · updated ${st.updated ? esc(LLD.fmtDate(st.updated, { year: true })) : "never"}${st.ps.length > 1 ? " · views and engagement weighted by followers" : ""} <span class="sample">Sample</span></p>
+            </div></div>
+            ${
+              st.ps.length
+                ? `<dl class="profile-nums">
+              <div><dt>Followers</dt><dd class="t-money" data-n="${st.followers}" data-f="c">${esc(LLD.compact(st.followers))}</dd><p>${esc(st.ps.map(([key]) => (PLAT[key] ? PLAT[key][0] : key)).join(" and "))}</p></div>
+              <div><dt>Avg views</dt><dd class="t-money" data-n="${st.views}" data-f="c">${st.views ? esc(LLD.compact(st.views)) : "—"}</dd><p>per post</p></div>
+              <div><dt>Engagement</dt><dd class="t-money" data-n="${st.er}" data-f="p">${st.er ? esc(pct(st.er)) : "—"}</dd><p>engagement rate</p></div>
+            </dl>`
+                : `<p class="muted">No audience numbers yet.<span data-own ${own}> Add Instagram or YouTube in <button type="button" class="btn-q" data-edit2>Edit profile</button> to show them here.</span></p>`
+            }
+            <div class="profile-aud-g">
+              <section class="profile-sub" aria-labelledby="profile-plat">
+                <h3 class="profile-sub-h" id="profile-plat">Platforms</h3>
+                ${
+                  st.ps.length
+                    ? `<ul class="profile-plats">${st.ps
+                        .map(
+                          ([key, p]) => `
+                  <li class="profile-plat" data-st>
+                    <span class="profile-plat-ic">${icon(PLAT[key] ? PLAT[key][1] : "link")}</span>
+                    <div class="profile-plat-id"><p class="t-h3">${esc(PLAT[key] ? PLAT[key][0] : key)}</p>${p.handle ? `<a href="${esc(href(p.url || ""))}" target="_blank" rel="noopener noreferrer" class="profile-plat-h">${esc(p.handle)}<span class="sr-only">, opens in a new tab</span></a>` : `<span class="t-cap muted" data-own ${own}>Add your handle in Edit profile</span>`}<p class="t-cap muted">${esc(p.source || "Self-reported")} · ${p.updated ? esc(LLD.fmtDate(p.updated)) : "—"}</p></div>
+                    <dl class="profile-plat-n">
+                      <div><dt>${PLAT[key] ? PLAT[key][2] : "Followers"}</dt><dd class="t-money">${p.followers ? esc(LLD.compact(p.followers)) : "—"}</dd></div>
+                      <div><dt>Avg views</dt><dd class="t-money">${p.avgViews ? esc(LLD.compact(p.avgViews)) : "—"}</dd></div>
+                      <div><dt>Engagement</dt><dd class="t-money">${p.er ? esc(pct(p.er)) : "—"}</dd></div>
+                    </dl>
+                  </li>`,
+                        )
+                        .join("")}</ul>`
+                    : `<p class="muted">No platforms yet.<span data-own ${own}> Brands filter by platform, so add at least one.</span></p>`
+                }
+              </section>
+              <section class="profile-sub" aria-labelledby="profile-geo">
+                <h3 class="profile-sub-h" id="profile-geo">Where the audience is</h3>
+                ${
+                  (me.audienceGeo || []).length
+                    ? `<ol class="profile-geo">${me.audienceGeo
+                        .map(
+                          ([city, v]) => `
+                  <li data-st><span class="profile-geo-l">${esc(city)}</span><span class="profile-geo-b" aria-hidden="true"><i style="width:${Math.max(2, (v / geoMax) * 100).toFixed(1)}%" class="${/other/i.test(city) ? "is-other" : ""}"></i></span><span class="profile-geo-v num">${esc(v)}%</span></li>`,
+                        )
+                        .join("")}</ol>
+                  <p class="t-cap muted">Share of followers by city · ${esc(st.source || "Self-reported")}, ${st.updated ? esc(LLD.fmtDate(st.updated, { year: true })) : "—"}</p>`
+                    : `<p class="muted">No audience data yet.</p>`
+                }
+              </section>
+            </div>
+          </section>
 
-        <div class="profile-grid">
-          <div class="profile-col">
-            <section class="profile-sec" aria-labelledby="profile-plat">
-              <h2 class="t-h2" id="profile-plat">Platforms</h2>
-              ${
-                st.ps.length
-                  ? `<ul class="profile-plats">${st.ps
-                      .map(
-                        ([key, p]) => `
-                <li class="profile-plat" data-st>
-                  <span class="profile-plat-ic">${icon(PLAT[key] ? PLAT[key][1] : "link")}</span>
-                  <div class="profile-plat-id"><p class="t-h3">${esc(PLAT[key] ? PLAT[key][0] : key)}</p><a href="${esc(href(p.url || ""))}" target="_blank" rel="noopener noreferrer" class="profile-plat-h">${esc(p.handle)}<span class="sr-only">, opens in a new tab</span></a><p class="t-cap muted">${esc(p.source || "Self-reported")} · ${p.updated ? esc(LLD.fmtDate(p.updated)) : "—"}</p></div>
-                  <dl class="profile-plat-n">
-                    <div><dt>${PLAT[key] ? PLAT[key][2] : "Followers"}</dt><dd class="t-money">${p.followers ? esc(LLD.compact(p.followers)) : "—"}</dd></div>
-                    <div><dt>Avg views</dt><dd class="t-money">${p.avgViews ? esc(LLD.compact(p.avgViews)) : "—"}</dd></div>
-                    <div><dt>Engagement</dt><dd class="t-money">${p.er ? esc(pct(p.er)) : "—"}</dd></div>
-                  </dl>
-                </li>`,
-                      )
-                      .join("")}</ul>`
-                  : `<div class="empty"><img src="assets/step-04-orbit.svg" width="300" height="220" alt=""><p class="t-h3">No platforms yet</p><p class="muted">Brands filter by platform, so add at least one.</p></div>`
-              }
-            </section>
+          <section class="ll-panel profile-workp" aria-labelledby="profile-work">
+            <div class="ll-panel-head">
+              <div><h2 class="ll-panel-h" id="profile-work">Work</h2><p class="ll-panel-sub">Posts you're proud of, and your record on Linkloom.</p></div>
+              <button type="button" class="btn-q" data-edit3 ${own}>${icon("plus")}Add link</button>
+            </div>
+            <div class="profile-work-g">
+              <section class="profile-sub" aria-labelledby="profile-sel">
+                <h3 class="profile-sub-h" id="profile-sel">Selected work</h3>
+                ${
+                  (me.portfolio || []).length
+                    ? `<ol class="profile-work">${me.portfolio
+                        .map(
+                          (w, i) => `
+                  <li data-st><a href="${esc(href(w.url))}" target="_blank" rel="noopener noreferrer">
+                    <span class="profile-work-n num">${String(i + 1).padStart(2, "0")}</span>
+                    <span class="profile-work-t"><b>${esc(w.title)}</b><span>${icon(PLAT[w.platform] ? PLAT[w.platform][1] : "link")}${esc([PLAT[w.platform] ? PLAT[w.platform][0] : "Link", w.format].filter(Boolean).join(" · "))}</span></span>
+                    ${w.views ? `<span class="profile-work-v"><b class="t-money">${esc(LLD.compact(w.views))}</b><span>views</span></span>` : ""}
+                    <span class="profile-work-go">${icon("arrow")}<span class="sr-only">Open, new tab</span></span>
+                  </a></li>`,
+                        )
+                        .join("")}</ol>`
+                    : `<p class="muted">No work links yet.<span data-own ${own}> Add two or three posts you're proud of. Brands open these before they accept a bid.</span></p>`
+                }
+              </section>
+              <section class="profile-sub" aria-labelledby="profile-rec">
+                <h3 class="profile-sub-h" id="profile-rec">Track record</h3>
+                <dl class="profile-rec">
+                  <div><dd class="t-money" data-n="${me.completedJobs || 0}">${esc(me.completedJobs || 0)}</dd><dt>deals completed</dt></div>
+                  <div><dd class="t-money" data-n="${me.totalBids || 0}">${esc(me.totalBids || 0)}</dd><dt>bids sent</dt></div>
+                </dl>
+                <p class="t-cap muted">Completed means the brand approved the work. Counted by Linkloom, not self-reported.</p>
+              </section>
+            </div>
+          </section>
 
-            <section class="profile-sec" aria-labelledby="profile-work">
-              <div class="row between wrap"><h2 class="t-h2" id="profile-work">Selected work</h2>${!brand ? '<button type="button" class="btn-q" data-edit3>' + icon("plus") + "Add link</button>" : ""}</div>
-              ${
-                (me.portfolio || []).length
-                  ? `<ol class="profile-work">${me.portfolio
-                      .map(
-                        (w, i) => `
-                <li data-st><a href="${esc(href(w.url))}" target="_blank" rel="noopener noreferrer">
-                  <span class="profile-work-n num">${String(i + 1).padStart(2, "0")}</span>
-                  <span class="profile-work-t"><b>${esc(w.title)}</b><span>${icon(PLAT[w.platform] ? PLAT[w.platform][1] : "link")}${esc([PLAT[w.platform] ? PLAT[w.platform][0] : "Link", w.format].filter(Boolean).join(" · "))}</span></span>
-                  ${w.views ? `<span class="profile-work-v"><b class="t-money">${esc(LLD.compact(w.views))}</b><span>views</span></span>` : ""}
-                  <span class="profile-work-go">${icon("arrow")}<span class="sr-only">Open, new tab</span></span>
-                </a></li>`,
-                      )
-                      .join("")}</ol>`
-                  : `<div class="empty"><img src="assets/step-01-envelope.svg" width="300" height="220" alt=""><p class="t-h3">No work links yet</p><p class="muted">Add two or three posts you're proud of. Brands open these before they accept a bid.</p></div>`
-              }
-            </section>
-          </div>
+          <section class="ll-panel profile-revp" aria-labelledby="profile-rev">
+            <div class="ll-panel-head"><div><h2 class="ll-panel-h" id="profile-rev">Reviews</h2><p class="ll-panel-sub">What brands said after approving the work.</p></div></div>
+            ${
+              (me.reviews || []).length
+                ? `<div class="profile-revs">${me.reviews
+                    .map(
+                      r => `
+              <figure class="profile-rev" data-st>
+                <blockquote>${esc(r.text)}</blockquote>
+                <figcaption><b>${esc(r.brand)}</b><span class="num">${esc(r.rating)} out of 5</span></figcaption>
+              </figure>`,
+                    )
+                    .join("")}</div>`
+                : `<p class="muted">Reviews appear here after your first approved deal.</p>`
+            }
+          </section>
 
-          <div class="profile-col">
-            <section class="profile-sec profile-card" aria-labelledby="profile-geo">
-              <h2 class="t-h3" id="profile-geo">Where the audience is</h2>
-              ${
-                (me.audienceGeo || []).length
-                  ? `<ol class="profile-geo">${me.audienceGeo
-                      .map(
-                        ([city, v]) => `
-                <li data-st><span class="profile-geo-l">${esc(city)}</span><span class="profile-geo-b" aria-hidden="true"><i style="width:${Math.max(2, (v / geoMax) * 100).toFixed(1)}%" class="${/other/i.test(city) ? "is-other" : ""}"></i></span><span class="profile-geo-v num">${esc(v)}%</span></li>`,
-                      )
-                      .join("")}</ol>
-                <p class="t-cap muted">Share of followers by city · ${esc(st.source || "Self-reported")}, ${st.updated ? esc(LLD.fmtDate(st.updated, { year: true })) : "—"}</p>`
-                  : `<p class="muted">No audience data yet.</p>`
-              }
-            </section>
-
-            <section class="profile-sec profile-card" aria-labelledby="profile-rec">
-              <h2 class="t-h3" id="profile-rec">Track record</h2>
-              <dl class="profile-rec">
-                <div><dd class="t-money" data-n="${me.completedJobs || 0}">${esc(me.completedJobs || 0)}</dd><dt>jobs completed</dt></div>
-                <div><dd class="t-money" data-n="${me.totalBids || 0}">${esc(me.totalBids || 0)}</dd><dt>bids sent</dt></div>
-              </dl>
-              <p class="t-cap muted">Completed means the brand approved the work. Counted by Linkloom, not self-reported.</p>
-            </section>
-
-            <section class="profile-sec" aria-labelledby="profile-rev">
-              <h2 class="t-h3" id="profile-rev">What brands said</h2>
-              ${
-                (me.reviews || []).length
-                  ? me.reviews
-                      .map(
-                        r => `
-                <figure class="profile-rev" data-st>
-                  <blockquote>${esc(r.text)}</blockquote>
-                  <figcaption><b>${esc(r.brand)}</b><span class="num">${esc(r.rating)} out of 5</span></figcaption>
-                </figure>`,
-                      )
-                      .join("")
-                  : `<p class="muted">Reviews appear here after your first approved job.</p>`
-              }
-            </section>
-          </div>
+          <section class="ll-panel profile-priv" aria-labelledby="profile-priv" data-priv data-settings ${own}>
+            <div class="ll-panel-head"><div><h2 class="ll-panel-h profile-priv-t" id="profile-priv">${icon("lock")}Private to you</h2><p class="ll-panel-sub">Brands never see this section.</p></div></div>
+            <dl class="profile-priv-g">
+              <div><dt>Email</dt><dd>${esc(sess.email || "Not added")}</dd></div>
+              ${sess.mobile ? `<div><dt>Mobile</dt><dd class="num">${esc(sess.mobile)}</dd></div>` : ""}
+              <div><dt>Date of birth</dt><dd class="num">${me.dob ? esc(LLD.fmtDate(me.dob, { year: true })) + " · " + esc(age) : "—"}</dd></div>
+              <div><dt>Verification</dt><dd><span class="pill ${kc}">${k.status === "verified" ? icon("check") : ["action_needed", "rejected"].includes(k.status) ? icon("alert") : ""}${kt}</span><span class="t-cap muted">${esc(kn)}</span>${k.status !== "verified" ? '<a class="btn-q" href="#kyc">' + (k.status === "not_started" ? "Start" : k.status === "under_review" ? "See status" : "Fix it") + "</a>" : ""}</dd></div>
+              <div><dt>Payouts go to</dt><dd class="num">${esc(payout || "Not added yet")}</dd></div>
+              ${store.s.plan ? `<div><dt>Plan</dt><dd>${esc(store.s.plan.name)}${store.s.plan.status === "active" && store.s.plan.renews ? '<span class="t-cap muted">Renews ' + esc(LLD.fmtDate(store.s.plan.renews)) + "</span>" : ""}</dd></div>` : ""}
+            </dl>
+            <div class="profile-priv-f"><button type="button" class="lq lq-s lq-sm" data-signout>${icon("logout", "ic")}Sign out</button></div>
+          </section>
         </div>
-
-        <section class="profile-priv" aria-labelledby="profile-priv" data-priv ${brand ? "hidden" : ""}>
-          <div class="profile-priv-h"><h2 class="t-h3" id="profile-priv">${icon("lock")}Private to you</h2><p class="t-cap muted">Brands never see this section.</p></div>
-          <dl class="profile-priv-g">
-            <div><dt>Email</dt><dd>${esc(sess.email || "Not added")}</dd></div>
-            ${sess.mobile ? `<div><dt>Mobile</dt><dd class="num">${esc(sess.mobile)}</dd></div>` : ""}
-            <div><dt>Date of birth</dt><dd class="num">${me.dob ? esc(LLD.fmtDate(me.dob, { year: true })) + " · " + esc(age) : "—"}</dd></div>
-            <div><dt>Verification</dt><dd><span class="pill ${kc}">${k.status === "verified" ? icon("check") : ["action_needed", "rejected"].includes(k.status) ? icon("alert") : ""}${kt}</span><span class="t-cap muted">${esc(kn)}</span>${k.status !== "verified" ? '<a class="btn-q" href="#kyc">' + (k.status === "not_started" ? "Start" : k.status === "under_review" ? "See status" : "Fix it") + "</a>" : ""}</dd></div>
-            <div><dt>Payouts go to</dt><dd class="num">${esc(payout || "Not added yet")}</dd></div>
-            ${store.s.plan ? `<div><dt>Plan</dt><dd>${esc(store.s.plan.name)}${store.s.plan.status === "active" && store.s.plan.renews ? '<span class="t-cap muted">Renews ' + esc(LLD.fmtDate(store.s.plan.renews)) + "</span>" : ""}</dd></div>` : ""}
-          </dl>
-          <div class="profile-priv-f"><button type="button" class="lq lq-s lq-sm" data-signout>${icon("logout", "ic")}Sign out</button></div>
-        </section>
       </div>`;
       LLD.liquid(el);
       wire();
@@ -212,7 +229,8 @@
       el.querySelector("[data-switch]").setAttribute("aria-checked", String(on));
       el.querySelector("[data-bv]").hidden = !on;
       el.querySelector("[data-priv]").hidden = on;
-      el.querySelectorAll("[data-edit],[data-edit3]").forEach(b => {
+      /* everything only the owner sees: edit buttons, "Add languages", the nudges in empty sections */
+      el.querySelectorAll("[data-edit],[data-edit3],[data-own]").forEach(b => {
         b.hidden = on;
       });
       try {
@@ -225,12 +243,12 @@
       try {
         LLD.motion.press(el.querySelector("[data-switch]"));
       } catch (e) {}
-      el.querySelectorAll("[data-edit],[data-edit2],[data-edit3]").forEach(b =>
+      el.querySelectorAll("[data-edit],[data-edit2],[data-edit3],[data-addlang]").forEach(b =>
         b.addEventListener("click", () => {
           try {
             LLD.motion.press(b);
           } catch (e) {}
-          openEdit(b.hasAttribute("data-edit3"));
+          openEdit(b.hasAttribute("data-edit3") ? "links" : b.hasAttribute("data-addlang") ? "langs" : "");
         }),
       );
       const so = el.querySelector("[data-signout]");
@@ -254,7 +272,8 @@
     }
 
     /* ---------- edit profile sheet ---------- */
-    function openEdit(toLinks) {
+    /** `at`: "links" scrolls to Selected work, "langs" to the languages (C7's "Add languages"). */
+    function openEdit(at) {
       const A = window.LLA || {},
         V = A.V;
       if (!V || !A.photo) {
@@ -301,7 +320,7 @@
             ${fld("region", "State or UT", `<select class="select" id="pe-region"><option value="">Choose</option>${A.STATES.map(x => `<option ${d.region === x ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>`)}
           </div>
           <fieldset class="setup-fs" data-pf="langs"><legend>Languages you create in</legend><div class="setup-opts">${A.LANGS.map(l => opt("checkbox", "pe-lang", l, d.languages.includes(l))).join("")}</div><p class="err" aria-live="polite"></p></fieldset>
-          <fieldset class="setup-fs"><legend>What you make <span class="setup-opt-l">up to ${A.CAT_MAX}</span></legend><div class="setup-opts" data-cats>${A.CATS.map(c => opt("checkbox", "pe-cat", c, d.categories.includes(c))).join("")}</div></fieldset>
+          <fieldset class="setup-fs"><legend>What you make <span class="setup-opt-l">up to ${A.CAT_MAX}</span></legend><div class="setup-opts" data-cats>${[...A.CATS, ...d.categories.filter(c => !A.CATS.includes(c))].map(c => opt("checkbox", "pe-cat", c, d.categories.includes(c))).join("")}</div></fieldset>
           <fieldset class="setup-fs"><legend>Gender <span class="setup-opt-l">optional, never shown to brands</span></legend><div class="setup-opts">${A.GENDERS.map(g => opt("radio", "pe-gender", g, d.gender === g)).join("")}</div></fieldset>
           ${platRow("ig", "Instagram")}${platRow("yt", "YouTube")}
           <fieldset class="setup-fs" data-links><legend>Selected work</legend><ul class="profile-pe-links" data-linklist></ul>
@@ -423,10 +442,17 @@
             q("#pe-lt").focus();
           });
           q("[data-cancel]").addEventListener("click", () => close());
-          if (toLinks)
+          if (at === "links")
             setTimeout(() => {
               q("[data-links]").scrollIntoView({ block: "start" });
               q("#pe-lt").focus({ preventScroll: true });
+            }, 60);
+          else if (at === "langs")
+            setTimeout(() => {
+              const fs = q('[data-pf="langs"]');
+              fs.scrollIntoView({ block: "start" });
+              const first = fs.querySelector("input");
+              first && first.focus({ preventScroll: true });
             }, 60);
 
           q("[data-pe]").addEventListener("submit", e => {
@@ -539,24 +565,43 @@
             }, "profile-edited");
             if (LLD.live) {
               const m = store.s.me;
-              const jobs = [
-                LLD.live.saveProfile({
-                  name: m.name,
-                  bio: m.bio,
-                  categories: m.categories,
-                  city: m.city,
-                  region: m.region,
-                  primaryPlatform: m.platforms.instagram && m.platforms.instagram.handle ? "instagram" : m.platforms.youtube && m.platforms.youtube.handle ? "youtube" : undefined,
-                  extras: { gender: m.gender, languages: m.languages, region: m.region, platforms: m.platforms, portfolio: m.portfolio },
-                }),
-              ];
-              if (photo && photo.startsWith("data:") && photo !== before)
-                jobs.push(
-                  import("@/shared/api/uploads").then(u => LLD.live.uploadAvatar(u.dataUrlToBlob(photo))).then(url => {
-                    if (url) store.set(s => (s.me.photo = url), "profile-edited");
+              /* the photo first: saveProfile reads the profile back, and that read must already see the new photo */
+              const upload =
+                photo && photo.startsWith("data:") && photo !== before
+                  ? import("@/shared/api/uploads")
+                      .then(u => LLD.live.uploadAvatar(u.dataUrlToBlob(photo)))
+                      .then(url => {
+                        if (url) store.set(s => (s.me.photo = url), "profile-edited");
+                      })
+                  : Promise.resolve();
+              upload
+                .then(() =>
+                  LLD.live.saveProfile({
+                    name: m.name,
+                    bio: m.bio,
+                    categories: m.categories,
+                    city: m.city,
+                    region: m.region,
+                    primaryPlatform:
+                      m.platforms.instagram && m.platforms.instagram.handle
+                        ? "instagram"
+                        : m.platforms.youtube && m.platforms.youtube.handle
+                          ? "youtube"
+                          : undefined,
+                    languages: m.languages,
+                    platforms: m.platforms,
+                    extras: { gender: m.gender, portfolio: m.portfolio },
                   }),
-                );
-              Promise.all(jobs).catch(er => LLD.toast(LLD.live.errorText(er), "alert"));
+                )
+                .then(r => {
+                  /* C6: the screen shows what the server keeps; say plainly what it can't keep yet */
+                  if (r && r.unsaved && r.unsaved.length)
+                    LLD.toast(
+                      `Saved. Linkloom can't store your ${r.unsaved.join(" and ")} yet, so brands don't see them.`,
+                      "info",
+                    );
+                })
+                .catch(er => LLD.toast(LLD.live.errorText(er), "alert"));
             }
             close();
             paint();

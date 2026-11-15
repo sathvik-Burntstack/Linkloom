@@ -535,6 +535,9 @@
   gap: 12px;
   flex-wrap: wrap;
 }
+.bid-rv-acts + .ll-trust {
+  margin-top: -8px;
+}
 .bid-rv .err:empty {
   display: none;
 }

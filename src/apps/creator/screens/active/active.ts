@@ -201,12 +201,12 @@
       ui = s.workUI || (s.workUI = {});
     if (!s.active.length) {
       el.innerHTML = `<div class="view-in active">
-        <header class="active-head"><div class="active-head-t"><h1 class="t-h1">Active jobs</h1></div></header>
+        <header class="active-head"><div class="active-head-t"><h1 class="t-h1">Active deals</h1></div></header>
         <div class="empty active-empty">
           <img src="assets/trust-lock-coin.svg" width="200" height="140" alt="">
           <p class="t-h2">No active work yet</p>
-          <p class="muted">When a brand accepts your bid and pays into escrow, the job lands here with its brief, dates and chat.</p>
-          <div class="row wrap active-empty-cta"><a class="lq lq-p" href="#jobs">Find jobs</a><a class="lq lq-s" href="#bids">See my bids</a></div>
+          <p class="muted">When a brand accepts your bid and pays into escrow, the deal lands here with its brief, dates and chat.</p>
+          <div class="row wrap active-empty-cta"><a class="lq lq-p" href="#jobs">Find briefs</a><a class="lq lq-s" href="#bids">See my bids</a></div>
         </div></div>`;
       return;
     }
@@ -220,7 +220,7 @@
     el.innerHTML = `<div class="view-in active">
       <header class="active-head">
         <div class="active-head-t">
-          <h1 class="t-h1">Active jobs</h1>
+          <h1 class="t-h1">Active deals</h1>
           <p class="muted">Brands accepted these bids and paid in first. <span class="sample">Sample data</span></p>
         </div>
         <div class="active-held">
@@ -229,7 +229,7 @@
           <p class="t-note active-held-note" aria-hidden="true">paid in before you start</p>
         </div>
       </header>
-      <div class="seg active-seg" role="group" aria-label="Filter active jobs">
+      <div class="seg active-seg" role="group" aria-label="Filter active deals">
         ${FILTERS.map(([k, n]) => `<button type="button" data-f="${k}" aria-pressed="${k === f}">${n}<span class="active-seg-n">${count(k)}</span></button>`).join("")}
       </div>
       <ol class="active-list" aria-live="polite">${list.map(ticket).join("")}</ol>
@@ -259,7 +259,7 @@
     L.motion.stagger(rows.filter(r => !r.hidden));
   }
 
-  L.register("active", { title: "Active jobs", nav: "active", render: renderList });
+  L.register("active", { title: "Active deals", nav: "active", render: renderList });
 
   /* ====================================================================================
      #work-<id>: the production board for one deal.
@@ -414,7 +414,7 @@
     const s = L.store.s,
       a = s.active.find(x => x.id === id);
     if (!a) {
-      el.innerHTML = `<div class="view-in"><div class="empty"><img src="assets/step-05-stamp.svg" width="200" height="146" alt=""><p class="t-h2">This job is not in your active work</p><p class="muted">It may have been closed or the link is old.</p><a class="lq lq-p" href="#active">Back to active jobs</a></div></div>`;
+      el.innerHTML = `<div class="view-in"><div class="empty"><img src="assets/step-05-stamp.svg" width="200" height="146" alt=""><p class="t-h2">This deal is not in your active work</p><p class="muted">It may have been closed or the link is old.</p><a class="lq lq-p" href="#active">Back to active deals</a></div></div>`;
       return;
     }
     let up = null,
@@ -431,7 +431,7 @@
       const late = a.stage !== "approved" && C.days(a.due) < 0;
       const draftDone = files.length > 0;
       el.innerHTML = `<div class="view-in work" data-who="${C.who(a)}">
-        <a class="btn-q work-back" href="#active">${ic("back")}<span>Active jobs</span></a>
+        <a class="btn-q work-back" href="#active">${ic("back")}<span>Active deals</span></a>
         <header class="work-head">
           <div class="work-head-t">
             <p class="work-brand"><span class="avatar v" aria-hidden="true">${esc(C.bi(a.brand))}</span><span><b>${esc(a.brand)}</b><span class="muted">${ic(d.platform === "youtube" ? "yt" : "ig")}${esc(C.plat(d.platform))} ${esc(d.format || "")}</span></span><span class="sample">Sample</span></p>
@@ -870,11 +870,11 @@
   L.register("work", {
     title: p => {
       const a = L.store.s.active.find(x => x.id === p);
-      return a ? a.title : "Active job";
+      return a ? a.title : "Active deal";
     },
     crumb: p => {
       const a = L.store.s.active.find(x => x.id === p);
-      return '<a href="#active">Active jobs</a>' + (a ? " / " + esc(a.brand) : "");
+      return '<a href="#active">Active deals</a>' + (a ? " / " + esc(a.brand) : "");
     },
     nav: "active",
     render: renderWork,

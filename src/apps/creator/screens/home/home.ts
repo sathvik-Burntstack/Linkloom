@@ -3,6 +3,9 @@
    then the "Briefs for you" and "Your bids" panels. Brief cards come from ui/brief-card.ts, shared with #jobs.
    Also owns the notifications sheet opened by the #bell button in the top bar. Owner: Builder B. */
 import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
+import { KYC_AFTER_ACCEPT, kycOwed, kycWaitText, openKyc } from "../../core/kyc-gate";
+import { storedUser } from "@/shared/api/client";
+import { firstTime } from "@/shared/ux";
 
 (() => {
   const L = window.LLD,
@@ -122,14 +125,8 @@ import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
   /* time left on the ID review: the API's estimate when it sends one, otherwise our promise */
   // TODO(backend): automatic PAN check so most reviews finish within 2 hours; expose an ETA on GET /v1/kyc/
   // (for example "reviewEtaAt", the ISO time the review should be done), copied onto kyc.reviewEtaAt by live/creator.ts mapKyc.
-  function reviewLeft(k) {
-    const at = k.reviewEtaAt ? new Date(k.reviewEtaAt).getTime() : NaN;
-    if (!Number.isFinite(at)) return "within 2 hours";
-    const min = Math.round((at - Date.now()) / 6e4);
-    if (min <= 1) return "any minute now";
-    if (min < 60) return `about ${min} min left`;
-    return `about ${Math.round(min / 60)} h left`;
-  }
+  /* same words as #kyc and the profile (one helper, the app clock) */
+  const reviewLeft = k => kycWaitText(k);
   function kycBar(k) {
     if (k.status === "verified") return "";
     if (k.status === "under_review")
@@ -183,6 +180,85 @@ import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
       </section>`;
   }
 
+  /* ---------- the best moment: first deal confirmed, first payout ---------- */
+  /* Shown on the visit after it happens, once per account and device (shared/ux firstTime). It stays for the rest of
+     that visit until it is dismissed or its button is used. Only for a creator's real first: an account with more than
+     one deal or payout never sees it, so turning this on doesn't congratulate old hands. */
+  let cheerNow = null,
+    cheerDone = false;
+  const BID_WORD = {
+    submitted: "Sent",
+    viewed: "Viewed",
+    accepted: "Accepted",
+    rejected: "Not selected",
+    withdrawn: "Withdrawn",
+    completed: "Completed",
+  };
+  function cheerFor(s) {
+    const u = storedUser();
+    const uid = (u && u.id) || s.me.handle || "anon";
+    /* first payout: the one deal approved and its money released */
+    const paid = (s.ledger || []).filter(x => x.status === "paid");
+    if (paid.length === 1) {
+      const x = paid[0];
+      return {
+        key: `${uid}-first-payout`,
+        ic: "coin",
+        title: "Your first payout is in!",
+        text: `${L.inr(x.amount)} from ${x.brand} was released to you.${s.payoutsEnabled === false ? " It's kept in your Linkloom balance until bank withdrawals open." : ""}`,
+        cta: "See earnings",
+        href: "#earnings",
+      };
+    }
+    if (paid.length > 1) return null;
+    /* first deal: one accepted bid or one hire (direct offers become deals without a bid) */
+    const won = s.bids.filter(b => b.status === "accepted" || b.status === "completed");
+    const deals = new Set([...s.active.map(a => a.job || "o:" + a.id), ...won.map(b => b.job)]);
+    if (deals.size !== 1) return null;
+    const a = s.active[0] || null,
+      b = won[0] || null;
+    if (a && (a.pay === "released" || a.stage === "approved")) return null; // already done: the payout moment covers it
+    const j = b ? L.jobkit.job(b.job) : null;
+    const brand = a ? a.brand : (j && j.brand) || (b && b.brand) || "The brand";
+    const title = a ? a.title : (j && j.title) || (b && b.title) || "the brief";
+    if (b && b.status === "accepted" && kycOwed())
+      /* C10 trial: the bid went out before the ID check, so the deal waits on it */
+      return {
+        key: `${uid}-first-deal-kyc`,
+        ic: "shield",
+        title: "Your first deal is one step away",
+        text: KYC_AFTER_ACCEPT,
+        cta: "Verify ID",
+        kyc: true,
+      };
+    return {
+      key: `${uid}-first-deal`,
+      ic: "check",
+      title: "Your first deal is confirmed!",
+      text: a
+        ? `${brand} hired you for ${title}. The money is in escrow, so you can start.`
+        : `${brand} picked your bid for ${title}. You can start once they pay into escrow.`,
+      cta: a ? "Open the deal" : "See your bid",
+      href: a ? "#work-" + a.id : "#bids",
+    };
+  }
+  function bestMoment(s) {
+    if (cheerDone) return null;
+    if (cheerNow) return cheerNow;
+    if (import.meta.env.VITE_TEST_HOOKS || !s.session.signedIn) return null; // never in the parity build or for guests
+    const c = cheerFor(s);
+    if (!c || !firstTime(c.key)) return null;
+    return (cheerNow = c);
+  }
+  function cheerCard(c, btn) {
+    return `<section class="ll-cheer home-cheer" aria-labelledby="homeCheerH">
+        <span class="ll-cheer-ic" aria-hidden="true">${L.icon(c.ic)}</span>
+        <p class="ll-cheer-t"><b id="homeCheerH">${esc(c.title)}</b><span>${esc(c.text)}</span></p>
+        ${c.kyc ? `<button class="${btn}" type="button" data-cheer-go>${L.icon("shield")}${esc(c.cta)}</button>` : `<a class="${btn}" href="${esc(c.href)}" data-cheer-go>${esc(c.cta)}</a>`}
+        <button class="ll-cheer-x" type="button" data-cheer-x aria-label="Dismiss">${L.icon("close")}</button>
+      </section>`;
+  }
+
   L.register("home", {
     title: "Home",
     nav: "home",
@@ -216,6 +292,9 @@ import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
       /* one primary button per screen: the first real ask on the page gets it, everything after is outlined */
       let primaryUsed = false;
       const prim = () => (primaryUsed ? "lq lq-s lq-sm" : ((primaryUsed = true), "lq lq-p lq-sm"));
+      /* the best moment comes first and takes the one primary button and the one coloured block */
+      const cheer = bestMoment(s);
+      const cheerHtml = cheer ? cheerCard(cheer, prim().replace(" lq-sm", "")) : "";
 
       /* what needs you today: real objects from active work and money */
       const objs = [];
@@ -246,7 +325,7 @@ import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
         });
       const pending = s.ledger.filter(x => x.status === "pending").reduce((n, x) => n + x.amount, 0);
       if (s.readyToWithdraw > 0) {
-        objs.push(`<li class="home-obj home-money ink-card dark">
+        objs.push(`<li class="home-obj home-money ${cheer ? "is-quiet" : "ink-card dark"}">
           <p class="home-money-l">Ready to withdraw</p>
           <p class="t-money home-money-v" data-ready>${L.inr(s.readyToWithdraw)}</p>
           <p class="home-money-s">Cleared funds only.${pending ? ` ${L.inr(pending)} still pending is not included.` : ""}</p>
@@ -256,13 +335,19 @@ import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
 
       /* the lede only says nothing needs you when that is true: no open work, no money waiting, ID check done */
       const myBids = [...s.bids].sort((a, b) => L.D(b.sent) - L.D(a.sent));
+      /* deals still being made (not approved, not cancelled): "nothing needs you" would not be true then (C1) */
+      const working = s.active.filter(a => a.stage !== "approved" && a.pay !== "released");
       const lede = objs.length
         ? `${WORDS[Math.min(objs.length, 5)]} ${objs.length === 1 ? "needs" : "need"} you today.`
-        : s.kyc.status === "verified"
-          ? "Nothing needs you right now. A good day to find a new brief."
-          : myBids.length
-            ? "Here are the briefs that fit you best."
-            : "Find a brief that fits you and send your first bid.";
+        : cheer
+          ? "Good news since your last visit."
+          : working.length
+            ? `${working.length === 1 ? "Your deal is" : `${working.length} deals are`} in progress. Find the next brief while you work.`
+            : s.kyc.status === "verified"
+              ? "Nothing needs you right now. A good day to find a new brief."
+              : myBids.length
+                ? "Here are the briefs that fit you best."
+                : "Find a brief that fits you and send your first bid.";
 
       /* Your bids: the latest three that are still in play */
       const bidRow = b => {
@@ -274,7 +359,7 @@ import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
             <span class="jobs-bi" aria-hidden="true">${esc(j ? j.bi : L.initials(brand))}</span>
             <span class="home-bid-t"><span class="home-bid-n">${esc(title)}</span><span class="home-bid-s">${esc(brand)} · sent ${esc(L.fmtDate(b.sent))}</span></span>
             <span class="home-bid-p">${L.inr(b.price)}</span>
-            ${K.pill(b.status)}
+            ${b.status === "viewed" && b.shortlisted ? `<span class="pill pill-info">${L.icon("flag")}Shortlisted</span>` : K.pill(b.status, BID_WORD[b.status] || "")}
           </a></li>`;
       };
       const shownBids = myBids.filter(b => b.status !== "withdrawn").slice(0, 3);
@@ -282,13 +367,14 @@ import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
         ? `<ul class="home-bids-list">${shownBids.map(bidRow).join("")}</ul>`
         : `<p class="home-bids-none">${myBids.length ? "No bids in play right now. Your earlier bids are in My bids." : "No bids yet. Pick a brief above and send your first bid. It takes about a minute."}</p>`;
 
-      el.innerHTML = `<div class="view-in home">
+      el.innerHTML = `<div class="view-in home${cheer ? " has-cheer" : ""}">
         <header class="home-hi">
           <h1 class="home-greet">${esc(greeting(now))}, ${esc(first)}.</h1>
           <p class="home-lede">${lede} <span class="sample">Sample data</span></p>
         </header>
 
-        ${kycBar(s.kyc)}
+        ${cheerHtml}
+        ${cheer && cheer.kyc ? "" : kycBar(s.kyc)}
 
         <div class="ll-stack home-stack">
           ${
@@ -323,6 +409,28 @@ import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
         </div>
       </div>`;
       L.liquid(el);
+
+      const ch = el.querySelector(".home-cheer");
+      if (ch) {
+        ch.querySelector("[data-cheer-x]").addEventListener("click", () => {
+          cheerDone = true;
+          ch.remove();
+          el.firstElementChild.classList.remove("has-cheer");
+          /* the money slip may be the one ink block again */
+          const money = el.querySelector(".home-money.is-quiet");
+          if (money) (money.classList.replace("is-quiet", "ink-card"), money.classList.add("dark"));
+          const h = el.querySelector(".home-greet");
+          h.setAttribute("tabindex", "-1");
+          h.focus({ preventScroll: true });
+        });
+        ch.querySelector("[data-cheer-go]").addEventListener("click", e => {
+          cheerDone = true;
+          if (cheer.kyc) {
+            e.preventDefault();
+            openKyc("#bids");
+          }
+        });
+      }
 
       const grid = el.querySelector("#homeGrid");
       const lead = !primaryUsed; // nothing above needs you, so the top brief's Bid is the one primary button

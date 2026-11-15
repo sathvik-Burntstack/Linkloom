@@ -127,8 +127,8 @@
     if (!s.ledger.length && !s.withdrawals.length) {
       el.innerHTML = `<div class="view-in earnings"><h1 class="t-h1">Earnings</h1>
         <div class="empty earnings-empty"><img src="assets/step-06-coins.svg" width="220" height="160" alt="">
-          <p class="t-h2">No earnings yet</p><p class="muted">${s.earningsSummary && s.earningsSummary.inEscrow ? `${L.inr(s.earningsSummary.inEscrow)} is held in escrow for ${s.earningsSummary.ordersInEscrow} job${s.earningsSummary.ordersInEscrow === 1 ? "" : "s"} in progress. ` : ""}When a brand approves your work, the payout is released from escrow and shows up here with a full slip.</p>
-          <a class="lq lq-p" href="#active">See active jobs</a></div></div>`;
+          <p class="t-h2">No earnings yet</p><p class="muted">${s.earningsSummary && s.earningsSummary.inEscrow ? `${L.inr(s.earningsSummary.inEscrow)} is held in escrow for ${s.earningsSummary.ordersInEscrow} deal${s.earningsSummary.ordersInEscrow === 1 ? "" : "s"} in progress. ` : ""}When a brand approves your work, the payout is released from escrow and shows up here with a full slip.</p>
+          <a class="lq lq-p" href="#active">See active deals</a></div></div>`;
       return;
     }
 
@@ -153,16 +153,17 @@
           <div class="earnings-hero-a">
             <h2 class="earnings-hero-l" id="earnReadyH">${noPayouts ? "Earned" : "Ready to withdraw"}</h2>
             <p class="earnings-ready"><span class="earnings-rs">₹</span><span data-ready>${L.inr(noPayouts ? sum0.earned : from == null ? m.ready : from).slice(1)}</span></p>
-            <p class="earnings-ready-sub">${noPayouts ? `From ${sum0.ordersEarned} approved job${sum0.ordersEarned === 1 ? "" : "s"}. Withdrawals to your bank open soon; everything you earn is kept here.` : `Cleared money only.${m.clearing ? ` ${L.inr(m.clearing)} still clearing is not included.` : ""}`}</p>
+            <p class="earnings-ready-sub">${noPayouts ? `From ${sum0.ordersEarned} approved deal${sum0.ordersEarned === 1 ? "" : "s"}. Withdrawals to your bank open soon; everything you earn is kept here.` : `Cleared money only.${m.clearing ? ` ${L.inr(m.clearing)} still clearing is not included.` : ""}`}</p>
             <div class="earnings-cta"${noPayouts ? " hidden" : ""}>
               <button class="lq lq-p lq-xl" type="button" data-withdraw${m.ready <= 0 ? " disabled" : ""}>${ic("arrow")}Withdraw</button>
               <span class="earnings-to">${m.ready > 0 ? `to ${esc(meth[0] ? meth[0].kind + " " + meth[0].label : "your payout method")}` : "Nothing cleared to withdraw right now."}</span>
+              <p class="ll-trust earnings-trust">${ic("lock")}Paid only to your own verified bank account or UPI. Never shown to brands.</p>
             </div>
           </div>
           <div class="earnings-recon">
             <p class="earnings-recon-h">How it adds up</p>
             ${noPayouts ? `<dl>
-              <div><dt>In escrow, ${sum0.ordersInEscrow} job${sum0.ordersInEscrow === 1 ? "" : "s"}</dt><dd>${L.inr(sum0.inEscrow)}</dd></div>
+              <div><dt>In escrow, ${sum0.ordersInEscrow} deal${sum0.ordersInEscrow === 1 ? "" : "s"}</dt><dd>${L.inr(sum0.inEscrow)}</dd></div>
               <div><dt>Earned, approved work</dt><dd>${L.inr(sum0.earned)}</dd></div>
               <div><dt>TDS deducted</dt><dd>${L.inr(-sum0.tds)}</dd></div>
             </dl>` : ""}
@@ -183,7 +184,7 @@
               <div class="earnings-total-t">
                 <h2 class="earnings-sec-h" id="earnTotH">Total earned</h2>
                 <p class="t-money earnings-total-n" data-total>${L.inr(E.total)}</p>
-                <p class="earnings-total-r"><span data-range>${esc(E.label)}</span> · <span data-jobs>${E.n} approved job${E.n === 1 ? "" : "s"}</span></p>
+                <p class="earnings-total-r"><span data-range>${esc(E.label)}</span> · <span data-jobs>${E.n} approved deal${E.n === 1 ? "" : "s"}</span></p>
                 <p class="help">Agreed prices, before tax. Includes money still clearing.</p>
               </div>
               <div class="seg earnings-range" role="group" aria-label="Date range">
@@ -254,7 +255,7 @@
           L.$$(".earnings-range button", el).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
           const e = earnedIn(range);
           L.$("[data-range]", el).textContent = e.label;
-          L.$("[data-jobs]", el).textContent = `${e.n} approved job${e.n === 1 ? "" : "s"}`;
+          L.$("[data-jobs]", el).textContent = `${e.n} approved deal${e.n === 1 ? "" : "s"}`;
           L.motion.count(L.$("[data-total]", el), e.total, L.inr);
         }),
       );
@@ -425,6 +426,7 @@
         <p class="help">${esc(x.note || "")}. You will get a UTR reference you can quote to your bank.</p>
         <label class="check earnings-wf-fail"><input type="checkbox" data-fail><span><span class="sample">Sample</span> Make this payout fail, to see what happens</span></label>
         <div class="row wrap earnings-wf-acts"><button class="lq lq-p lq-xl" type="button" data-confirm>Confirm and withdraw</button><button class="lq lq-s lq-xl" type="button" data-back>Change</button></div>
+        <p class="ll-trust">${ic("lock")}Sent only to your verified ${esc(x.kind)}. Linkloom never shares payout details with brands.</p>
       </div>`,
         2,
       );

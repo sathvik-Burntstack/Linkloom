@@ -72,7 +72,7 @@
       el.innerHTML = `<div class="view-in messages-none-v"><h1 class="t-h1">Messages</h1>
         <div class="empty"><img src="assets/step-01-envelope.svg" width="220" height="160" alt=""><p class="t-h2">No chats yet</p>
         <p class="muted">A chat opens when a brand accepts your bid and pays into escrow. Until then, brands can’t message you.</p>
-        <div class="row wrap" style="justify-content:center"><a class="lq lq-p" href="#bids">See my bids</a><a class="lq lq-s" href="#jobs">Find jobs</a></div></div></div>`;
+        <div class="row wrap" style="justify-content:center"><a class="lq lq-p" href="#bids">See my bids</a><a class="lq lq-s" href="#jobs">Find briefs</a></div></div></div>`;
       return;
     }
     const t = param ? s.threads.find(x => x.id === param) : null;
@@ -107,7 +107,7 @@
   const missing = () => `<div class="chat-empty">
     <img src="assets/step-03-lock.svg" width="200" height="146" alt="" class="chat-empty-ink">
     <p class="t-h2">This chat isn’t open</p>
-    <p class="muted">Chat unlocks only with a brand that accepted your bid. If a job was cancelled, the chat closes too.</p>
+    <p class="muted">Chat unlocks only with a brand that accepted your bid. If a deal was cancelled, the chat closes too.</p>
     <a class="lq lq-s" href="#messages">All chats</a></div>`;
 
   function openChat(pane, t, ul) {
@@ -197,14 +197,14 @@
         <div class="chat-more">
           <button class="chat-opt" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="chatMenu">Options${ic("down")}</button>
           <ul class="chat-menu" id="chatMenu" role="menu" aria-label="Chat options" hidden>
-            ${a.loose ? "" : `<li role="none"><a role="menuitem" tabindex="-1" href="#work-${esc(a.id)}">${ic("rail")}Open the job</a></li>`}
+            ${a.loose ? "" : `<li role="none"><a role="menuitem" tabindex="-1" href="#work-${esc(a.id)}">${ic("rail")}Open the deal</a></li>`}
             <li role="none"><button role="menuitem" tabindex="-1" type="button" data-report>${ic("flag")}Report this chat</button></li>
             <li role="none"><button role="menuitem" tabindex="-1" type="button" data-block>${ic("close")}<span data-block-l>${t.blocked ? "Unblock" : "Block"} ${esc(t.brand)}</span></button></li>
           </ul>
         </div>
       </header>
       <a class="chat-job" href="${a.loose ? "#bids" : "#work-" + esc(a.id)}" data-who="${C.who(a)}"${a.loose ? " hidden" : ""}>
-        <span class="chat-job-t"><span class="chat-job-k">Job</span><b>${esc(a.title)}</b><span class="chat-job-s"><i aria-hidden="true"></i>${esc(stageLine(a))}</span></span>
+        <span class="chat-job-t"><span class="chat-job-k">Deal</span><b>${esc(a.title)}</b><span class="chat-job-s"><i aria-hidden="true"></i>${esc(stageLine(a))}</span></span>
         <span class="chat-job-m"><b class="t-money">${L.inr(a.price)}</b>${C.payPill(a)}</span>
         ${ic("chevron")}
       </a>
@@ -235,7 +235,7 @@
     /* composer or blocked notice */
     const drawFoot = () => {
       if (t.blocked) {
-        foot.innerHTML = `<div class="chat-blocked"><p><b>You blocked ${esc(t.brand)}.</b> They can’t message you. The job and the ${L.inr(a.price)} in escrow are unchanged; Linkloom support steps in if anything is urgent.</p><button class="lq lq-s lq-sm" type="button" data-unblock>Unblock</button></div>`;
+        foot.innerHTML = `<div class="chat-blocked"><p><b>You blocked ${esc(t.brand)}.</b> They can’t message you. The deal and the ${L.inr(a.price)} in escrow are unchanged; Linkloom support steps in if anything is urgent.</p><button class="lq lq-s lq-sm" type="button" data-unblock>Unblock</button></div>`;
         L.liquid(foot);
         L.$("[data-unblock]", foot).addEventListener("click", () => setBlocked(false));
         return;
@@ -489,8 +489,8 @@
         body: `<div class="chat-sheet">
         <ul class="chat-rules">
           <li>${ic("close")}<span>They can’t send you messages.</span></li>
-          <li>${ic("lock")}<span>The job and the ${L.inr(a.price)} in escrow stay as they are.</span></li>
-          <li>${ic("shield")}<span>Linkloom support handles anything urgent about the job.</span></li>
+          <li>${ic("lock")}<span>The deal and the ${L.inr(a.price)} in escrow stay as they are.</span></li>
+          <li>${ic("shield")}<span>Linkloom support handles anything urgent about the deal.</span></li>
         </ul>
         <div class="row wrap"><button class="lq lq-p" type="button" data-yes>Block ${esc(first(t.brand))}</button><button class="lq lq-s" type="button" data-no>Keep chatting</button></div>
       </div>`,
