@@ -210,8 +210,7 @@
   align-items: flex-end;
   gap: 24px 32px;
   flex-wrap: wrap;
-  padding-bottom: 32px;
-  border-bottom: 1.5px solid var(--ll-ink-text);
+  padding: var(--pad-card);
 }
 .earnings-total-t {
   display: flex;
@@ -474,8 +473,13 @@
   .earnings-recon {
     max-width: 480px;
   }
+  /* tablets and small laptops: a slip column beside the history squeezed every row to "Paid int…", so the
+     history gets the full width and a row opens its slip in a sheet, as on phones (payments.ts narrow()) */
   .earnings-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .earnings-side {
+    display: none;
   }
 }
 @media (max-width: 900px) {
@@ -620,18 +624,21 @@
 }
 .pay-hint {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
-.pay-hint svg {
+.pay-hint > span {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+.pay-hint > .lq {
+  flex: none;
+}
+.pay-hint > svg {
   width: 16px;
   height: 16px;
   flex: none;
-  margin-top: 1px;
-}
-.pay-hint .btn-q {
-  font-size: 13px;
-  line-height: 18px;
 }
 .pay-slip-dl {
   align-self: flex-start;

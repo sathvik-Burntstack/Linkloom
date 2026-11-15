@@ -28,19 +28,28 @@
   font-weight: 600;
   color: var(--ll-ink-text);
 }
-.home-quiet .btn-q svg {
-  width: 16px;
-  height: 16px;
+/* the quiet line and its action: the action is a real (outlined) button next to the sentence, not a text link */
+.home-quiet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.home-quiet-row > .lq {
+  flex: none;
 }
 
 /* post a brief: the first thing a new brand sees; one quiet row for a returning one */
 .home-post {
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 24px;
+  gap: 16px 24px;
 }
+/* the button drops under the text when the text would get narrower than 300px (phones) */
 .home-post-t {
-  flex: 1;
+  flex: 1 1 300px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -275,10 +284,12 @@
   color: var(--ll-white);
   font-weight: 600;
 }
-.home-bud-s .btn-q {
-  color: var(--ll-white);
-  font-size: 13px;
-  line-height: 18px;
+/* "Spending report" on the ink band: the outlined button in white */
+.home-bud-a.lq {
+  --strong: var(--ll-white);
+  --tx: var(--ll-white);
+  --on-fill: var(--ll-ink-text);
+  align-self: flex-start;
 }
 .home-key {
   display: inline-block;
@@ -439,11 +450,12 @@
   background: var(--ll-white);
   flex-wrap: wrap;
 }
+/* basis = content width, so the numbers wrap onto a second line instead of running into each other */
 .home-mini > div:first-child {
-  flex: 1.7 1 0;
+  flex: 1.7 1 auto;
 }
 .home-mini > div {
-  flex: 1 1 0;
+  flex: 1 1 auto;
 }
 .home-mini > div {
   display: flex;
@@ -902,6 +914,10 @@
   gap: 4px;
   padding: 24px 0;
 }
+.home-nt-none > .lq {
+  align-self: flex-start;
+  margin-top: 8px;
+}
 .home-nt-foot {
   display: block;
   margin-top: 24px;
@@ -981,8 +997,10 @@
   .home-obj.home-pay {
     padding: 24px 16px 32px;
   }
+  /* start, not center: the avatar sits by the name, not halfway down a five-line block */
   .home-wait {
     grid-template-columns: 28px minmax(0, 1fr);
+    align-items: start;
   }
   .home-wait-a {
     grid-column: 2;

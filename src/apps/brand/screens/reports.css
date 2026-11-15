@@ -349,11 +349,21 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: var(--ctl-h-sm, 36px);
+  padding: 0 16px;
+  border: 1.5px solid var(--ll-ink-text);
+  border-radius: var(--r-full);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   list-style: none;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.rp-tbl summary:hover {
+  background: var(--ll-ink-text);
+  color: #fff;
 }
 .rp-tbl summary::-webkit-details-marker {
   display: none;
@@ -372,8 +382,15 @@
   transform: rotate(225deg);
   margin-top: 3px;
 }
-.rp-tbl summary:focus-visible {
-  border-radius: 6px;
+.rp-bu-f {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.rp-bu-f > .lq {
+  flex: none;
 }
 .rp-tbl table,
 .rp-cwt {
@@ -645,13 +662,10 @@
   width: 14px;
   height: 14px;
 }
-.rp-rate-a {
+.rp-rate-a.lq {
   display: flex;
-  margin-top: 4px;
-  font-size: 12px;
-  line-height: 16px;
-  white-space: normal;
-  max-width: 200px;
+  width: fit-content;
+  margin-top: 8px;
 }
 .rp-cwt .btn-q svg {
   width: 14px;
@@ -697,38 +711,7 @@
   .rp-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
-@media (max-width: 900px) {
-  .rp {
-    gap: 24px;
-  }
-  .rp-filter {
-    margin-top: 0;
-  }
-  .rp-seg {
-    width: 100%;
-    --seg-pad: 8px;
-  }
-  .rp-seg button {
-    font-size: 13px;
-  }
-  .rp-card {
-    padding: 20px;
-    gap: 20px;
-  }
-  .rp-tile {
-    padding: 16px 20px;
-  }
-  .rp-tiles {
-    gap: 12px;
-  }
-  .rp-tile-v {
-    font-size: 28px;
-  }
-  .rp-big {
-    font-size: 40px;
-  }
-  /* creator table becomes cards */
+  /* creator table becomes cards: as a table it squeezed the creator name into a 60px column on tablets */
   .rp-tw {
     overflow: visible;
     margin: 0;
@@ -744,7 +727,7 @@
   }
   .rp-cwt tr {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 12px 16px;
     padding: 16px 0;
     border-bottom: 1px solid var(--ll-rule);
@@ -786,6 +769,37 @@
   .rp-cwt tfoot th {
     grid-column: 1/-1;
   }
+}
+@media (max-width: 900px) {
+  .rp {
+    gap: 24px;
+  }
+  .rp-filter {
+    margin-top: 0;
+  }
+  .rp-seg {
+    width: 100%;
+    --seg-pad: 8px;
+  }
+  .rp-seg button {
+    font-size: 13px;
+  }
+  .rp-card {
+    padding: 20px;
+    gap: 20px;
+  }
+  .rp-tile {
+    padding: 16px 20px;
+  }
+  .rp-tiles {
+    gap: 12px;
+  }
+  .rp-tile-v {
+    font-size: 28px;
+  }
+  .rp-big {
+    font-size: 40px;
+  }
   .rp-pace {
     max-width: none;
   }
@@ -804,5 +818,11 @@
 @media (max-width: 359px) {
   .rp-tiles {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* touch: the creator link in the creator-wise report is a 44px target */
+@media (pointer: coarse) {
+  .rp-who {
+    min-height: 44px;
   }
 }

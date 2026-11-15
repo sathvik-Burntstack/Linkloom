@@ -128,7 +128,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
             <button type="button" data-f="all" aria-pressed="${ui.nfilter === "all"}">All</button>
             <button type="button" data-f="unread" aria-pressed="${ui.nfilter === "unread"}">Unread${unread ? ` <span class="num">${unread}</span>` : ""}</button>
           </div>
-          <button class="btn-q" type="button" data-allread ${unread ? "" : 'disabled aria-disabled="true"'}>${icon("check")}Mark all read</button>
+          <button class="lq lq-s lq-sm" type="button" data-allread ${unread ? "" : 'disabled aria-disabled="true"'}>${icon("check", "ic")}Mark all read</button>
         </div>
         <p class="sr-only" aria-live="polite" data-ntlive>${unread ? `${unread} unread` : "All caught up"}</p>
         ${
@@ -151,10 +151,11 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
                       .join("")}</ul></section>`,
                 )
                 .join("")
-            : `<div class="home-nt-none"><p class="t-h3">No unread notifications</p><p class="muted">You've seen everything. <button type="button" class="btn-q" data-f="all">Show all</button></p></div>`
+            : `<div class="home-nt-none"><p class="t-h3">No unread notifications</p><p class="muted">You've seen everything.</p><button type="button" class="lq lq-s lq-sm" data-f="all">Show all</button></div>`
         }
         <p class="home-nt-foot sample">Sample notifications</p>`
         : `<div class="empty home-nt-empty"><img src="assets/step-01-envelope.svg" width="140" height="103" alt=""><p class="t-h2">You're all caught up.</p><p class="muted">Bids, accepted invitations, deliveries and payments land here.</p></div>`;
+      L.liquid(body);
       if (!opts.quiet) mo("stagger", L.$$(".home-nt li", body));
     };
     L.openSheet({
@@ -362,7 +363,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
             ${j.budget ? `<div><dt>Your budget</dt><dd class="t-money">${L.inr(j.budget)}</dd></div>` : ""}
             <div><dt>All bids</dt><dd class="t-money">${esc(Math.max(j.bids || 0, fresh.length))}</dd></div>
           </dl>
-          <div class="home-obj-act"><a class="${cta()}" href="#job-${esc(j.id)}">Compare bids</a>${openJobs[1] ? `<a class="btn-q" href="#job-${esc(openJobs[1].j.id)}">+${openJobs[1].fresh.length} on ${esc(openJobs[1].j.title)}</a>` : ""}</div>
+          <div class="home-obj-act"><a class="${cta()}" href="#job-${esc(j.id)}">Compare bids</a>${openJobs[1] ? `<a class="lq lq-s lq-sm" href="#job-${esc(openJobs[1].j.id)}">+${openJobs[1].fresh.length} on ${esc(openJobs[1].j.title)}</a>` : ""}</div>
         </li>`);
       }
       s.campaigns
@@ -374,7 +375,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
           <p class="home-pay-l">${esc(cr.name)} accepted${acc ? ` ${esc(L.ago(acc[0]))}` : ""}</p>
           <p class="t-money home-pay-v">${L.inr(c.price)}</p>
           <p class="home-pay-s">Pay into escrow to start <b>${esc(c.title)}</b>. Chat opens once it's paid.</p>
-          <div class="home-obj-act"><button class="${cta()}" type="button" data-pay="${esc(c.id)}">${icon("lock", "ic")}Pay into escrow</button><a class="btn-q" href="#campaign-${esc(c.id)}">Details</a></div>
+          <div class="home-obj-act"><button class="${cta()}" type="button" data-pay="${esc(c.id)}">${icon("lock", "ic")}Pay into escrow</button><a class="lq lq-s lq-sm" href="#campaign-${esc(c.id)}">Details</a></div>
           <p class="ll-trust home-trust">${icon("lock")}Linkloom holds it until you approve the work.</p>
           ${bud.total ? `<p class="home-pay-b">Leaves ${L.inr(Math.max(0, bud.left - c.price))} of your ${esc(bud.label)} budget.</p>` : ""}
         </li>`);
@@ -391,7 +392,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
           waits.push(`<li class="home-wait">${avatar(cr)}
           <div class="home-wait-t"><p><b>${esc(cr.name)}</b> is working on your revision <span class="pill pill-warn">Revision ${c.revisionsUsed} of ${c.revisionsIncluded}</span></p>
             <p class="home-wait-s">${esc(c.title)} · due ${esc(L.fmtDate(c.due))}, ${esc(dayTxt(L.daysLeft(c.due)))}${last ? ` · “${esc(last.text)}”` : ""}</p></div>
-          <div class="home-wait-a">${th ? `<a class="btn-q" href="#chat-${esc(th.id)}">${icon("chat")}Message</a>` : ""}<a class="btn-q" href="#campaign-${esc(c.id)}">Open${icon("arrow")}</a></div></li>`);
+          <div class="home-wait-a">${th ? `<a class="lq lq-s lq-sm" href="#chat-${esc(th.id)}">${icon("chat", "ic")}Message</a>` : ""}<a class="lq lq-s lq-sm" href="#campaign-${esc(c.id)}">Open${icon("arrow", "ic")}</a></div></li>`);
         });
       s.campaigns
         .filter(c => c.stage === "invited")
@@ -401,7 +402,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
           waits.push(`<li class="home-wait">${avatar(cr)}
           <div class="home-wait-t"><p><b>${esc(cr.name)}</b> hasn't replied to your invitation <span class="pill pill-paper">${icon("clock")}Pending</span></p>
             <p class="home-wait-s">${esc(c.title)} · ${L.inr(c.price)}${inv ? ` · sent ${esc(L.ago(inv[0]))}` : ""} · nothing is charged until ${esc(first(cr.name))} accepts and you pay</p></div>
-          <div class="home-wait-a"><a class="btn-q" href="#campaign-${esc(c.id)}">View or cancel${icon("arrow")}</a></div></li>`);
+          <div class="home-wait-a"><a class="lq lq-s lq-sm" href="#campaign-${esc(c.id)}">View or cancel${icon("arrow", "ic")}</a></div></li>`);
         });
 
       const crs = picks(s);
@@ -442,11 +443,11 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
       if (objs.length || waits.length || open.length) {
         const withOnly = !objs.length && waits.length;
         const quiet = open.length
-          ? `<p class="home-quiet">${
+          ? `<div class="home-quiet-row"><p class="home-quiet">${
               open.length === 1
                 ? `No new bids yet on <b>${esc(open[0].title)}</b>. Bids land here as creators send them.`
                 : `No new bids yet on your ${open.length} open briefs. Bids land here as creators send them.`
-            } <a class="btn-q" href="${open.length === 1 ? `#job-${esc(open[0].id)}` : "#jobs"}">${open.length === 1 ? "View brief" : "See briefs"}${icon("arrow")}</a></p>`
+            }</p><a class="lq lq-s lq-sm" href="${open.length === 1 ? `#job-${esc(open[0].id)}` : "#jobs"}">${open.length === 1 ? "View brief" : "See briefs"}${icon("arrow", "ic")}</a></div>`
           : "";
         needs = `<section class="ll-panel home-sec home-today" aria-labelledby="homeTodayH">
           <div class="ll-panel-head"><div><h2 class="ll-panel-h" id="homeTodayH">${withOnly ? "With creators" : "Needs you"}</h2>${withOnly ? '<p class="ll-panel-sub">Nothing needs you right now. These are waiting on the creator.</p>' : ""}</div></div>
@@ -461,7 +462,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
           <div class="home-post-t">
             <h2 class="ll-panel-h" id="homePostH">${isNew ? "Post your first brief" : "Post a brief"}<span class="home-post-time"> · takes about 3 minutes</span></h2>
             <p class="ll-panel-sub">${isNew ? "Say what you need and what you'll pay. Creators who fit bid with a price and a date, and you pay into escrow only when you hire." : "Need another creator? Creators who fit bid with a price and a date."}</p>
-            ${draft ? `<a class="btn-q home-post-draft" href="#post-${esc(draft.id)}">${icon("edit")}Finish your draft: ${esc(draft.title || "Untitled brief")}</a>` : ""}
+            ${draft ? `<a class="lq lq-s lq-sm home-post-draft" href="#post-${esc(draft.id)}">${icon("edit", "ic")}Finish your draft: ${esc(draft.title || "Untitled brief")}</a>` : ""}
           </div>
           <a class="${cta().replace(" lq-sm", "")}" href="#post">${icon("plus", "ic")}Post a brief</a>
         </section>`;
@@ -487,7 +488,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
               ? `<div class="home-bud">
             <div class="home-bud-h"><p><b>Budget used</b> · ${esc(bud.label)}</p><p class="num"><b>${L.inr(bud.used)}</b> of ${L.inr(bud.total)}</p></div>
             <div class="home-bud-bar" role="img" aria-label="${Math.round(pct)}% of the ${esc(bud.label)} budget used${bud.owed ? `, ${L.inr(bud.owed)} more to pay for accepted invitations` : ""}"><i style="width:${pct.toFixed(2)}%"></i>${bud.owed ? `<i class="is-owed" style="width:${opct.toFixed(2)}%"></i>` : ""}</div>
-            <p class="home-bud-s"><span class="num">${L.inr(bud.left)}</span> left${bud.owed ? ` · <span class="home-key"></span>${L.inr(bud.owed)} more once you pay accepted invitations` : ""} · <a class="btn-q" href="#reports">Spending report</a></p>
+            <p class="home-bud-s"><span class="num">${L.inr(bud.left)}</span> left${bud.owed ? ` · <span class="home-key"></span>${L.inr(bud.owed)} more once you pay accepted invitations` : ""}</p><a class="lq lq-s lq-sm home-bud-a" href="#reports">${icon("chart", "ic")}Spending report</a>
           </div>`
               : ""
           }
@@ -530,7 +531,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
           ${
             crs.length
               ? `<ul class="home-cr-list">${crs.map(crCard).join("")}</ul>`
-              : `<p class="home-quiet">You're working with everyone we'd suggest. <a class="btn-q" href="#creators">Search all creators${icon("arrow")}</a></p>`
+              : `<div class="home-quiet-row"><p class="home-quiet">You're working with everyone we'd suggest.</p><a class="lq lq-s lq-sm" href="#creators">${icon("search", "ic")}Search all creators</a></div>`
           }
         </section>`;
 

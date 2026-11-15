@@ -45,7 +45,7 @@ export function briefCard(j: Job, o: BriefCardOptions = {}): string {
     : "";
   /* the Bid slot never moves: an open bid swaps the button for a link to it */
   const bid = mine
-    ? `<a class="btn-q jobs-bid" href="#bids">See your bid${L.icon("arrow")}</a>`
+    ? `<a class="lq lq-s lq-sm jobs-bid" href="#bids">See your bid${L.icon("arrow", "ic")}</a>`
     : `<button class="lq ${o.primary ? "lq-p" : "lq-s"} lq-sm jobs-bid" type="button" data-bid="${esc(j.id)}">Bid on this</button>`;
   return `<article class="jobs-card${feat ? " jobs-card--feature" : ""}${saved ? " is-saved" : ""}" data-id="${esc(j.id)}" aria-labelledby="${tid}">
       <div class="jobs-card-top">

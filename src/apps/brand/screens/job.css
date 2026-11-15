@@ -67,6 +67,16 @@
   padding: 24px 0;
   border-top: 1px solid var(--ll-rule);
 }
+/* the brief sits in its own white card, and "Bids received" starts a new block under it */
+.jd-sec.jd-brief-sec {
+  padding: var(--pad-card);
+  border-top: 0;
+  margin-bottom: var(--space-section, 48px);
+}
+.jd-sec.jd-bids-sec {
+  padding-top: 0;
+  border-top: 0;
+}
 .jd-brief {
   max-width: 62ch;
   font-size: 19px;
@@ -140,20 +150,18 @@
 
 /* phone: a dock above the tab bar holds price, place and Bid */
 
-@media (max-width: 1100px) {
-  .jd-layout {
-    grid-template-columns: minmax(0, 1fr) 300px;
-    gap: 32px;
-  }
-}
-@media (max-width: 900px) {
-  .jd {
-    padding-bottom: 96px;
-  }
+/* tablets and small laptops: a 300px slip beside the bids squeezed every bid card (stats cut to "52K…"),
+   so below 1180px the slip moves under the title and the bids get the full width */
+@media (max-width: 1180px) {
+  /* stretch, not "start": a "start" column sizes each block to its content, so the bids block ran off a phone screen */
   .jd-layout {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     gap: 0;
+  }
+  .jd-sec {
+    min-width: 0;
   }
   .jd-main {
     display: contents;
@@ -168,6 +176,11 @@
     position: static;
     order: 1;
     margin-bottom: 24px;
+  }
+}
+@media (max-width: 900px) {
+  .jd {
+    padding-bottom: 96px;
   }
   .jd-deal {
     padding: 24px 16px;
@@ -515,6 +528,13 @@
 body:has(.jd-tray:not([hidden])) {
   --toast-offset: 72px;
 }
+/* with the sidebar: centred under the page content, not under the whole window */
+@media (min-width: 901px) {
+  .jd-tray {
+    left: calc(50% + var(--side-w) / 2);
+    max-width: calc(100vw - var(--side-w) - 48px);
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
   .jd-tray:not([hidden]) {
     animation: jdTrayIn 0.4s var(--mo-out, cubic-bezier(0.22, 1, 0.36, 1));
@@ -708,4 +728,11 @@ body:has(.jd-tray:not([hidden])) {
 .jd-bid-m {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+/* touch: the bidder name link is a 44px target */
+@media (pointer: coarse) {
+  .jd-bid-who {
+    min-height: 44px;
+    align-items: center;
+  }
 }

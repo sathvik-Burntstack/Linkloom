@@ -51,6 +51,8 @@
   --gut: max(16px, env(safe-area-inset-left, 0px));
   --gutr: max(16px, env(safe-area-inset-right, 0px));
   --side-w: 264px;
+  /* the widest the page content (and the top bar above it) gets; centred in the space right of the sidebar */
+  --view-max: 1280px;
   /* spacing scale (4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96); use these, not one-off values */
   --s-1: 4px;
   --s-2: 8px;
@@ -421,7 +423,8 @@ img {
   opacity: 0.42;
   pointer-events: none;
 }
-.lq .ic {
+.lq .ic,
+.lq svg {
   width: 16px;
   height: 16px;
   flex: none;
@@ -1025,6 +1028,12 @@ img {
   line-height: 20px;
   color: var(--ll-mist);
 }
+/* tall screens (1080/1440 high): the note stays with the linkloom.in link at the foot of the box,
+   instead of floating halfway down an empty column */
+.nav-box > .nav-note:not(:last-child) {
+  margin-top: auto;
+  margin-bottom: -16px;
+}
 .side .slipbox {
   display: flex;
   flex-direction: column;
@@ -1078,6 +1087,9 @@ img {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  max-width: var(--view-max);
+  margin-inline: auto;
   padding: 12px var(--gx-r) 0 var(--gx);
   pointer-events: none;
 }
@@ -1135,8 +1147,15 @@ img {
 .view {
   flex: 1;
   padding: 32px var(--gx-r) 96px var(--gx);
-  max-width: 1280px;
+  max-width: var(--view-max);
   width: 100%;
+  margin-inline: auto;
+}
+/* big monitors (2560 wide): a little more room, still well short of edge to edge */
+@media (min-width: 2200px) {
+  :root {
+    --view-max: 1440px;
+  }
 }
 .view-in {
   display: flex;
@@ -1417,6 +1436,13 @@ img {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+/* with the sidebar: centred under the page content, like the compare tray */
+@media (min-width: 901px) {
+  .toast {
+    left: calc(50% + var(--side-w) / 2);
+    max-width: calc(100vw - var(--side-w) - 48px);
+  }
+}
 @media (max-width: 900px) {
   .sheet {
     --sheet-x: max(24px, env(safe-area-inset-left, 0px));
@@ -1472,6 +1498,18 @@ img {
   .hbox.icons .avatar {
     width: 44px;
     height: 44px;
+  }
+  /* segmented controls (period filters, Instagram/YouTube, All creators/Saved): 44px pills on touch */
+  .seg > button {
+    height: 44px;
+    min-width: 44px;
+  }
+  /* "← Deals", "← All briefs"…: a 44px tall target; the negative margin keeps the line where it was */
+  .btn-q.cw-back,
+  .btn-q.jd-back,
+  .btn-q.pj-back {
+    min-height: 44px;
+    margin-block: -12px;
   }
 } /* 44px targets; the 54px header box keeps an equal 5px inset */
 @media (prefers-reduced-motion: reduce) {

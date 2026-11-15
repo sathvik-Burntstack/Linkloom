@@ -364,20 +364,20 @@
       acts.push(
         `<a class="lq lq-s lq-sm" href="#job-${esc(j.id)}">${j.bids ? `See ${j.bids} bid${j.bids === 1 ? "" : "s"}` : "Open brief"}</a>`,
       );
-      acts.push(`<a class="btn-q" href="#post-${esc(j.id)}">${ic("edit")}Edit</a>`);
-      acts.push(`<button class="btn-q" type="button" data-close="${esc(j.id)}">Close brief</button>`);
+      acts.push(`<a class="lq lq-s lq-sm" href="#post-${esc(j.id)}">${ic("edit")}Edit</a>`);
+      acts.push(`<button class="lq lq-s lq-sm" type="button" data-close="${esc(j.id)}">Close brief</button>`);
     } else if (draft) {
       acts.push(`<a class="lq lq-s lq-sm" href="#post-${esc(j.id)}">Continue editing</a>`);
-      acts.push(`<a class="btn-q" href="#job-${esc(j.id)}">${ic("eye")}Preview</a>`);
-      acts.push(`<button class="btn-q" type="button" data-del="${esc(j.id)}">${ic("trash")}Delete</button>`);
+      acts.push(`<a class="lq lq-s lq-sm" href="#job-${esc(j.id)}">${ic("eye")}Preview</a>`);
+      acts.push(`<button class="lq lq-s lq-sm" type="button" data-del="${esc(j.id)}">${ic("trash")}Delete</button>`);
     } else {
       if (c) acts.push(`<a class="lq lq-s lq-sm" href="#campaign-${esc(c.id)}">Open deal</a>`);
-      acts.push(`<a class="btn-q" href="#job-${esc(j.id)}">View brief</a>`);
+      acts.push(`<a class="lq lq-s lq-sm" href="#job-${esc(j.id)}">View brief</a>`);
       if (j.status === "hired")
-        acts.push(`<button class="btn-q" type="button" data-close="${esc(j.id)}">Close listing</button>`);
+        acts.push(`<button class="lq lq-s lq-sm" type="button" data-close="${esc(j.id)}">Close listing</button>`);
       if (!c)
         acts.push(
-          `<button class="btn-q" type="button" data-del="${esc(j.id)}">${ic("trash")}Delete</button>`,
+          `<button class="lq lq-s lq-sm" type="button" data-del="${esc(j.id)}">${ic("trash")}Delete</button>`,
         );
     }
     const st =

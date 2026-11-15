@@ -50,6 +50,7 @@
   --gut: max(16px, env(safe-area-inset-left, 0px));
   --gutr: max(16px, env(safe-area-inset-right, 0px));
   --side-w: 264px;
+  --view-max: 1280px; /* content column (and top bar) width beside the sidebar; centred when the window is wider */
   /* spacing scale (4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96); use these, not one-off values */
   --s-1: 4px;
   --s-2: 8px;
@@ -965,10 +966,18 @@ img {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 24px;
   min-height: 0;
   overflow: auto;
+}
+/* the platforms line and the way back to the site sit together at the foot of the box; with space-between the line
+   floated in the middle of a tall (1080/1440) sidebar */
+.nav-box > .nav-note {
+  margin-top: auto;
+}
+.nav-box > .nav-note + .nav-site {
+  margin-top: -12px;
 }
 .nav {
   display: flex;
@@ -1131,11 +1140,22 @@ img {
 .hlogo {
   display: none;
 }
+/* The content column and the top bar share one max width and are centred in the space beside the sidebar, so on
+   1920/2560 monitors the page sits in the middle instead of stranded at the left with a wide empty strip. */
+.top,
+.view {
+  width: 100%;
+  max-width: var(--view-max);
+  margin-inline: auto;
+}
 .view {
   flex: 1;
   padding: 32px var(--gx-r) 96px var(--gx);
-  max-width: 1280px;
-  width: 100%;
+}
+@media (min-width: 2200px) {
+  :root {
+    --view-max: 1440px;
+  }
 }
 .view-in {
   display: flex;
@@ -1252,6 +1272,12 @@ img {
   max-width: 640px;
   width: 100%;
 }
+/* on wide monitors the form sits in the middle of its half instead of hugging the dark panel with an empty strip */
+@media (min-width: 1600px) {
+  .focus-form {
+    margin-inline: auto;
+  }
+}
 
 /* bottom nav on phones (Home · Find Jobs · My Bids · Active Jobs · Earnings) */
 .tabbar {
@@ -1332,12 +1358,14 @@ img {
   }
   .focus {
     grid-template-columns: minmax(0, 1fr);
-  }
+    grid-template-rows: auto 1fr;
+  } /* the dark header keeps its own height; the spare screen height goes to the form, not to an empty ink band */
   .focus-art {
     min-height: 0;
     padding: 24px var(--gutr) 32px var(--gut);
   }
   .focus-form {
+    justify-content: flex-start;
     padding: 32px var(--gutr) 48px var(--gut);
   }
 }
@@ -1472,6 +1500,30 @@ img {
     width: 44px;
     height: 44px;
   }
+  /* the rest of the touch targets that measured under 44px on phones and tablets */
+  .seg > button {
+    height: 44px;
+  }
+  .check {
+    min-height: 44px;
+    align-items: center;
+  }
+  .job-back,
+  .bid-back {
+    min-height: 44px;
+  }
+  .top .crumb a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .view .ll-panel-more {
+    min-height: 44px;
+  } /* shared/layout.css sets 36px */
+  .view .ll-cheer-x {
+    width: 44px;
+    height: 44px;
+  } /* shared/layout.css sets 32px */
 } /* 44px targets; the 54px header box keeps an equal 5px inset */
 @media (prefers-reduced-motion: reduce) {
   .lq:hover {
@@ -1483,5 +1535,29 @@ img {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* Section heads on phones: the heading and its button ("See all →", "Add link") share the first row and the one-line
+   description takes the full width under them, instead of being folded into a narrow column beside the button.
+   Only for heads that have both a description and a trailing control; the .ll-panel pieces come from shared/layout.css. */
+@media (max-width: 600px) {
+  .view .ll-panel-head:has(> div > .ll-panel-sub):has(> .ll-panel-more, > .lq) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 16px;
+  }
+  .view .ll-panel-head:has(> div > .ll-panel-sub):has(> .ll-panel-more, > .lq) > div {
+    display: contents;
+  }
+  .view .ll-panel-head:has(> div > .ll-panel-sub):has(> .ll-panel-more, > .lq) .ll-panel-h {
+    grid-area: 1 / 1;
+  }
+  .view .ll-panel-head:has(> div > .ll-panel-sub):has(> .ll-panel-more, > .lq) .ll-panel-sub {
+    grid-area: 2 / 1 / 3 / -1;
+  }
+  .view .ll-panel-head:has(> div > .ll-panel-sub):has(> .ll-panel-more, > .lq) > :is(.ll-panel-more, .lq) {
+    grid-area: 1 / 2;
   }
 }

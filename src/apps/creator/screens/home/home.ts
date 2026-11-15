@@ -27,7 +27,7 @@ import { firstTime } from "@/shared/ux";
       body.innerHTML = list.length
         ? `<div class="home-nt-h">
           <p class="t-small muted" aria-live="polite">${unread ? `${unread} unread` : "All caught up"}</p>
-          <button class="btn-q" type="button" data-allread ${unread ? "" : 'disabled aria-disabled="true"'}>${L.icon("check")}Mark all read</button>
+          <button class="lq lq-s lq-sm" type="button" data-allread ${unread ? "" : 'disabled aria-disabled="true"'}>${L.icon("check", "ic")}Mark all read</button>
         </div>
         <ul class="home-nt">${list
           .map(
@@ -40,6 +40,7 @@ import { firstTime } from "@/shared/ux";
           .join("")}</ul>
         <p class="home-nt-foot sample">Sample notifications</p>`
         : `<div class="empty home-nt-empty"><img src="assets/step-01-envelope.svg" width="140" height="103" alt=""><p class="t-h2">You are all caught up.</p><p class="muted">Bid updates, revision requests and payouts land here.</p></div>`;
+      L.liquid(body); // the sheet's own liquid pass ran before this body was painted
     };
     L.openSheet({
       title: "Notifications",
@@ -176,7 +177,7 @@ import { firstTime } from "@/shared/ux";
         <p class="home-kyc-bar-t" title="${esc(main + " · " + rest)}"><b>${esc(main)}</b><span> · ${esc(rest)}</span></p>
         ${prog}
         <p class="ll-trust">${L.icon("lock")}Encrypted. Never shown to brands.</p>
-        <a class="btn-q home-kyc-go" href="#kyc">${esc(cta)}${L.icon("arrow")}</a>
+        <a class="lq lq-s lq-sm home-kyc-go" href="#kyc">${esc(cta)}${L.icon("arrow", "ic")}</a>
       </section>`;
   }
 
@@ -308,7 +309,7 @@ import { firstTime } from "@/shared/ux";
           <p class="home-from"><span class="jobs-bi" aria-hidden="true">${esc(th ? th.bi : L.initials(a.brand))}</span>${esc(a.brand)} asked</p>
           <blockquote class="home-quote">“${esc(a.revision || "Please take another look.")}”</blockquote>
           <p class="home-job">${esc(a.title)}</p>
-          <div class="home-obj-act"><a class="${prim()}" href="#work-${esc(a.id)}">Open the deal</a>${th ? `<a class="btn-q" href="#chat-${esc(th.id)}">Reply</a>` : ""}</div>
+          <div class="home-obj-act"><a class="${prim()}" href="#work-${esc(a.id)}">Open the deal</a>${th ? `<a class="lq lq-s lq-sm" href="#chat-${esc(th.id)}">Reply</a>` : ""}</div>
         </li>`);
         });
       s.active
@@ -320,7 +321,7 @@ import { firstTime } from "@/shared/ux";
           <p class="home-obj-t">${esc(a.brand)} is reviewing your final cut</p>
           <p class="home-job">${esc(a.title)}</p>
           <ol class="home-track" aria-label="Stage"><li class="is-done">Kickoff</li><li class="is-done">Upload</li><li class="is-now" aria-current="step">Review</li></ol>
-          <div class="home-obj-act"><span class="pill pill-escrow">${L.icon("lock")}${L.inr(a.price)} in escrow</span><a class="btn-q" href="#work-${esc(a.id)}">See status${L.icon("arrow")}</a></div>
+          <div class="home-obj-act"><span class="pill pill-escrow">${L.icon("lock")}${L.inr(a.price)} in escrow</span><a class="lq lq-s lq-sm" href="#work-${esc(a.id)}">See status${L.icon("arrow", "ic")}</a></div>
         </li>`);
         });
       const pending = s.ledger.filter(x => x.status === "pending").reduce((n, x) => n + x.amount, 0);
@@ -387,12 +388,10 @@ import { firstTime } from "@/shared/ux";
           }
 
           <section class="ll-panel home-panel home-match" aria-labelledby="homeMatchH">
-            <div class="home-ph">
-              <div class="ll-panel-head">
-                <h2 class="ll-panel-h" id="homeMatchH">Briefs for you</h2>
-                <a class="ll-panel-more" href="#jobs" aria-label="See all briefs">See all →</a>
-              </div>
-              <p class="ll-panel-sub">Ranked on platform, niche, language, city, budget and deadline.</p>
+            <div class="ll-panel-head">
+              <div><h2 class="ll-panel-h" id="homeMatchH">Briefs for you</h2>
+              <p class="ll-panel-sub">Ranked on platform, niche, language, city, budget and deadline.</p></div>
+              <a class="ll-panel-more" href="#jobs" aria-label="See all briefs">See all →</a>
             </div>
             <p class="home-hint help">${L.icon("info")}Swipe a brief right to save it, left to hide it. The buttons do the same.</p>
             <div class="home-match-grid" id="homeGrid"></div>

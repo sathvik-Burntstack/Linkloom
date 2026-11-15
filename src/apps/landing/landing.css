@@ -1723,25 +1723,35 @@ html.lenis body {
   transform: translateY(130%);
   color: var(--on-fill);
 }
-.lq:hover::before,
 .lq:focus-visible::before {
   transform: translateY(-1%) scaleY(1);
   border-radius: 0;
 }
-.lq:hover,
 .lq:focus-visible {
   border-color: var(--fill);
 }
-.lq:hover .t,
 .lq:focus-visible .t {
   transform: translateY(calc(-100% - 22px));
 }
-.lq:hover .t2,
 .lq:focus-visible .t2 {
   transform: translateY(0);
 }
-.lq:hover {
-  animation: llLqPulse 0.8s cubic-bezier(0.1, 0, 0.2, 1) forwards;
+/* hover only on real pointers: on touch a tap would leave the button stuck mid-flip */
+@media (hover: hover) {
+  .lq:hover::before {
+    transform: translateY(-1%) scaleY(1);
+    border-radius: 0;
+  }
+  .lq:hover {
+    border-color: var(--fill);
+    animation: llLqPulse 0.8s cubic-bezier(0.1, 0, 0.2, 1) forwards;
+  }
+  .lq:hover .t {
+    transform: translateY(calc(-100% - 22px));
+  }
+  .lq:hover .t2 {
+    transform: translateY(0);
+  }
 }
 @keyframes llLqPulse {
   0% {
@@ -1920,8 +1930,10 @@ html.lenis body {
   }
 }
 @media (max-width: 520px) {
+  /* returning visitors on phones still get "Sign in" in the header, beside Get started */
   .hsign {
-    display: none;
+    padding: 0 12px;
+    font-size: 15px;
   }
   .hlogo span {
     font-size: 22px;
@@ -1933,6 +1945,15 @@ html.lenis body {
   .hdr .lq {
     min-height: 48px;
     padding: 0 18px;
+  }
+}
+@media (max-width: 380px) {
+  /* the narrowest phones: the logo mark alone (the link keeps its "Linkloom home" label), so all three fit */
+  .hlogo span {
+    display: none;
+  }
+  .hdr .lq {
+    padding: 0 14px;
   }
 }
 
@@ -1949,6 +1970,9 @@ html.lenis body {
 }
 .has-cursor .ll-cur {
   display: block;
+}
+.ll-cur:not(.is-on) {
+  visibility: hidden;
 }
 .ll-cur-dot {
   position: absolute;
@@ -3345,9 +3369,13 @@ html.lenis body {
   --on-fill: var(--ll-ink-text);
 }
 /* core .lq rolls .t by -130% of its own 20px line, which leaves a sliver inside the 52px pill; roll it fully out here */
-.sd .lq:hover .t,
 .sd .lq:focus-visible .t {
   transform: translateY(calc(-100% - 22px));
+}
+@media (hover: hover) {
+  .sd .lq:hover .t {
+    transform: translateY(calc(-100% - 22px));
+  }
 }
 .sd .sd-send[aria-disabled="true"] {
   cursor: default;
@@ -4313,7 +4341,8 @@ html.lenis body {
 /* ── payout: copy + ink receipt calculator ── */
 .tr-pay {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 840px);
+  /* the copy column keeps room for its heading on 1181–1366px laptops instead of breaking it word by word */
+  grid-template-columns: minmax(340px, 1fr) minmax(0, 840px);
   gap: 48px 64px;
   align-items: start;
 }
@@ -4578,6 +4607,7 @@ html.lenis body {
 }
 .tr-rows dt {
   color: var(--ll-mist);
+  white-space: nowrap;
 }
 .tr-eg {
   font-size: 13px;
@@ -4772,7 +4802,8 @@ html.lenis body {
     line-height: 20px;
   }
 }
-@media (max-width: 720px) {
+/* the two-column slip needs ~860px; below that it stacks (tablet portrait included) */
+@media (max-width: 860px) {
   .tr-calc {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
@@ -6867,5 +6898,96 @@ html.lenis body {
   .ct-sub {
     font-size: 17px;
     max-width: 24ch;
+  }
+}
+
+/* ───────── responsive polish: wide monitors, laptops, touch ───────── */
+/* wide monitors: the header sits on the same 1440 content column as every section (not on the screen edges) */
+@media (min-width: 1473px) {
+  .hdr {
+    left: calc((100% - 1440px) / 2 + 48px);
+    right: calc((100% - 1440px) / 2 + 48px);
+  }
+}
+/* 1181–1366px laptops: the three footer boxes give up a little width so the statement keeps a readable column */
+@media (min-width: 1181px) {
+  .explore,
+  .follow {
+    flex: 0 1 320px;
+    min-width: 0;
+  }
+  .contact {
+    flex: 0 1 340px;
+    min-width: 0;
+  }
+  .statement {
+    min-width: 280px;
+  }
+}
+/* the newsletter input fills its pill, so the whole field is the tap target */
+.field input {
+  align-self: stretch;
+  margin-block: -6px;
+}
+/* touch: every control gets at least a 44px hit area; visuals stay the same */
+@media (pointer: coarse) {
+  .sd-step {
+    width: 44px;
+    height: 44px;
+  }
+  .tr-chips button,
+  .tr-seg button,
+  .sub,
+  .tr-node-r {
+    position: relative;
+  }
+  .tr-chips button::after,
+  .tr-seg button::after,
+  .sub::after,
+  .tr-node-r::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+  .tr-range {
+    height: 44px;
+    margin-top: 7px;
+    margin-bottom: -7px;
+  }
+  .flinks a,
+  .legal a,
+  .social a {
+    min-height: 44px;
+  }
+  /* negative margins give back the extra height, so the lists keep their spacing */
+  .flinks a {
+    margin-block: -7px;
+  }
+  .legal a,
+  .social a {
+    margin-block: -10px;
+  }
+  /* 44px pitch between stacked links, so neighbouring hit areas don't overlap */
+  .flinks {
+    gap: 14px;
+  }
+  .legal,
+  .social {
+    gap: 20px;
+  }
+  .hnav a {
+    padding-block: 12px;
+  }
+  .hnav a::after {
+    bottom: 6px;
+  }
+}
+@media (pointer: coarse) and (max-width: 1000px) {
+  .tr-node-r {
+    min-height: 44px;
   }
 }

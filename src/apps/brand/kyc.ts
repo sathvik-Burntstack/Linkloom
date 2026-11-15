@@ -55,7 +55,7 @@ function render(el: HTMLElement): () => void {
     const sec = (id: string, title: string, isDone: boolean, summary: string, form: string) => `
       <section class="card stack" aria-labelledby="bk-${id}-h" data-sec="${id}">
         <div class="row between wrap"><h2 class="t-h3" id="bk-${id}-h">${esc(title)}</h2>${isDone ? `<span class="pill pill-ok">${icon("check")}Saved</span>` : ""}</div>
-        ${isDone && !openEdit.has(id) ? `<dl>${summary}</dl>${locked ? "" : `<button class="btn-q" type="button" data-edit="${id}">Change</button>`}` : locked ? `<p class="muted">Locked while under review.</p>` : form}
+        ${isDone && !openEdit.has(id) ? `<dl>${summary}</dl>${locked ? "" : `<div class="row"><button class="lq lq-s lq-sm" type="button" data-edit="${id}">Change</button></div>`}` : locked ? `<p class="muted">Locked while under review.</p>` : form}
       </section>`;
 
     el.innerHTML = `<div class="focus auth setup">

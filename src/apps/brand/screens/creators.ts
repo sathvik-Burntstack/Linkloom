@@ -750,7 +750,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       ${tabs("all")}
       <div class="creators-layout">
         <aside class="creators-filters" id="crFilters" aria-label="Filters">
-          <div class="creators-f-h"><p class="t-label">Filters</p><button class="btn-q creators-clear" type="button" data-clear>Clear all</button></div>
+          <div class="creators-f-h"><p class="t-label">Filters</p><button class="lq lq-s lq-sm creators-clear" type="button" data-clear>Clear all</button></div>
 
           <div class="creators-g creators-g-main">
             <div class="field"><span class="lab" id="crCatL">Category</span>
@@ -902,7 +902,11 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       $("#crPriceE").textContent = pe;
       $(".creators-pricef").classList.toggle("is-err", !!pe);
       L.$$(".creators-clear", el).forEach(b => {
-        b.textContent = n ? `Clear all (${n})` : "Clear all";
+        /* an outlined liquid button: write the label into its two roll spans, not over them */
+        const lbl = n ? `Clear all (${n})` : "Clear all",
+          sp = b.querySelectorAll(".t,.t2");
+        if (sp.length) sp.forEach(x => (x.textContent = lbl));
+        else b.textContent = lbl;
         b.setAttribute("aria-disabled", String(!n));
       });
       const ft = $(".creators-ftoggle");
@@ -949,9 +953,10 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
               a =>
                 `<button class="chip creators-achip" type="button" data-off="${esc(a.k)}" aria-label="Remove filter: ${esc(a.label)}">${esc(a.label)}${L.icon("close")}</button>`,
             )
-            .join("") + `<button class="btn-q" type="button" data-clear>Clear all</button>`
+            .join("") + `<button class="lq lq-s lq-sm" type="button" data-clear>Clear all</button>`
         : "";
       $("#crActive").hidden = !act.length;
+      L.liquid($("#crActive"));
       const empty = !ids.length;
       $(".creators-empty").hidden = !empty;
       list.hidden = empty;

@@ -206,7 +206,7 @@ import { openKyc } from "../../core/kyc-gate";
                 <p class="lab" id="bidLinksL">Similar work links</p>
                 <ul class="bid-links" id="bidLinks" aria-labelledby="bidLinksL"></ul>
                 <div class="bid-links-f">
-                  <button class="btn-q" type="button" data-addlink>${L.icon("plus")}Add link</button>
+                  <button class="lq lq-s lq-sm" type="button" data-addlink>${L.icon("plus", "ic")}Add link</button>
                   <span class="help" id="bidLinksMax">Up to ${R.maxLinks}. Reels, videos or pages from past deals.</span>
                 </div>
                 ${portfolio.length ? `<div class="bid-port"><p class="help">From your profile</p><div class="chips" id="bidPort"></div></div>` : ""}

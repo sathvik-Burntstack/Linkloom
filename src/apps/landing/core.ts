@@ -143,7 +143,11 @@
       prev = { x: -100, y: -100 };
     addEventListener(
       "pointermove",
-      e => G.to(pos, { x: e.clientX, y: e.clientY, duration: 0.55, ease: "expo.out", overwrite: true }),
+      e => {
+        /* parked off-screen until the pointer first moves; shown from then on */
+        el.classList.add("is-on");
+        G.to(pos, { x: e.clientX, y: e.clientY, duration: 0.55, ease: "expo.out", overwrite: true });
+      },
       { passive: true },
     );
     G.ticker.add(() => {

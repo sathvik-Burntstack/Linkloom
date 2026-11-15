@@ -12,6 +12,13 @@
   min-height: 540px;
   margin-bottom: -76px;
 }
+/* beside the sidebar on a 1024 tablet the list took 340px and left the chat 350px, cutting the deal card to
+   "Morning ro…"; a narrower list gives the conversation the room */
+@media (min-width: 901px) and (max-width: 1180px) {
+  .messages-wrap {
+    grid-template-columns: 264px minmax(0, 1fr);
+  }
+}
 .messages-list {
   display: flex;
   flex-direction: column;

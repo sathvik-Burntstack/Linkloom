@@ -267,6 +267,7 @@
   .job-layout {
     display: flex;
     flex-direction: column;
+    align-items: stretch; /* the desktop grid's "start" left the brief at its content width on tablets */
     gap: 0;
   }
   .job-main {
@@ -325,5 +326,11 @@
   }
   .job-sticky .lq {
     flex: none;
+  }
+}
+/* tablet portrait: the brief now takes the full width, so the four match reasons sit two a row again */
+@media (min-width: 640px) and (max-width: 900px) {
+  .job-fit {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

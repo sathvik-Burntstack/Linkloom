@@ -1,6 +1,6 @@
 /* profile screen styles (Builder A). Classes are prefixed .profile-
-   Layout: header, then section panels (.ll-panel, src/shared/layout.css) --space-section apart:
-   Audience · Work · Reviews · Private to you (brief: creator profile layout). */
+   Layout: header, then the ink Audience band (the screen's one dark block), then section panels (.ll-panel,
+   src/shared/layout.css) --space-section apart: Platforms and audience · Work · Reviews · Private to you. */
 .profile {
   gap: var(--space-section, 48px);
 }
@@ -122,9 +122,8 @@
   line-height: 20px;
   color: var(--ll-slate);
 }
-.profile-addlang {
+.profile-addlang:not(:first-child) {
   margin-left: 8px;
-  font-size: 14px;
 }
 .profile-act {
   display: flex;
@@ -179,7 +178,37 @@
   background: var(--ll-ink-text);
 }
 
-/* audience panel: the three headline numbers, then platforms and geography side by side */
+/* audience band (ink): the three headline numbers, big, on the one dark block of the screen */
+.profile-band {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 32px;
+  border-radius: var(--r-lg);
+  background: var(--ll-ink-900);
+  color: var(--ll-white);
+}
+.profile-band-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.profile-band .t-eyebrow {
+  color: var(--ll-mist);
+}
+.profile-src {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ll-mist);
+}
+.profile-band-empty {
+  color: var(--ll-mist);
+}
+.profile-band-empty .btn-q {
+  color: var(--ll-butter);
+}
 .profile-nums {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -190,7 +219,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 0 24px;
-  border-left: 1px solid var(--ll-rule);
+  border-left: 1px solid var(--ll-ink-700);
   min-width: 0;
 }
 .profile-nums > div:first-child {
@@ -201,29 +230,28 @@
   font-weight: 600;
   font-size: 13px;
   line-height: 18px;
-  color: var(--ll-slate);
+  color: var(--ll-mist);
 }
 .profile-nums dd {
   margin: 0;
-  font-size: clamp(48px, 5vw, 72px);
+  font-size: clamp(56px, 6vw, 92px);
   line-height: 1;
-  color: var(--ll-ink-text);
+  color: var(--ll-white);
 }
 .profile-nums p {
   font-size: 13px;
   line-height: 18px;
-  color: var(--ll-slate);
+  color: var(--ll-mist);
 }
 
-/* two blocks side by side inside a panel (platforms | geography, selected work | track record) */
+/* two blocks side by side inside a panel (platforms | geography, selected work | track record); the panel head's
+   rule already separates them from the heading */
 .profile-aud-g,
 .profile-work-g {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: var(--space-items, 16px) 40px;
+  gap: 32px 40px;
   align-items: start;
-  padding-top: var(--space-items, 16px);
-  border-top: 1px solid var(--ll-rule);
 }
 .profile-sub {
   display: flex;
@@ -658,6 +686,10 @@
   .profile-act .lq {
     flex: 1;
   }
+  .profile-band {
+    padding: 24px;
+    gap: 24px;
+  }
   .profile-nums {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
@@ -671,7 +703,7 @@
     row-gap: 0;
     padding: 0 0 16px;
     border-left: 0;
-    border-bottom: 1px solid var(--ll-rule);
+    border-bottom: 1px solid var(--ll-ink-700);
   }
   .profile-nums > div:last-child {
     border-bottom: 0;
@@ -730,4 +762,11 @@
   width: 16px;
   height: 16px;
   flex: none;
+}
+/* the "Edit profile" link inside the empty audience line: a 44px touch target without moving the sentence */
+@media (pointer: coarse) {
+  .profile-band-empty .btn-q {
+    padding-block: 12px;
+    margin-block: -12px;
+  }
 }

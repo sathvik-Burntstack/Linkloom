@@ -81,7 +81,7 @@
           acts.push(c0 ? `<a class="lq lq-s lq-sm" href="#campaign-${esc(c0.id)}">Open deal</a>` : "");
         else if (b.status === "declined") {
           if (canHire())
-            acts.push(`<button class="btn-q" type="button" data-undo="${esc(b.id)}">Undo decline</button>`);
+            acts.push(`<button class="lq lq-s lq-sm" type="button" data-undo="${esc(b.id)}">Undo decline</button>`);
         } else if (canHire()) {
           acts.push(
             `<button class="lq lq-s lq-sm" type="button" data-hire="${esc(b.id)}">Confirm ${esc(K.first(c))}</button>`,
@@ -92,11 +92,11 @@
           acts.push(
             `<button class="chip jd-cmp-t" type="button" data-cmp="${esc(b.id)}" aria-pressed="${inCmp}">${inCmp ? ic("check") : ic("plus")}<span>Compare</span></button>`,
           );
-          acts.push(`<button class="btn-q" type="button" data-decline="${esc(b.id)}">Decline</button>`);
+          acts.push(`<button class="lq lq-s lq-sm" type="button" data-decline="${esc(b.id)}">Decline</button>`);
         }
         if (b.status === "new" && canHire())
           acts.push(
-            `<button class="btn-q jd-seen" type="button" data-seen="${esc(b.id)}">${ic("eye")}Mark as viewed</button>`,
+            `<button class="lq lq-s lq-sm jd-seen" type="button" data-seen="${esc(b.id)}">${ic("eye", "ic")}Mark as viewed</button>`,
           );
         return `<article class="jd-bid is-${b.status}" data-id="${esc(b.id)}" aria-labelledby="jb-${esc(b.id)}">
           <div class="jd-bid-h">
@@ -153,7 +153,7 @@
         if (!t) return;
         t.hidden = !ids.length || !canHire();
         t.innerHTML = `<p class="jd-tray-t"><span class="jd-tray-av">${ids.map(b => K.cav(K.cr(S().bids.find(x => x.id === b).creator))).join("")}</span><span><b>${ids.length} of ${MAXCMP}</b> picked to compare</span></p>
-          <div class="row"><button class="btn-q jd-tray-x" type="button" data-clearcmp>Clear</button><button class="lq lq-p lq-sm" type="button" data-opencmp ${ids.length < 2 ? 'disabled aria-disabled="true"' : ""}>${ids.length < 2 ? "Pick one more" : "Compare " + ids.length}</button></div>`;
+          <div class="row"><button class="lq lq-s lq-sm jd-tray-x" type="button" data-clearcmp>Clear</button><button class="lq lq-p lq-sm" type="button" data-opencmp ${ids.length < 2 ? 'disabled aria-disabled="true"' : ""}>${ids.length < 2 ? "Pick one more" : "Compare " + ids.length}</button></div>`;
         L.liquid(t);
       }
 
@@ -199,7 +199,7 @@
                 </div>
               </header>
               ${banner}
-              <section class="jd-sec" aria-labelledby="jdBriefH">
+              <section class="jd-sec jd-brief-sec card" aria-labelledby="jdBriefH">
                 <h2 class="t-eyebrow muted" id="jdBriefH">The brief</h2>
                 <p class="jd-brief">${esc(j.brief || "No brief yet.")}</p>
                 <dl class="cw-facts jd-facts">

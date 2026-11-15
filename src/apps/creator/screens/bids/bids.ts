@@ -91,14 +91,14 @@ import { KYC_AFTER_ACCEPT, kycOwed, openKyc } from "../../core/kyc-gate";
           actions.push(
             `<button class="lq lq-s lq-sm" type="button" data-withdraw="${esc(b.id)}">Withdraw bid</button>`,
           );
-          if (m.job) actions.push(`<a class="btn-q" href="#job-${esc(m.job.id)}">View brief</a>`);
+          if (m.job) actions.push(`<a class="lq lq-s lq-sm" href="#job-${esc(m.job.id)}">View brief</a>`);
         } else if (owed) {
           actions.push(
             `<button class="lq lq-p lq-sm" type="button" data-verify>${L.icon("shield")}Verify ID</button>`,
           );
           if (thread)
             actions.push(
-              `<a class="btn-q" href="#chat-${esc(thread.id)}">${L.icon("chat")}Message ${esc(m.brand)}</a>`,
+              `<a class="lq lq-s lq-sm" href="#chat-${esc(thread.id)}">${L.icon("chat", "ic")}Message ${esc(m.brand)}</a>`,
             );
         } else if (b.status === "accepted") {
           actions.push(
@@ -106,7 +106,7 @@ import { KYC_AFTER_ACCEPT, kycOwed, openKyc } from "../../core/kyc-gate";
           );
           if (thread)
             actions.push(
-              `<a class="btn-q" href="#chat-${esc(thread.id)}">${L.icon("chat")}Message ${esc(m.brand)}</a>`,
+              `<a class="lq lq-s lq-sm" href="#chat-${esc(thread.id)}">${L.icon("chat", "ic")}Message ${esc(m.brand)}</a>`,
             );
         } else if (b.status === "completed") {
           if (b.feedback)
@@ -117,13 +117,13 @@ import { KYC_AFTER_ACCEPT, kycOwed, openKyc } from "../../core/kyc-gate";
             actions.push(
               `<button class="lq lq-p lq-sm" type="button" data-feedback="${esc(b.id)}">Leave feedback</button>`,
             );
-          actions.push(`<a class="btn-q" href="#earnings">See payout</a>`);
+          actions.push(`<a class="lq lq-s lq-sm" href="#earnings">See payout</a>`);
         } else if (b.status === "rejected") {
           actions.push(
-            `<button class="btn-q" type="button" data-similar="${esc(m.job ? m.job.category : "")}">Find similar briefs${L.icon("arrow")}</button>`,
+            `<button class="lq lq-s lq-sm" type="button" data-similar="${esc(m.job ? m.job.category : "")}">Find similar briefs${L.icon("arrow", "ic")}</button>`,
           );
         } else if (b.status === "withdrawn" && m.job) {
-          actions.push(`<a class="btn-q" href="#job-${esc(m.job.id)}">Open brief to bid again</a>`);
+          actions.push(`<a class="lq lq-s lq-sm" href="#job-${esc(m.job.id)}">Open brief to bid again</a>`);
         }
         return `<article class="bids-slip is-${b.status}" data-id="${esc(b.id)}" data-status="${b.status}" aria-labelledby="bt-${esc(b.id)}">
           <div class="bids-stub">

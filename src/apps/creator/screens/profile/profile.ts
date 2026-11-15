@@ -4,7 +4,8 @@
    audience geography, track record, selected work, reviews, and a "Private to you" panel.
    "See what brands see" switches to the brand-safe view: no contact details, no date of birth, no KYC or payout data.
    #profile-brand opens straight in that view. Edit profile opens a sheet (reuses LLA.photo and LLA.V from setup.js).
-   Layout (brief): header, then section panels 48px apart: Audience · Work · Reviews · Private to you.
+   Layout: header, then the dark Audience band (the one dark block on this screen: the three headline numbers), then
+   section panels --space-section apart: Platforms and audience · Work · Reviews · Private to you.
    C7: no languages → no "Creates in" for brands; the owner gets an "Add languages" link to the edit sheet. */
 import { kycWaitText } from "../../core/kyc-gate";
 
@@ -77,7 +78,7 @@ import { kycWaitText } from "../../core/kyc-gate";
             <p class="profile-meta">${(me.categories || []).map(c => `<span class="pill pill-line">${esc(c)}</span>`).join("")}${
               langs.length
                 ? `<span class="profile-langs">Creates in ${esc(langs.join(", "))}</span>`
-                : `<button type="button" class="btn-q profile-addlang" data-addlang data-own ${own}>${icon("plus")}Add languages</button>`
+                : `<button type="button" class="lq lq-s lq-sm profile-addlang" data-addlang data-own ${own}>${icon("plus", "ic")}Add languages</button>`
             }</p>
           </div>
           <div class="profile-act">
@@ -87,20 +88,27 @@ import { kycWaitText } from "../../core/kyc-gate";
         </header>
 
         <div class="ll-stack profile-stack">
-          <section class="ll-panel profile-aud" aria-labelledby="profile-aud">
-            <div class="ll-panel-head"><div>
-              <h2 class="ll-panel-h" id="profile-aud">Audience</h2>
-              <p class="ll-panel-sub">${esc(st.source || "Self-reported")} · updated ${st.updated ? esc(LLD.fmtDate(st.updated, { year: true })) : "never"}${st.ps.length > 1 ? " · views and engagement weighted by followers" : ""} <span class="sample">Sample</span></p>
-            </div></div>
+          <section class="profile-band" aria-labelledby="profile-aud">
+            <div class="profile-band-h">
+              <h2 class="t-eyebrow" id="profile-aud">Audience</h2>
+              <p class="profile-src">${esc(st.source || "Self-reported")} · updated ${st.updated ? esc(LLD.fmtDate(st.updated, { year: true })) : "never"}${st.ps.length > 1 ? " · views and engagement weighted by followers" : ""} <span class="sample">Sample</span></p>
+            </div>
             ${
               st.ps.length
                 ? `<dl class="profile-nums">
-              <div><dt>Followers</dt><dd class="t-money" data-n="${st.followers}" data-f="c">${esc(LLD.compact(st.followers))}</dd><p>${esc(st.ps.map(([key]) => (PLAT[key] ? PLAT[key][0] : key)).join(" and "))}</p></div>
+              <div><dt>Followers</dt><dd class="t-money" data-n="${st.followers}" data-f="c">${st.followers ? esc(LLD.compact(st.followers)) : "—"}</dd><p>${esc(st.ps.map(([key]) => (PLAT[key] ? PLAT[key][0] : key)).join(" and "))}</p></div>
               <div><dt>Avg views</dt><dd class="t-money" data-n="${st.views}" data-f="c">${st.views ? esc(LLD.compact(st.views)) : "—"}</dd><p>per post</p></div>
               <div><dt>Engagement</dt><dd class="t-money" data-n="${st.er}" data-f="p">${st.er ? esc(pct(st.er)) : "—"}</dd><p>engagement rate</p></div>
             </dl>`
-                : `<p class="muted">No audience numbers yet.<span data-own ${own}> Add Instagram or YouTube in <button type="button" class="btn-q" data-edit2>Edit profile</button> to show them here.</span></p>`
+                : `<p class="profile-band-empty">No audience numbers yet.<span data-own ${own}> Add Instagram or YouTube in <button type="button" class="btn-q" data-edit2>Edit profile</button> to show your audience here.</span></p>`
             }
+          </section>
+
+          <section class="ll-panel profile-aud" aria-labelledby="profile-audp">
+            <div class="ll-panel-head"><div>
+              <h2 class="ll-panel-h" id="profile-audp">Platforms and audience</h2>
+              <p class="ll-panel-sub">Numbers for each account, and where your followers live.</p>
+            </div></div>
             <div class="profile-aud-g">
               <section class="profile-sub" aria-labelledby="profile-plat">
                 <h3 class="profile-sub-h" id="profile-plat">Platforms</h3>
@@ -143,7 +151,7 @@ import { kycWaitText } from "../../core/kyc-gate";
           <section class="ll-panel profile-workp" aria-labelledby="profile-work">
             <div class="ll-panel-head">
               <div><h2 class="ll-panel-h" id="profile-work">Work</h2><p class="ll-panel-sub">Posts you're proud of, and your record on Linkloom.</p></div>
-              <button type="button" class="btn-q" data-edit3 ${own}>${icon("plus")}Add link</button>
+              <button type="button" class="lq lq-s lq-sm" data-edit3 ${own}>${icon("plus", "ic")}Add link</button>
             </div>
             <div class="profile-work-g">
               <section class="profile-sub" aria-labelledby="profile-sel">
@@ -166,10 +174,15 @@ import { kycWaitText } from "../../core/kyc-gate";
               </section>
               <section class="profile-sub" aria-labelledby="profile-rec">
                 <h3 class="profile-sub-h" id="profile-rec">Track record</h3>
-                <dl class="profile-rec">
+                ${
+                  /* zeros feel like failure: a new creator gets the next step, numbers once there are any */
+                  (me.completedJobs || 0) + (me.totalBids || 0) > 0
+                    ? `<dl class="profile-rec">
                   <div><dd class="t-money" data-n="${me.completedJobs || 0}">${esc(me.completedJobs || 0)}</dd><dt>deals completed</dt></div>
                   <div><dd class="t-money" data-n="${me.totalBids || 0}">${esc(me.totalBids || 0)}</dd><dt>bids sent</dt></div>
-                </dl>
+                </dl>`
+                    : `<p class="muted">New on Linkloom, no deals yet.<span data-own ${own}> Your record starts with your first bid.</span></p>`
+                }
                 <p class="t-cap muted">Completed means the brand approved the work. Counted by Linkloom, not self-reported.</p>
               </section>
             </div>
@@ -198,7 +211,7 @@ import { kycWaitText } from "../../core/kyc-gate";
               <div><dt>Email</dt><dd>${esc(sess.email || "Not added")}</dd></div>
               ${sess.mobile ? `<div><dt>Mobile</dt><dd class="num">${esc(sess.mobile)}</dd></div>` : ""}
               <div><dt>Date of birth</dt><dd class="num">${me.dob ? esc(LLD.fmtDate(me.dob, { year: true })) + " · " + esc(age) : "—"}</dd></div>
-              <div><dt>Verification</dt><dd><span class="pill ${kc}">${k.status === "verified" ? icon("check") : ["action_needed", "rejected"].includes(k.status) ? icon("alert") : ""}${kt}</span><span class="t-cap muted">${esc(kn)}</span>${k.status !== "verified" ? '<a class="btn-q" href="#kyc">' + (k.status === "not_started" ? "Start" : k.status === "under_review" ? "See status" : "Fix it") + "</a>" : ""}</dd></div>
+              <div><dt>Verification</dt><dd><span class="pill ${kc}">${k.status === "verified" ? icon("check") : ["action_needed", "rejected"].includes(k.status) ? icon("alert") : ""}${kt}</span><span class="t-cap muted">${esc(kn)}</span>${k.status !== "verified" ? '<a class="lq lq-s lq-sm profile-kyc-go" href="#kyc">' + (k.status === "not_started" ? "Start" : k.status === "under_review" ? "See status" : "Fix it") + "</a>" : ""}</dd></div>
               <div><dt>Payouts go to</dt><dd class="num">${esc(payout || "Not added yet")}</dd></div>
               ${store.s.plan ? `<div><dt>Plan</dt><dd>${esc(store.s.plan.name)}${store.s.plan.status === "active" && store.s.plan.renews ? '<span class="t-cap muted">Renews ' + esc(LLD.fmtDate(store.s.plan.renews)) + "</span>" : ""}</dd></div>` : ""}
             </dl>

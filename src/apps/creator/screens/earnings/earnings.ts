@@ -180,7 +180,7 @@
 
         <div class="earnings-grid">
           <div class="earnings-main">
-            <section class="earnings-total" aria-labelledby="earnTotH">
+            <section class="ll-panel" aria-labelledby="earnTotH"><div class="earnings-total">
               <div class="earnings-total-t">
                 <h2 class="earnings-sec-h" id="earnTotH">Total earned</h2>
                 <p class="t-money earnings-total-n" data-total>${L.inr(E.total)}</p>
@@ -190,11 +190,11 @@
               <div class="seg earnings-range" role="group" aria-label="Date range">
                 ${RANGES.map(([k, n]) => `<button type="button" data-r="${k}" aria-pressed="${k === range}">${n}</button>`).join("")}
               </div>
-            </section>
+            </div></section>
 
-            <section class="earnings-sec" aria-labelledby="earnActH">
-              <div class="earnings-sec-top">
-                <h2 class="earnings-sec-h" id="earnActH">Activity</h2>
+            <section class="ll-panel earnings-sec" aria-labelledby="earnActH">
+              <div class="ll-panel-head earnings-sec-top">
+                <h2 class="ll-panel-h" id="earnActH">Activity</h2>
                 <div class="chips earnings-filter" role="group" aria-label="Filter activity">
                   ${FILTERS.map(([k, n]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${k === f}">${n} <span class="earnings-chip-n">${cnt(k)}</span></button>`).join("")}
                 </div>
@@ -213,8 +213,8 @@
               <p class="earnings-none muted" hidden>Nothing with this status.</p>
             </section>
 
-            <section class="earnings-sec" aria-labelledby="earnWdH"${noPayouts ? " hidden" : ""}>
-              <div class="earnings-sec-top"><h2 class="earnings-sec-h" id="earnWdH">Withdrawals</h2><span class="help">Methods are masked. UTR is the bank’s reference.</span></div>
+            <section class="ll-panel earnings-sec" aria-labelledby="earnWdH"${noPayouts ? " hidden" : ""}>
+              <div class="ll-panel-head earnings-sec-top"><div><h2 class="ll-panel-h" id="earnWdH">Withdrawals</h2><p class="ll-panel-sub">Methods are masked. UTR is the bank’s reference.</p></div></div>
               ${
                 wds.length
                   ? `<ol class="earnings-wds">${wds

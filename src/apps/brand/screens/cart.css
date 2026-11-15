@@ -523,3 +523,10 @@
     min-height: 44px;
   }
 }
+/* touch: the creator name link is a 44px tall target without moving the heading */
+@media (pointer: coarse) {
+  .cart-who h2 > a {
+    padding-block: 10px;
+    margin-block: -10px; /* the heading is a flex row, so take the padding back */
+  }
+}

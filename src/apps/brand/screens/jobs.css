@@ -644,3 +644,9 @@
     flex-basis: 100% !important;
   }
 }
+/* touch: the brief title link is a 44px tall target; padding on an inline link does not move the text */
+@media (pointer: coarse) {
+  .jl-t > a {
+    padding-block: 12px;
+  }
+}

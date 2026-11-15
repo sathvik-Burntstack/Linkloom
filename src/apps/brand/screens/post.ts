@@ -249,7 +249,7 @@
               `<div class="field" id="fDels">
                   <p class="lab" id="pjDelL">Deliverables</p>
                   <ol class="pj-dels" id="pjDels" aria-labelledby="pjDelL"></ol>
-                  <div class="pj-dels-f"><button class="btn-q" type="button" data-adddel>${ic("plus")}Add a deliverable</button><span class="help">Up to ${R.maxDel}.</span></div>
+                  <div class="pj-dels-f"><button class="lq lq-s lq-sm" type="button" data-adddel>${ic("plus", "ic")}Add a deliverable</button><span class="help">Up to ${R.maxDel}.</span></div>
                   <p class="err" id="pjDelsErr"></p>
                 </div>
                 <div class="field pj-date"><label for="pjUsage">Usage rights</label>

@@ -205,7 +205,8 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
     if (n.matches(".earnings-slip-w") && n.firstElementChild) n = n.firstElementChild;
     M().print ? M().print(n) : M().reveal(n);
   };
-  const narrow = () => matchMedia("(max-width:900px)").matches;
+  /* below 1180px the slip column is hidden (payments.css), so a row opens its slip in a sheet */
+  const narrow = () => matchMedia("(max-width:1180px)").matches;
   const dateBlock = d =>
     `<span class="earnings-date"><b>${L.D(d).toLocaleDateString("en-IN", { day: "numeric", timeZone: "Asia/Kolkata" })}</b><span>${L.D(d).toLocaleDateString("en-IN", { month: "short", timeZone: "Asia/Kolkata" })}</span></span>`;
 
@@ -255,8 +256,8 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
           <p class="earnings-recon-h">How it adds up</p>
           <dl>
             <div><dt>Paid into escrow, all time</dt><dd>${L.inr(m.paidIn)}</dd></div>
-            <div><dt>Released to creators</dt><dd>${L.inr(-m.released)}</dd></div>
-            <div><dt>Refunded to you</dt><dd>${L.inr(-m.refunds)}</dd></div>
+            <div><dt>Released to creators</dt><dd>${m.released ? L.inr(-m.released) : "None yet"}</dd></div>
+            <div><dt>Refunded to you</dt><dd>${m.refunds ? L.inr(-m.refunds) : "None"}</dd></div>
             <div class="is-total"><dt>Held in escrow</dt><dd>${L.inr(m.held)}</dd></div>
           </dl>
           <p class="earnings-recon-ok${m.ok ? "" : " is-off"}">${ic(m.ok ? "check" : "alert")}<span>${m.ok ? "Matches your payment history." : "Does not match your payment history. Linkloom support has been told."}</span></p>
@@ -266,7 +267,7 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
 
       <div class="earnings-grid">
         <div class="earnings-main">
-          <section class="earnings-total" aria-labelledby="payTotH">
+          <section class="earnings-total card" aria-labelledby="payTotH">
             <div class="earnings-total-t">
               <h2 class="earnings-sec-h" id="payTotH">Total paid to creators</h2>
               <p class="t-money earnings-total-n" data-total>${L.inr(E.total)}</p>
@@ -301,7 +302,7 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
               })
               .join("")}</ol>
             <p class="earnings-none muted" hidden>Nothing of this kind yet.</p>
-            <p class="help pay-hint">${ic("file")}<span>Each row has an invoice with your billing details: ${esc((s.me.billing || {}).legal || s.me.brand)}, GSTIN ${esc((s.me.billing || {}).gstin || "not added")}. <a class="btn-q" href="#profile">Edit billing</a></span></p>
+            <p class="help pay-hint">${ic("file")}<span>Each row has an invoice with your billing details: ${esc((s.me.billing || {}).legal || s.me.brand)}, GSTIN ${esc((s.me.billing || {}).gstin || "not added")}.</span><a class="lq lq-s lq-sm" href="#profile">${ic("edit", "ic")}Edit billing</a></p>
           </section>
 
           <section class="earnings-sec" aria-labelledby="payRefH">
@@ -326,7 +327,7 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
                 <div><b>${esc(c.title || "")}</b><span>${esc(cr.name || "")} · paid ${paid ? esc(L.fmtDate(paid.date)) : ""}, refunded ${esc(L.fmtDate(r.date, { year: true }))}</span></div>
                 <b class="t-money pay-ref-a">+${L.inr(r.amount)}</b></div>
               <p class="pay-ref-r"><span class="pill pill-info">${ic("refund")}Refunded</span><span>${esc(c.refundReason || "Escrow returned in full.")}</span></p>
-              <div class="pay-ref-f"><span class="help">${esc(r.method)} · Credit note ${esc(r.invoice)}</span><button class="btn-q" type="button" data-dl="${esc(r.id)}">${ic("download")}Download credit note</button></div>
+              <div class="pay-ref-f"><span class="help">${esc(r.method)} · Credit note ${esc(r.invoice)}</span><button class="lq lq-s lq-sm" type="button" data-dl="${esc(r.id)}">${ic("download", "ic")}Download credit note</button></div>
             </li>`;
                     })
                     .join("")}</ol>`

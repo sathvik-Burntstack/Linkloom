@@ -324,7 +324,6 @@
   gap: 12px;
 }
 .creators-clear[aria-disabled="true"] {
-  color: var(--ll-slate);
   pointer-events: none;
 }
 .creators-g {
@@ -596,6 +595,7 @@
   .creators-layout {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     gap: 16px;
   }
   .creators-results {
@@ -647,7 +647,7 @@
   }
   .creators-list,
   .creators-list--3 {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
     gap: 16px;
   }
   .creators-card {
@@ -711,6 +711,7 @@
 @media (pointer: coarse) {
   .creators-seg button {
     min-height: 44px;
+    padding-inline: 16px; /* "All" was 41px wide */
   }
   .creators-achip {
     min-height: 44px;

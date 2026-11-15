@@ -78,7 +78,10 @@
       const live = mine.filter(x => LIVE.includes(x.stage));
       const reviews = mine.filter(x => x.review && x.review.text);
       const from = K.fromRate(c);
-      const rates = Object.entries(c.rates || {}).sort((a, b) => a[1] - b[1]);
+      const rates = K.rateList(c).sort((a, b) => a[1] - b[1]);
+      /* numbers the creator has not shared read as a dash, as on the creator cards, never as a bare 0 */
+      const nTxt = n => (n > 0 ? L.compact(n) : "—"),
+        pTxt = n => (n > 0 ? K.pct(n) : "—");
       const fromSaved = !!(s.ui && s.ui.creators && s.ui.creators.from === "saved");
       el.innerHTML = `<div class="view-in creator">
         <a class="btn-q creator-back" href="#creators">${L.icon("back")}Find creators</a>
@@ -116,16 +119,16 @@
             <p class="creator-src">Shared by ${esc(first(c.name))}${c.platforms.length > 1 ? " · views and engagement weighted by followers" : ""} <span class="sample">Sample</span></p>
           </div>
           <dl class="creator-nums">
-            <div><dt>Followers</dt><dd class="t-money" data-n="${fol}" data-f="c">${esc(L.compact(fol))}</dd><p>${esc(c.platforms.map(p => P[p.p].name).join(" and "))}</p></div>
-            <div><dt>Avg views</dt><dd class="t-money" data-n="${views}" data-f="c">${esc(L.compact(views))}</dd><p>per post</p></div>
-            <div><dt>Engagement</dt><dd class="t-money" data-n="${er}" data-f="p">${esc(K.pct(er))}</dd><p>engagement rate</p></div>
+            <div><dt>Followers</dt><dd class="t-money" data-n="${fol}" data-f="c">${esc(nTxt(fol))}</dd><p>${esc(c.platforms.map(p => P[p.p].name).join(" and "))}</p></div>
+            <div><dt>Avg views</dt><dd class="t-money" data-n="${views}" data-f="c">${esc(nTxt(views))}</dd><p>${views > 0 ? "per post" : "not shared yet"}</p></div>
+            <div><dt>Engagement</dt><dd class="t-money" data-n="${er}" data-f="p">${esc(pTxt(er))}</dd><p>${er > 0 ? "engagement rate" : "not shared yet"}</p></div>
           </dl>
         </section>
 
         <div class="creator-grid">
           <div class="creator-col">
-            <section class="creator-sec" aria-labelledby="creator-plat">
-              <h2 class="t-h2" id="creator-plat">Platforms</h2>
+            <section class="creator-sec creator-card" aria-labelledby="creator-plat">
+              <h2 class="t-h3" id="creator-plat">Platforms</h2>
               <ul class="creator-plats">${c.platforms
                 .map(
                   p => `
@@ -133,17 +136,17 @@
                   ${profileUrl(p) ? `<a class="creator-plat-ic" href="${esc(profileUrl(p))}" target="_blank" rel="noopener" aria-label="View on ${P[p.p].name}, opens in a new tab">${K.glyph(p.p)}</a>` : `<span class="creator-plat-ic">${K.glyph(p.p)}</span>`}
                   <div class="creator-plat-id"><p class="t-h3">${P[p.p].name}</p>${p.handle ? `<p class="creator-plat-h">${esc(p.handle)}</p>` : ""}</div>
                   <dl class="creator-plat-n">
-                    <div><dt>${P[p.p].unit}</dt><dd class="t-money">${esc(L.compact(p.followers))}</dd></div>
-                    <div><dt>Avg views</dt><dd class="t-money">${esc(L.compact(p.avgViews))}</dd></div>
-                    <div><dt>Engagement</dt><dd class="t-money">${esc(K.pct(p.er))}</dd></div>
+                    <div><dt>${P[p.p].unit}</dt><dd class="t-money">${esc(nTxt(p.followers))}</dd></div>
+                    <div><dt>Avg views</dt><dd class="t-money">${esc(nTxt(p.avgViews))}</dd></div>
+                    <div><dt>Engagement</dt><dd class="t-money">${esc(pTxt(p.er))}</dd></div>
                   </dl>
                 </li>`,
                 )
                 .join("")}</ul>
             </section>
 
-            <section class="creator-sec" aria-labelledby="creator-work">
-              <h2 class="t-h2" id="creator-work">Past work</h2>
+            <section class="creator-sec creator-card" aria-labelledby="creator-work">
+              <h2 class="t-h3" id="creator-work">Past work</h2>
               ${
                 c.work.length
                   ? `<ol class="creator-work">${c.work
@@ -160,8 +163,8 @@
               }
             </section>
 
-            <section class="creator-sec" aria-labelledby="creator-rev">
-              <h2 class="t-h2" id="creator-rev">Rating and reviews</h2>
+            <section class="creator-sec creator-card" aria-labelledby="creator-rev">
+              <h2 class="t-h3" id="creator-rev">Rating and reviews</h2>
               <div class="creator-rating">
                 ${
                   c.rating
@@ -190,7 +193,7 @@
           <div class="creator-col">
             <section class="creator-sec creator-card" aria-labelledby="creator-rates">
               <h2 class="t-h3" id="creator-rates">Rates</h2>
-              <dl class="creator-rates">${rates.map(([k, v]) => `<div class="kv"><dt>${esc(K.cap(k))}</dt><dd class="t-money">${L.inr(v)}</dd></div>`).join("")}</dl>
+              ${rates.length ? `<dl class="creator-rates">${rates.map(([k, v]) => `<div class="kv"><dt>${esc(K.cap(k))}</dt><dd class="t-money">${L.inr(v)}</dd></div>`).join("")}</dl>` : `<p class="creator-rates-none">${esc(K.RATE_ON_REQUEST)}</p>`}
               <p class="t-cap muted">Listed by ${esc(first(c.name))}. You set the agreed price in the cart. It goes into escrow only after ${esc(first(c.name))} accepts. No platform fee.</p>
             </section>
 
@@ -198,7 +201,7 @@
               <h2 class="t-h3" id="creator-avail">Availability</h2>
               <p class="creator-avail">${K.availPill(c)}</p>
               <p class="muted">${K.availDays(c) <= 0 ? `Open to new briefs now. Give at least 3 days for a first draft.` : `Can start a new brief ${K.availDays(c) === 1 ? "tomorrow" : "in " + K.availDays(c) + " days"}. Set your due date after that.`}</p>
-              <p class="t-cap muted">Posts ${esc(c.content.join(", "))}</p>
+              ${(c.content || []).length ? `<p class="t-cap muted">Posts ${esc(c.content.join(", "))}</p>` : ""}
             </section>
 
             <section class="creator-sec creator-card" aria-labelledby="creator-you">
@@ -213,7 +216,7 @@
         </div>
       </div>
       <div class="creator-dock" role="region" aria-label="Hire ${esc(c.name)}">
-        <p class="creator-dock-t">${from ? `<span>From</span><b class="t-money">${L.inr(from.price)}</b>` : ""}</p>
+        <p class="creator-dock-t">${from ? `<span>From</span><b class="t-money">${L.inr(from.price)}</b>` : `<span>${esc(K.RATE_ON_REQUEST)}</span>`}</p>
         <button class="lq lq-s lq-sm" type="button" data-cart></button>
         <button class="lq lq-p lq-sm" type="button" data-invite>Invite now</button>
       </div>`;

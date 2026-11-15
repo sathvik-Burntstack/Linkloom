@@ -183,7 +183,7 @@
         <div class="cart-sec-h"><h3 class="t-label" id="${rid}-dl"><span class="cart-step num">1</span>Deliverables</h3><p class="help">What ${esc(fn)} posts for you</p></div>
         <ol class="cart-items">${d.items.map((it, i) => itemRow(c, it, i, rid, d.items.length === 1)).join("")}</ol>
         <p class="err" aria-live="polite"></p>
-        ${d.items.length < MAX_ITEMS ? `<button class="btn-q cart-add" type="button" data-additem>${L.icon("plus")}Add deliverable</button>` : ""}
+        ${d.items.length < MAX_ITEMS ? `<button class="lq lq-s lq-sm cart-add" type="button" data-additem>${L.icon("plus", "ic")}Add deliverable</button>` : ""}
       </section>
 
       <div class="cart-two">
@@ -221,7 +221,7 @@
       <span class="cart-slip-ic">${L.icon("check")}</span>
       <div class="cart-slip-t"><p><b>Invitation sent to ${esc(c.name)}</b></p>
         <p class="muted">${esc(camp.title)} · ${esc(camp.items.length === 1 ? camp.items[0].count + " " + plural(camp.items[0].count, camp.items[0].format) : camp.items.length + " deliverables")} · due ${esc(L.fmtDate(camp.due))}. You pay <span class="num">${L.inr(camp.price)}</span> into escrow if ${esc(first(c.name))} accepts.</p></div>
-      <a class="btn-q" href="#campaign-${esc(camp.id)}">View in Deals${L.icon("arrow")}</a>
+      <a class="lq lq-s lq-sm" href="#campaign-${esc(camp.id)}">View in Deals${L.icon("arrow", "ic")}</a>
     </div>`;
 
   L.register("cart", {
@@ -245,7 +245,7 @@
             <h1 class="t-h1">Hiring cart</h1>
             <p class="cart-lede">Set what you need from each creator, then send the invitation. <b>Nothing is charged now.</b> You pay the agreed price into escrow only after a creator accepts. <span class="sample">Sample data</span></p>
           </div>
-          <a class="btn-q" href="#creators">${L.icon("plus")}Add more creators</a>
+          <a class="lq lq-s lq-sm" href="#creators">${L.icon("plus", "ic")}Add more creators</a>
         </header>
         <div class="cart-layout">
           <div class="cart-main">

@@ -88,10 +88,6 @@
   margin-top: auto;
   padding-top: 4px;
 }
-.home-obj-act .btn-q svg {
-  width: 16px;
-  height: 16px;
-}
 .home-job {
   font-size: 14px;
   line-height: 20px;
@@ -234,6 +230,7 @@
 /* ID check: one quiet line with its progress; never the loudest thing on the page (C1) */
 .home-kyc-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px 16px;
   min-height: 48px;
@@ -257,12 +254,12 @@
 .home-kyc-bar.is-err > svg {
   color: var(--ll-err-fg);
 }
+/* the line wraps instead of being cut to "about 4 minut…"; when the row is too narrow the trust line and Continue drop
+   to a second row (the bar wraps) */
 .home-kyc-bar-t {
-  flex: 1;
+  flex: 1 1 260px;
   min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-wrap: pretty;
 }
 .home-kyc-bar-t b {
   font-weight: 600;
@@ -302,10 +299,6 @@
 }
 .home-kyc-go {
   flex: none;
-}
-.home-kyc-go svg {
-  width: 16px;
-  height: 16px;
 }
 /* ID under review: how long it should take, and a way to keep going meanwhile */
 .home-kyc-wait {
@@ -354,11 +347,6 @@
   flex-direction: column;
   gap: var(--space-items, 16px);
 }
-.home-ph {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-inside, 8px);
-}
 .home-hint {
   display: none;
   align-items: center;
@@ -402,6 +390,42 @@
 }
 .home-more:empty {
   display: none;
+}
+/* an odd card out (one or three briefs) takes the whole row instead of leaving half the panel empty; beside the
+   sidebar it lays out in two columns (title and price left; match beside the title, deadline beside the price) so it does not read as stretched */
+.home-more > .jobs-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+@media (min-width: 1100px) {
+  .home-more > .jobs-card:last-child:nth-child(odd) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-areas: "top top" "title match" "cat match" "money meta" "acts acts";
+    align-items: start;
+    column-gap: 32px;
+  }
+  .home-more > .jobs-card:last-child:nth-child(odd) > .jobs-card-top {
+    grid-area: top;
+  }
+  .home-more > .jobs-card:last-child:nth-child(odd) > .jobs-card-t {
+    grid-area: title;
+  }
+  .home-more > .jobs-card:last-child:nth-child(odd) > .jobs-cat {
+    grid-area: cat;
+  }
+  .home-more > .jobs-card:last-child:nth-child(odd) > .jobs-money {
+    grid-area: money;
+  }
+  .home-more > .jobs-card:last-child:nth-child(odd) > .jobs-meta {
+    grid-area: meta;
+    align-self: end;
+  }
+  .home-more > .jobs-card:last-child:nth-child(odd) > .jobs-match {
+    grid-area: match;
+  }
+  .home-more > .jobs-card:last-child:nth-child(odd) > .jobs-acts {
+    grid-area: acts;
+  }
 }
 
 /* Your bids: one row per bid, newest first */
@@ -631,6 +655,15 @@
   }
   .home-kyc-bar {
     flex-wrap: wrap;
+    padding: 12px 16px;
+  }
+  /* the line itself gets the first row (icon + text), so it is never cut to "3 steps t…"; trust line and Continue
+     share the second */
+  .home-kyc-bar-t {
+    flex-basis: calc(100% - 34px);
+  }
+  .home-kyc-go {
+    margin-left: auto;
   }
   .home-kyc-wait {
     flex-wrap: wrap;
@@ -651,5 +684,41 @@
   }
   .home-obj.home-money {
     padding: 24px 16px 32px;
+  }
+}
+/* Your bids on a phone: the title gets the full row beside the brand mark (it was cut to "Morning …" with the brand
+   line folded into a narrow column); price and status share the second row */
+@media (max-width: 560px) {
+  .home-bid {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 6px;
+  }
+  .home-bid .jobs-bi {
+    grid-row: 1 / span 2;
+    align-self: start;
+    margin-top: 2px;
+  }
+  .home-bid-t {
+    grid-column: 2 / -1;
+  }
+  .home-bid-p {
+    grid-column: 2;
+  }
+  .home-bid > .pill {
+    grid-column: 3;
+    justify-self: end;
+  }
+}
+/* the first-payout card on a phone: the shared .ll-cheer wraps, but its text column (flex: 1, min-width 0) never gives
+   way, so it was squeezed into a one-word column. Text takes the first row beside the icon; the button and the
+   dismiss share the second. */
+@media (max-width: 720px) {
+  .home-cheer .ll-cheer-t {
+    flex-basis: calc(100% - 68px);
+  }
+  .home-cheer .ll-cheer-x {
+    margin-left: auto;
   }
 }

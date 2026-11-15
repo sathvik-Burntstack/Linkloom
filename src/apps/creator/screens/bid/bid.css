@@ -654,6 +654,17 @@
     translate: 0 0;
   }
 }
+/* the payout preview beside the form is 320px from 901 to 1100: the escrow line wraps inside the slip instead of
+   running past its right edge */
+.bid-side .pill {
+  white-space: normal;
+}
+@media (pointer: coarse) {
+  .bid-step {
+    width: 44px;
+    height: 44px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .is-tick {
     animation: none;

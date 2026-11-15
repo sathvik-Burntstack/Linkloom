@@ -101,6 +101,11 @@
   border-radius: var(--r-sm);
   background: var(--ll-paper);
 }
+/* the deadline ("25 Nov · 10 days") is the longer value; the bid count is a number. Give the date the room so it is not
+   cut to "10 da…" in a card inside a panel or a two-up grid */
+.jobs-meta > div:first-child {
+  flex-grow: 1.7;
+}
 .jobs-meta dt {
   font-size: 12px;
   line-height: 16px;
@@ -289,6 +294,10 @@
   .jobs-card-top {
     flex-wrap: wrap;
     row-gap: 6px;
+  }
+  /* last resort on the narrowest phones: the date wraps to a second line rather than losing "10 days" */
+  .jobs-meta dd {
+    white-space: normal;
   }
 }
 

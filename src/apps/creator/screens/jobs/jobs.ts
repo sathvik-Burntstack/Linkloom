@@ -404,7 +404,7 @@ import { briefCard } from "../../ui/brief-card";
         </header>
         <div class="jobs-layout">
           <aside class="jobs-filters" id="jobsFilters" aria-label="Filters">
-            <div class="jobs-f-h"><p class="t-label">Filters</p><button class="btn-q jobs-clear" type="button" data-clear>Clear filters</button></div>
+            <div class="jobs-f-h"><p class="t-label">Filters</p><button class="lq lq-s lq-sm jobs-clear" type="button" data-clear>Clear filters</button></div>
             <div class="field"><label for="jobsCity">City</label>
               <select class="select" id="jobsCity"><option value="">All cities</option>${cities.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}<option value="remote">Any city · remote</option></select></div>
             <div class="field"><span class="lab" id="jobsPlatL">Platform</span>
@@ -470,7 +470,11 @@ import { briefCard } from "../../ui/brief-card";
         $("#jobsSort").value = ui.sort;
         const n = activeCount(ui);
         L.$$(".jobs-clear", el).forEach(b => {
-          b.textContent = n ? `Clear filters (${n})` : "Clear filters";
+          const lab = n ? `Clear filters (${n})` : "Clear filters";
+          /* a liquid button keeps its label in two spans (.t, and the hover copy .t2) */
+          const spans = b.querySelectorAll(".t,.t2");
+          if (spans.length) spans.forEach(x => (x.textContent = lab));
+          else b.textContent = lab;
           b.setAttribute("aria-disabled", String(!n));
         });
         const ft = $(".jobs-ftoggle");

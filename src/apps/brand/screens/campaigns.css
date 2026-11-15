@@ -573,7 +573,7 @@
 }
 .cw-nt {
   font-family: var(--ll-display);
-  font-size: clamp(18px, 1.6vw, 24px);
+  font-size: clamp(17px, 1.35vw, 22px);
   line-height: 1.15;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -1294,17 +1294,8 @@
   .cw-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-  .cw-side {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 32px;
-    align-items: start;
-  }
-}
-@media (max-width: 900px) {
-  .cw {
-    gap: 24px;
-  }
+  /* tablets and small laptops too: eight steps in a row left ~80px each, so "In progress" broke onto two lines
+     and the price sat in an odd spot under the title. The rail turns vertical and the price row spans the width */
   .cw-head {
     align-items: flex-start;
   }
@@ -1321,13 +1312,6 @@
   .cw-price {
     align-items: flex-start;
     text-align: left;
-  }
-  .cw-price .t-money {
-    font-size: 40px;
-  }
-  .cw-board {
-    padding: 24px 20px;
-    gap: 24px;
   }
   /* work rail turns vertical */
   .cw-rail {
@@ -1405,6 +1389,24 @@
     font-size: 12px;
     line-height: 16px;
   }
+  .cw-side {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+}
+@media (max-width: 900px) {
+  .cw {
+    gap: 24px;
+  }
+  .cw-price .t-money {
+    font-size: 40px;
+  }
+  .cw-board {
+    padding: 24px 20px;
+    gap: 24px;
+  }
   .cw-now {
     padding: 24px 20px;
   }
@@ -1438,7 +1440,8 @@
     animation: cwShackle 0.36s cubic-bezier(0.3, 1.6, 0.5, 1) 0.3s both;
   }
 }
-@media (prefers-reduced-motion: no-preference) and (max-width: 900px) {
+/* the rail is vertical up to 1180px, so the thread pulls downwards there */
+@media (prefers-reduced-motion: no-preference) and (max-width: 1180px) {
   .cw-rail.is-pulling .cw-node.is-pull .cw-rl::before {
     transform-origin: 50% 0;
     animation-name: cwPullY;
@@ -1658,6 +1661,10 @@
 .cw-dv .btn-q svg {
   width: 16px;
   height: 16px;
+}
+.cw-dv > .lq {
+  flex: none;
+  margin-left: auto;
 }
 .cw-note .avatar {
   width: 32px;
@@ -1984,7 +1991,8 @@
   width: 18px;
   height: 18px;
 }
-.cw-sec > .btn-q {
+.cw-sec > .btn-q,
+.cw-sec > .lq {
   align-self: flex-start;
 }
 .cw-sec > .btn-q svg {
@@ -2211,4 +2219,10 @@
 .cw-dl-t .muted {
   font-size: 14px;
   line-height: 20px;
+}
+/* touch: invoice rows in the money slip are 44px targets */
+@media (pointer: coarse) {
+  .cw-inv a {
+    min-height: 44px;
+  }
 }

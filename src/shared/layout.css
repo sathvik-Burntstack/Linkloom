@@ -27,22 +27,34 @@
   gap: var(--space-section);
   min-width: 0;
 }
+/* The same white card the rest of the app uses (.card: white, --r-lg, --ll-shadow-card), so each section reads as its
+   own block on the page background instead of one long sheet. */
 .ll-panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-items);
   min-width: 0;
   padding: 24px;
-  border: 1px solid var(--ll-panel-line);
-  border-radius: var(--ll-panel-r);
+  border-radius: var(--r-lg, var(--ll-panel-r));
   background: #fff;
+  box-shadow: var(--ll-shadow-card);
 }
 .ll-panel-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
   min-width: 0;
+}
+/* the title block takes the row; on narrow phones "See all" wraps under it instead of squeezing the subtitle */
+.ll-panel-head > div {
+  flex: 1 1 220px;
+}
+/* a rule under the heading when the section has a body, so the heading and its content read as one labelled block */
+.ll-panel > .ll-panel-head:not(:last-child) {
+  padding-bottom: var(--space-items);
+  border-bottom: 1px solid var(--ll-rule);
 }
 .ll-panel-head > div {
   display: flex;
@@ -64,20 +76,40 @@
   color: var(--ll-slate);
   text-wrap: pretty;
 }
+/* "See all →": an outlined small button (the .lq-s look), so it is found at a glance, not a quiet text link */
 .ll-panel-more {
   flex: none;
   align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 1.5px solid var(--ll-ink-text);
+  border-radius: 999px;
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
   white-space: nowrap;
   color: var(--ll-ink-text);
-  border-bottom: 1.5px solid transparent;
-  transition: border-color 0.25s;
+  background: #fff;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 .ll-panel-more:hover,
 .ll-panel-more:focus-visible {
-  border-color: currentColor;
+  background: var(--ll-ink-text);
+  color: #fff;
+}
+@media (pointer: coarse) {
+  .ll-panel-more {
+    min-height: 44px;
+  }
+  .ll-cheer-x {
+    width: 44px;
+    height: 44px;
+  }
 }
 .ll-hairline {
   height: 1px;
@@ -397,5 +429,9 @@
 @media (max-width: 720px) {
   .ll-cheer {
     flex-wrap: wrap;
+  }
+  /* the message takes its own row beside the icon, so it is never squeezed into a one-word column */
+  .ll-cheer-t {
+    flex: 1 1 calc(100% - 68px);
   }
 }

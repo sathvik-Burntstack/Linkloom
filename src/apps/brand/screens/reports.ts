@@ -404,7 +404,7 @@
             <ul class="rp-legend" aria-label="Legend"><li><i class="rp-key"></i>Spent</li>${m.refunded ? '<li><i class="rp-key is-hatch"></i>Refunded</li>' : ""}</ul></div>
           <dl class="rp-eq">
             <div><dt>Paid into escrow</dt><dd>${L.inr(m.paidIn)}</dd></div>
-            <div><dt>Refunds</dt><dd>${L.inr(-m.refunded)}</dd></div>
+            <div><dt>Refunds</dt><dd>${m.refunded ? L.inr(-m.refunded) : "None"}</dd></div>
             <div class="is-total"><dt>Spent</dt><dd>${L.inr(m.spent)}</dd></div>
           </dl>
           <figure class="rp-fig" data-chart="spend"><div class="rp-svgw" data-draw="spend"></div><div class="rp-tip" role="presentation" hidden></div>
@@ -446,7 +446,7 @@
 
         <section class="rp-sec rp-card" aria-labelledby="rpBuH">
           <div class="rp-sec-top"><div><h2 class="rp-h" id="rpBuH">Budget &amp; spending</h2>
-            <p class="rp-bu-l"><span class="t-money rp-big">${L.inr(B.spent)}</span><span class="rp-bu-of">of ${L.inr(B.b.total)} spent · ${esc(B.b.label)}</span></p></div>
+            <p class="rp-bu-l"><span class="t-money rp-big">${L.inr(B.spent)}</span><span class="rp-bu-of">${esc([B.b.total ? `of ${L.inr(B.b.total)} spent` : "spent", B.b.label].filter(Boolean).join(" · "))}</span></p></div>
             <p class="rp-pace${B.over ? " is-over" : ""}">${ic(B.over ? "alert" : !B.b.total ? "info" : "check")}<span>${
               !B.b.total
                 ? `No budget set. Add one in <a href="#profile">your profile</a> to see spend against it.`
@@ -461,10 +461,10 @@
           ${B.committedC.length ? `<p class="help rp-bu-n">Waiting for payment: ${B.committedC.map(c => `<a class="btn-q" href="#campaign-${esc(c.id)}">${esc(c.title)}</a> (${esc(L.creator(c.creator).name)}, ${c.stage === "accepted" ? "accepted" : "invited"})`).join(", ")}.</p>` : ""}
           <div class="rp-sec-top rp-sub"><h3 class="rp-h3">By month</h3><ul class="rp-legend" aria-label="Legend"><li><i class="rp-key"></i>Spent</li><li><i class="rp-key is-line"></i>Even pace</li></ul></div>
           <figure class="rp-fig" data-chart="budget"><div class="rp-svgw" data-draw="budget"></div><div class="rp-tip" role="presentation" hidden></div>
-            <figcaption class="sr-only">${esc(`Spend by month against an even pace of ${L.inr(B.pace)} a month: ` + B.months.map(x => `${MONY(x.m)} ${x.future ? "not started" : L.inr(x.spent)}`).join("; ") + ".")}</figcaption></figure>
+            <figcaption class="sr-only">${esc(`Spend by month${B.pace ? ` against an even pace of ${L.inr(B.pace)} a month` : ""}: ` + B.months.map(x => `${MONY(x.m)} ${x.future ? "not started" : L.inr(x.spent)}`).join("; ") + ".")}</figcaption></figure>
           <details class="rp-tbl"><summary>Show as a table</summary><table><thead><tr><th scope="col">Month</th><th scope="col">Even pace</th><th scope="col">Spent</th><th scope="col">Difference</th></tr></thead>
-            <tbody>${B.months.map(x => `<tr><th scope="row">${esc(MONY(x.m))}</th><td>${L.inr(B.pace)}</td><td>${x.future ? "—" : L.inr(x.spent)}</td><td>${x.future ? "—" : x.spent > B.pace ? L.inr(x.spent - B.pace) + " over" : L.inr(B.pace - x.spent) + " under"}</td></tr>`).join("")}</tbody></table></details>
-          <p class="help">Budget period ${esc(B.b.label)}. The period filter above doesn’t change this section. Change the budget in <a class="btn-q" href="#profile">your profile</a>.</p>
+            <tbody>${B.months.map(x => `<tr><th scope="row">${esc(MONY(x.m))}</th><td>${B.pace ? L.inr(B.pace) : "—"}</td><td>${x.future ? "—" : L.inr(x.spent)}</td><td>${x.future || !B.pace ? "—" : x.spent > B.pace ? L.inr(x.spent - B.pace) + " over" : L.inr(B.pace - x.spent) + " under"}</td></tr>`).join("")}</tbody></table></details>
+          <div class="rp-bu-f"><p class="help">${B.b.label ? `Budget period ${esc(B.b.label)}. ` : ""}The period filter above doesn’t change this section. The budget is set in your profile.</p><a class="lq lq-s lq-sm" href="#profile">${ic("edit", "ic")}${B.b.total ? "Change budget" : "Set a budget"}</a></div>
         </section>
 
         <section class="rp-sec rp-card rp-cw" aria-labelledby="rpCwH">
@@ -481,7 +481,7 @@
               <td data-l="Spent" class="num">${r.spent ? L.inr(r.spent) : `<span class="rp-cell-s">${s.campaigns.some(c => c.creator === r.cr.id && c.stage === "refunded") ? "Refunded" : "Not paid yet"}</span>`}</td>
               <td data-l="Views" class="num">${r.views ? num(r.views) : '<span class="rp-cell-s">Not live yet</span>'}</td>
               <td data-l="Per 1,000 views" class="num">${r.cpm == null ? "—" : L.inr(r.cpm)}</td>
-              <td data-l="Rating given">${r.rating != null ? `<span class="rp-rate">${stars(r.rating)}<b class="num">${r.rating.toFixed(1)}</b><span class="sr-only"> out of 5 from ${r.ratedN} review${r.ratedN === 1 ? "" : "s"}</span></span>${r.unrated ? `<a class="btn-q rp-rate-a" href="#campaign-${esc(r.unrated.id)}">Rate ${esc(r.unrated.title)}</a>` : ""}` : r.unrated ? `<a class="btn-q" href="#campaign-${esc(r.unrated.id)}">${ic("star")}Rate now</a>` : '<span class="rp-cell-s">After completion</span>'}</td>
+              <td data-l="Rating given">${r.rating != null ? `<span class="rp-rate">${stars(r.rating)}<b class="num">${r.rating.toFixed(1)}</b><span class="sr-only"> out of 5 from ${r.ratedN} review${r.ratedN === 1 ? "" : "s"}</span></span>${r.unrated ? `<a class="lq lq-s lq-sm rp-rate-a" href="#campaign-${esc(r.unrated.id)}" title="Rate ${esc(r.unrated.title)}">${ic("star", "ic")}Rate the latest<span class="sr-only">: ${esc(r.unrated.title)}</span></a>` : ""}` : r.unrated ? `<a class="lq lq-s lq-sm" href="#campaign-${esc(r.unrated.id)}">${ic("star", "ic")}Rate now</a>` : '<span class="rp-cell-s">After completion</span>'}</td>
             </tr>`,
               )
               .join("")}</tbody>

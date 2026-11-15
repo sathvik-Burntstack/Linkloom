@@ -43,8 +43,7 @@ body[data-role=creator] .g-b,body[data-role=brand] .g-c{opacity:.42}
 /* ---------- right: the form ---------- */
 .panel{display:flex;flex-direction:column;justify-content:center;padding:48px var(--gx);gap:24px}
 .card{width:100%;max-width:440px;margin:0 auto}
-.back{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--slate);text-decoration:none;margin-bottom:24px}
-.back:hover{color:var(--ink)}
+.back{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;font-weight:600;color:var(--slate);text-decoration:none;margin:-10px 0 14px}
 .back svg{width:18px;height:18px}
 .t-h2{margin:0;font:400 40px/1.1 var(--display);letter-spacing:-.03em}
 .help{margin:8px 0 0;color:var(--slate);font-size:15px;line-height:22px}
@@ -65,25 +64,21 @@ body[data-role=brand] .seg-glide{transform:translateX(100%)}
 .in input{width:100%;height:48px;padding:0 16px;border:1.5px solid #c9c9d2;border-radius:12px;background:var(--white);transition:border-color .25s,box-shadow .25s}
 .in input:focus{outline:0;border-color:var(--ink);box-shadow:0 0 0 4px color-mix(in srgb,var(--role) 22%,transparent)}
 .in input[aria-invalid=true]{border-color:var(--err)}
-.eye{position:absolute;right:4px;top:4px;width:40px;height:40px;display:grid;place-items:center;border:0;border-radius:10px;background:none;cursor:pointer;color:var(--slate)}
+.eye{position:absolute;right:2px;top:2px;width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:10px;background:none;cursor:pointer;color:var(--slate)}
 .eye svg{width:20px;height:20px}
 .err{margin:0;min-height:0;font-size:13px;line-height:18px;font-weight:600;color:var(--err)}
-.row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 24px;flex-wrap:wrap}
-.check{display:inline-flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
+.row{display:flex;align-items:center;justify-content:space-between;gap:0 12px;margin:-6px 0 14px;flex-wrap:wrap}
+.check{display:inline-flex;align-items:center;gap:10px;min-height:44px;font-size:14px;cursor:pointer}
 .check input{width:20px;height:20px;margin:0;accent-color:var(--ink)}
 .link{font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 
 /* liquid pill (homepage P9), butter primary */
 .lq{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;border:0;border-radius:999px;background:var(--butter);color:var(--ink);font-weight:700;font-size:16px;cursor:pointer;overflow:hidden;isolation:isolate}
 .lq::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--ink);border-radius:inherit;transform:translateY(101%);transition:transform .5s var(--ease)}
-.lq:hover::before{transform:none}
-.lq:hover{color:var(--butter)}
 .lq span{display:block;transition:transform .5s var(--ease)}
 .lq svg{width:18px;height:18px;transition:transform .5s var(--ease)}
-.lq:hover svg{transform:translateX(4px)}
 .lq[aria-busy=true]{pointer-events:none}
 .alt{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:52px;margin-top:12px;border:1.5px solid var(--ink);border-radius:999px;background:none;font-weight:600;cursor:pointer;text-decoration:none;transition:background-color .3s,color .3s}
-.alt:hover{background:var(--ink);color:var(--white)}
 .alt svg{width:18px;height:18px}
 .or{display:flex;align-items:center;gap:12px;margin:20px 0 8px;color:var(--slate);font-size:13px}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--rule)}
@@ -113,14 +108,13 @@ body[data-role=brand] .seg-glide{transform:translateX(100%)}
 }
 
 /* sign-up: the mobile number with its Verify button, password rules, form-level errors */
-.link{padding:0;border:0;background:none;cursor:pointer}
-.err .link{display:inline;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:2px}
+.link{display:inline-flex;align-items:center;min-height:44px;margin-block:-10px;padding:0;border:0;background:none;cursor:pointer}
+.err .link{display:inline;min-height:0;margin:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:2px}
 .in input.has-eye{padding-right:48px}
 .in-row{display:flex;gap:8px}
 .in-row .in{flex:1;min-width:0}
 .in input[readonly]{background:var(--raised)}
 .vbtn{flex:none;min-width:104px;height:48px;padding:0 18px;border:1.5px solid var(--ink);border-radius:12px;background:var(--ink);color:var(--white);font-weight:600;font-size:15px;cursor:pointer;transition:background-color .25s,color .25s,border-color .25s}
-.vbtn:hover:not(:disabled){background:var(--role);border-color:var(--role);color:var(--ink)}
 .vbtn:disabled{cursor:default;opacity:.6}
 .vbtn.is-ok{opacity:1;background:var(--ok);border-color:var(--ok);color:var(--white)}
 .ok{margin:0;font-size:13px;line-height:18px;font-weight:600;color:var(--ok)}
@@ -136,3 +130,42 @@ body[data-role=brand] .seg-glide{transform:translateX(100%)}
 
 /* each form, the Google block and the join lines are toggled with [hidden] */
 [hidden]{display:none!important}
+
+/* hover effects only where there is a real pointer */
+@media (hover:hover){
+  .back:hover{color:var(--ink)}
+  .lq:hover::before{transform:none}
+  .lq:hover{color:var(--butter)}
+  .lq:hover svg{transform:translateX(4px)}
+  .alt:hover{background:var(--ink);color:var(--white)}
+  .vbtn:hover:not(:disabled){background:var(--role);border-color:var(--role);color:var(--ink)}
+}
+
+/* desktop: the loom panel stays in view while a long form (sign-up) scrolls */
+@media (min-width:901px) and (min-height:720px){
+  .loom{position:sticky;top:0;height:100vh;height:100dvh}
+}
+/* laptops with short screens (1280×800, 1536×864): tighter vertical rhythm so sign-in fits without scrolling */
+@media (min-width:901px) and (max-height:920px){
+  .panel{padding-block:28px}
+  .seg{margin:22px 0 18px}
+  .or{margin:16px 0 6px}
+  .join{margin-top:18px}
+  .fine{margin-top:20px}
+}
+/* large monitors: the form grows a little so it doesn't look lost in the half-screen */
+@media (min-width:1800px){
+  .card{max-width:480px}
+  .t-h2{font-size:48px}
+}
+/* tablet portrait: the stacked loom lines up with the form column below it */
+@media (min-width:601px) and (max-width:900px){
+  .loom > .top,.loom > .lede{width:100%;max-width:440px;margin-inline:auto}
+}
+/* phones: a shorter loom so the form starts higher on the first screen */
+@media (max-width:600px){
+  .loom{padding-top:16px}
+  .rings{width:min(230px,62%)}
+  .stage{min-height:0;margin:4px 0 8px}
+  .h1{font-size:clamp(34px,9.4vw,44px)}
+}

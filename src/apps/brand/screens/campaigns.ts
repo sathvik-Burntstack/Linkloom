@@ -410,7 +410,7 @@
       : "";
     const file = (x, cur) =>
       x
-        ? `<div class="cw-dv${cur ? " is-cur" : ""}"><span class="cw-v">v${x.v}</span><span class="cw-dv-n"><b>${esc(x.file)}</b><span class="muted">${esc(L.fmtDate(x.at) + ", " + K().time(x.at))}</span></span><button class="btn-q" type="button" data-openfile="${esc(x.file)}">${ic("download")}Open</button></div>`
+        ? `<div class="cw-dv${cur ? " is-cur" : ""}"><span class="cw-v">v${x.v}</span><span class="cw-dv-n"><b>${esc(x.file)}</b><span class="muted">${esc(L.fmtDate(x.at) + ", " + K().time(x.at))}</span></span><button class="lq lq-s lq-sm" type="button" data-openfile="${esc(x.file)}">${ic("download", "ic")}Open</button></div>`
         : "";
     const revMeter = () => {
       const inc = c.revisionsIncluded || 1,
@@ -467,7 +467,7 @@
           <p class="cw-now-p">${L.inr(c.price)} was released to ${esc(f)} on ${esc(L.fmtDate(logAt(c, "released") || c.released || K().nowISO()))}.${c.views ? ` The post has ${esc(L.compact(c.views))} views so far.` : ""}</p>
           ${c.liveUrl ? `<p class="cw-file-now">${ic("link")}<span><b>Live post</b><span class="muted">${esc(c.liveUrl)}</span></span></p>` : ""}`;
         if (c.review && !ui.editReview)
-          return `${top}<div class="cw-myrev">${starsRow(c.review.rating)}<p class="cw-myrev-t">${c.review.text ? "“" + esc(c.review.text) + "”" : '<span class="muted">No written review.</span>'}</p><p class="help">Your review · ${esc(L.fmtDate(c.review.at))}</p><button class="btn-q" type="button" data-editrev>${ic("edit")}Edit review</button></div>`;
+          return `${top}<div class="cw-myrev">${starsRow(c.review.rating)}<p class="cw-myrev-t">${c.review.text ? "“" + esc(c.review.text) + "”" : '<span class="muted">No written review.</span>'}</p><p class="help">Your review · ${esc(L.fmtDate(c.review.at))}</p><button class="lq lq-s lq-sm" type="button" data-editrev>${ic("edit", "ic")}Edit review</button></div>`;
         return top + reviewForm(c, k);
       }
       case "refunded": {
@@ -562,7 +562,7 @@
                 ${d.usage ? `<div><dt>Usage rights</dt><dd>${esc(d.usage)}</dd></div>` : ""}
               </dl>
               ${d.items.length ? `<ol class="cw-dl">${d.items.map((x, i) => `<li class="${c.stage === "released" || c.stage === "approved" ? "is-ok" : ""}"><span class="cw-dl-n" aria-hidden="true">0${i + 1}</span><span class="cw-dl-t">${x.p ? K().glyph(x.p) : ""}<span>${esc(x.t)}${x.sub ? `<span class="muted">${esc(x.sub)}</span>` : ""}</span></span>${c.stage === "released" || c.stage === "approved" ? '<span class="pill pill-ok">Approved</span>' : ""}</li>`).join("")}</ol>` : ""}
-              ${c.job ? `<a class="btn-q" href="#job-${esc(c.job)}">Open the brief${ic("arrow")}</a>` : ""}
+              ${c.job ? `<a class="lq lq-s lq-sm" href="#job-${esc(c.job)}">Open the brief${ic("arrow", "ic")}</a>` : ""}
             </section>
             <section class="cw-sec" aria-labelledby="cwFilesH">
               <h2 class="cw-sec-h" id="cwFilesH">Deliveries</h2>

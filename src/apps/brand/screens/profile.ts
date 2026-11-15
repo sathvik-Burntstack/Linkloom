@@ -169,7 +169,7 @@
         <div class="profile-lg-frame" data-frame aria-hidden="true"></div>
         <div class="profile-lg-side">
           <p class="t-label" id="${id}-l">Logo</p>
-          <div class="row wrap"><button class="lq lq-s lq-sm" type="button" data-pick aria-describedby="${id}-l ${id}-h">${icon("upload", "ic")}<span data-pl>Upload logo</span></button><button class="btn-q" type="button" data-rm hidden>Remove<span class="sr-only"> logo</span></button></div>
+          <div class="row wrap"><button class="lq lq-s lq-sm" type="button" data-pick aria-describedby="${id}-l ${id}-h">${icon("upload", "ic")}<span data-pl>Upload logo</span></button><button class="lq lq-s lq-sm" type="button" data-rm hidden>Remove<span class="sr-only"> logo</span></button></div>
           <input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" tabindex="-1" aria-label="Logo file" data-file>
           <p class="help" id="${id}-h">PNG, JPG, WebP or SVG, up to 2 MB. A square logo on a plain background looks best.</p>
           <p class="err" aria-live="polite" data-err></p>
@@ -649,6 +649,7 @@
       const hiredNames = st.hiredIds.map(id => (L.creator(id) || {}).name).filter(Boolean);
       const where = [me.city, me.state].filter(Boolean).join(", ");
       const check = bizCheck(s.kyc);
+      /* the "On Linkloom" numbers show for every brand: a new brand sees 0 and what fills it, not a missing band */
       el.innerHTML = `
       <div class="view-in profile">
         <header class="profile-mast">
@@ -663,24 +664,20 @@
           <div class="profile-act"><button class="lq ${check && check.todo ? "lq-s" : "lq-p"}" type="button" data-edit>${icon("edit", "ic")}Edit profile</button></div>
         </header>
         ${check ? checkCard(check) : ""}
-        ${
-          st.hired || st.funded || st.jobs
-            ? `<section class="profile-band" aria-labelledby="profile-on">
+        <section class="profile-band" aria-labelledby="profile-on">
           <div class="profile-band-h"><h2 class="t-eyebrow" id="profile-on">On Linkloom</h2>
             <p class="profile-src">${p ? "Since " + esc(L.fmtDate(p.since, { year: true })) + " · " : ""}counted by Linkloom, not self-reported <span class="sample">Sample</span></p></div>
           <dl class="profile-nums">
-            <div><dt>Creators hired</dt><dd class="t-money" data-n="${st.hired}">${st.hired}</dd><p>${hiredNames.length ? esc(hiredNames.join(" and ")) : "Paid through escrow"}</p></div>
-            <div><dt>Deals</dt><dd class="t-money" data-n="${st.funded}">${st.funded}</dd><p>funded through escrow</p></div>
-            <div><dt>Briefs posted</dt><dd class="t-money" data-n="${st.jobs}">${st.jobs}</dd><p>${st.drafts ? `${st.drafts} draft not counted` : "open, hired or closed"}</p></div>
+            <div><dt>Creators hired</dt><dd class="t-money" data-n="${st.hired}">${st.hired}</dd><p>${hiredNames.length ? esc(hiredNames.join(" and ")) : st.hired ? "Paid through escrow" : "None yet. Hire from a brief or Find creators"}</p></div>
+            <div><dt>Deals</dt><dd class="t-money" data-n="${st.funded}">${st.funded}</dd><p>${st.funded ? "funded through escrow" : "None funded yet"}</p></div>
+            <div><dt>Briefs posted</dt><dd class="t-money" data-n="${st.jobs}">${st.jobs}</dd><p>${st.drafts ? `${st.drafts} draft not counted` : st.jobs ? "open, hired or closed" : "None posted yet"}</p></div>
           </dl>
-        </section>`
-            : ""
-        }
+        </section>
 
         <div class="profile-grid">
           <div class="profile-col">
             <section class="profile-sec profile-card" aria-labelledby="profile-det">
-              <div class="profile-sec-h"><h2 class="t-h2" id="profile-det">Brand details</h2><button type="button" class="btn-q" data-edit2>${icon("edit")}Edit</button></div>
+              <div class="profile-sec-h"><h2 class="t-h2" id="profile-det">Brand details</h2><button type="button" class="lq lq-s lq-sm" data-edit2>${icon("edit", "ic")}Edit<span class="sr-only"> brand details</span></button></div>
               <dl class="profile-dl">
                 <div><dt>Brand name</dt><dd>${esc(me.brand)}</dd></div>
                 <div><dt>Industry</dt><dd>${esc(me.industry || "—")}</dd></div>
@@ -694,7 +691,7 @@
             </section>
 
             <section class="profile-sec profile-card" id="billing" aria-labelledby="profile-bill">
-              <div class="profile-sec-h"><h2 class="t-h2" id="profile-bill">Billing details</h2><button type="button" class="btn-q" data-editbill>${icon("edit")}Edit billing</button></div>
+              <div class="profile-sec-h"><h2 class="t-h2" id="profile-bill">Billing details</h2><button type="button" class="lq lq-s lq-sm" data-editbill>${icon("edit", "ic")}Edit billing</button></div>
               <dl class="profile-dl">
                 <div><dt>Legal name</dt><dd>${esc(b.legal || "—")}</dd></div>
                 <div><dt>GSTIN</dt><dd class="num">${esc(b.gstin || "Not added")}</dd></div>
@@ -718,12 +715,12 @@
             }
 
             <section class="profile-sec profile-card" id="budget" aria-labelledby="profile-bud">
-              <div class="profile-sec-h"><h2 class="t-h3" id="profile-bud">${icon("chart")}Creator budget</h2><button type="button" class="btn-q" data-editbud>${icon("edit")}Change</button></div>
+              <div class="profile-sec-h"><h2 class="t-h3" id="profile-bud">${icon("chart")}Creator budget</h2><button type="button" class="lq lq-s lq-sm" data-editbud>${icon("edit", "ic")}${bud && bud.total ? "Change" : "Set a budget"}</button></div>
               ${
                 bud && bud.total
                   ? `<p class="profile-bud-v"><span class="t-money">${L.inr(bud.total)}</span><span class="muted">for ${esc(bud.label)}</span></p>
               <div class="profile-bud-bar" aria-hidden="true"><i style="width:${Math.min(100, (used / bud.total) * 100).toFixed(1)}%"></i></div>
-              <p class="t-cap muted">${L.inr(used)} paid into escrow so far, ${L.inr(Math.max(0, bud.total - used))} left. A planning number for Home and Reports; it never blocks a payment.</p>`
+              <p class="t-cap muted">${used > 0 ? `${L.inr(used)} paid into escrow so far` : "Nothing paid into escrow yet"}, ${bud.total - used > 0 ? `${L.inr(bud.total - used)} left` : "none left"}. A planning number for Home and Reports; it never blocks a payment.</p>`
                   : `<p class="muted t-small">No budget set. Add one to see spend against it on Home and in Reports.</p>`
               }
             </section>

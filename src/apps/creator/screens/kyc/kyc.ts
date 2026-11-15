@@ -217,7 +217,8 @@ const TRUST = "Encrypted. Never shown to brands.";
       }
       if (!navigator.onLine) {
         clearInterval(t);
-        box.innerHTML = `<div class="kyc-up is-err" role="alert">${icon("alert")}<div><p class="t-label">Upload failed</p><p>You're offline. Check your connection, then try again.</p></div><button type="button" class="btn-q" data-retry>Retry</button></div>`;
+        box.innerHTML = `<div class="kyc-up is-err" role="alert">${icon("alert")}<div><p class="t-label">Upload failed</p><p>You're offline. Check your connection, then try again.</p></div><button type="button" class="lq lq-s lq-sm" data-retry>Retry</button></div>`;
+        LLD.liquid(box);
         box.querySelector("[data-retry]").addEventListener("click", () => upload(box, file, onDone));
         return;
       }
@@ -429,7 +430,7 @@ const TRUST = "Encrypted. Never shown to brands.";
           <p class="muted">${BID_BEFORE_KYC ? "You can bid now. Brands need your ID check before a deal starts, and it's needed for your first payout." : "Brands only accept bids from verified creators."} You can stop and pick up where you left off.</p></div>
         <ol class="kyc-need">${need.map((n, i) => `<li data-st><span class="kyc-need-n num">0${i + 1}</span><span><b>${esc(n[0])}</b><span>${esc(n[1])}</span></span></li>`).join("")}</ol>
         <div class="kyc-ask">
-          <div class="kyc-actions"><button class="lq lq-p lq-xl" type="button" data-begin>Start verification ${icon("arrow", "ic")}</button><span class="kyc-time">${icon("clock")}About 4 minutes</span><button class="btn-q kyc-exit" type="button" data-leave>Not now</button></div>
+          <div class="kyc-actions"><button class="lq lq-p lq-xl" type="button" data-begin>Start verification ${icon("arrow", "ic")}</button><span class="kyc-time">${icon("clock")}About 4 minutes</span><button class="lq lq-s lq-sm kyc-exit" type="button" data-leave>Not now</button></div>
           <p class="ll-trust">${icon("lock")}${TRUST}</p>
         </div>`;
       main.querySelector("[data-begin]").addEventListener("click", e => {
@@ -468,7 +469,7 @@ const TRUST = "Encrypted. Never shown to brands.";
             <div class="kyc-actions">
               <button class="lq lq-p" type="submit" data-next>${D.fixing ? "Save and review" : "Continue"}</button>
               ${i > 0 && !D.fixing ? `<button class="lq lq-s" type="button" data-back>${icon("back", "ic")}Back</button>` : ""}
-              <button class="btn-q kyc-exit" type="button" data-leave>Save and exit</button>
+              <button class="lq lq-s lq-sm kyc-exit" type="button" data-leave>Save and exit</button>
             </div>
             ${s.id === "gst" ? "" : `<p class="ll-trust">${icon("lock")}${TRUST}</p>`}
           </div>
@@ -1076,7 +1077,7 @@ const TRUST = "Encrypted. Never shown to brands.";
           <p class="err" data-agree-e aria-live="polite"></p>
           <p class="kyc-formerr" role="alert" data-formerr hidden></p>
           <div class="kyc-ask">
-            <div class="kyc-actions"><button class="lq lq-p lq-xl" type="submit" data-submit ${mismatch || missing.length ? "disabled" : ""}>Submit for review</button><button class="btn-q kyc-exit" type="button" data-leave>Save and exit</button></div>
+            <div class="kyc-actions"><button class="lq lq-p lq-xl" type="submit" data-submit ${mismatch || missing.length ? "disabled" : ""}>Submit for review</button><button class="lq lq-s lq-sm kyc-exit" type="button" data-leave>Save and exit</button></div>
             <p class="ll-trust">${icon("lock")}${TRUST}</p>
           </div>
         </form>`;
@@ -1185,7 +1186,7 @@ const TRUST = "Encrypted. Never shown to brands.";
         </div>
         <div class="kyc-actions">
           ${j ? `<button class="lq lq-p lq-xl" type="button" data-return>Back to your bid ${icon("arrow", "ic")}</button>` : `<button class="lq lq-p lq-xl" type="button" data-go="#jobs">Find briefs ${icon("arrow", "ic")}</button>`}
-          <button class="btn-q" type="button" data-go="#profile">View your profile</button>
+          <button class="lq lq-s lq-sm" type="button" data-go="#profile">View your profile</button>
         </div>`;
       const r = main.querySelector("[data-return]");
       if (r)
@@ -1264,7 +1265,7 @@ const TRUST = "Encrypted. Never shown to brands.";
           <p class="muted">${esc(k.note || "The check didn't pass. Try again with a clearer photo or a different ID.")}</p></div>
         <div class="kyc-alert kyc-alert-soft" data-st>${icon("info")}<div><p class="t-label">Bids stay paused until this passes</p><p>Your PAN and payout details are kept. Only the ID step needs redoing.</p></div></div>
         <div class="kyc-ask">
-          <div class="kyc-actions"><button class="lq lq-p" type="button" data-retry>Try again</button><button class="btn-q" type="button" data-leave>Not now</button></div>
+          <div class="kyc-actions"><button class="lq lq-p" type="button" data-retry>Try again</button><button class="lq lq-s lq-sm" type="button" data-leave>Not now</button></div>
           <p class="ll-trust">${icon("lock")}${TRUST}</p>
         </div>`;
       main.querySelector("[data-retry]").addEventListener("click", e => {
