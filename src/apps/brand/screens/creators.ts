@@ -739,7 +739,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       <header class="creators-head">
         <div class="creators-head-t">
           <h1 class="t-h1">Find creators</h1>
-          <p class="muted">${all.length} creators on Instagram and YouTube, ${all.filter(c => c.verified).length} of them verified. <span class="sample">Sample data</span></p>
+          <p class="muted">${all.length} ${all.length === 1 ? "creator" : "creators"} on Instagram and YouTube, ${all.filter(c => c.verified).length} of them verified. <span class="sample">Sample data</span></p>
         </div>
         <div class="creators-search">
           <label class="sr-only" for="crQ">Search by creator name or username</label>
@@ -942,7 +942,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
         }
       });
       $("#crCount").innerHTML =
-        `<b>${ids.length}</b> of ${all.length} creators · ${ui.sort === "match" ? "Best match first" : esc(SORTS[ui.sort])}`;
+        `<b>${ids.length}</b> of ${all.length} ${all.length === 1 ? "creator" : "creators"} · ${ui.sort === "match" ? "Best match first" : esc(SORTS[ui.sort])}`;
       $("#crActive").innerHTML = act.length
         ? act
             .map(
@@ -1243,7 +1243,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
         }, "cart-add");
         const cartBtn = document.getElementById("cartBtn");
         if (cartBtn) mo("thread", t, cartBtn);
-        L.toast(`${ids.length} creators added to your hiring cart`, "cart");
+        L.toast(`${ids.length} ${ids.length === 1 ? "creator" : "creators"} added to your hiring cart`, "cart");
         wired && wired.cleanup();
         paint();
         hook();

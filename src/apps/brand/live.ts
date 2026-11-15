@@ -539,18 +539,42 @@ function payments(camps: S[]): S[] {
 
 /* ---------- loading ---------- */
 
+/* Which API fields each mapped creator field comes from. Bids and orders carry only a short creator reference
+   ({id, displayName, slug}); merging that must not reset what the full row said (city to "India", followers to 0),
+   or brands see a different profile from the one the creator sees (C6). */
+const CREATOR_SOURCE: Record<string, string[]> = {
+  city: ["location"],
+  state: ["location"],
+  gender: ["gender"],
+  age: ["age"],
+  languages: ["languages"],
+  categories: ["categories"],
+  content: ["packages", "startingPrice"],
+  rates: ["packages", "startingPrice"],
+  packages: ["packages"],
+  platforms: ["platforms", "followerCount"],
+  verified: ["verified"],
+  rating: ["rating"],
+  reviews: ["reviewCount"],
+  bio: ["bio"],
+  work: ["gallery"],
+  avatarUrl: ["avatarUrl"],
+  repliesWithin: ["repliesWithin"],
+};
+
 function addCreators(s: S, rows: Obj[]): void {
   for (const r of rows) {
     if (!r || !r.id) continue;
     const c = mapCreator(r);
     const i = s.creators.findIndex((x: S) => x.id === c.id);
-    if (i < 0) s.creators.push(c);
-    else
-      s.creators[i] = {
-        ...s.creators[i],
-        ...c,
-        packages: c.packages.length ? c.packages : s.creators[i].packages,
-      };
+    if (i < 0) {
+      s.creators.push(c);
+      continue;
+    }
+    const merged = { ...s.creators[i], ...c };
+    for (const [k, from] of Object.entries(CREATOR_SOURCE))
+      if (!from.some(f => f in r && r[f] != null)) merged[k] = s.creators[i][k];
+    s.creators[i] = merged;
   }
 }
 

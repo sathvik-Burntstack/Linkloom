@@ -728,7 +728,7 @@
               }
             </section>
 
-            <section class="profile-sec profile-card" aria-labelledby="profile-sec">
+            <section class="profile-sec profile-card" aria-labelledby="profile-sec" data-settings>
               <h2 class="t-h3" id="profile-sec">${icon("shield")}Sign-in and security</h2>
               <ul class="profile-rows">
                 ${L.live ? `<li><span><b>Sign-in</b><span class="t-cap muted">Email and password${me.email ? ` (${esc(me.email)})` : ""}, a code sent to your email, or Google</span></span><a class="lq lq-s lq-sm" href="signin.html?role=brand&forgot=1">Change password</a></li>` : `<li><span><b>Password</b><span class="t-cap muted">Last changed ${me.passwordChanged ? esc(L.fmtDate(me.passwordChanged, { year: true })) : "never"}</span></span><button type="button" class="lq lq-s lq-sm" data-pw>Change password</button></li>`}

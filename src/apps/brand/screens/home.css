@@ -3,11 +3,11 @@
 .home {
   gap: var(--space-title, 24px);
 }
-.home-stack {
+.home-secs {
   display: flex;
   flex-direction: column;
   gap: var(--space-section, 48px);
-}
+} /* not .home-stack: that is the bidders' avatar row below */
 .home-sec {
   display: flex;
   flex-direction: column;

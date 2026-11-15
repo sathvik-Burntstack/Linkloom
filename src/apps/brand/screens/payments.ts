@@ -197,7 +197,7 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
         <div class="earnings-slip-net"><span>${esc(netL)}</span><span class="earnings-slip-amt">${amt(r)}</span></div>
         ${r.kind === "refund" && c.refundReason ? `<p class="earnings-slip-why">${esc(c.refundReason)}</p>` : ""}
         <p class="earnings-slip-f">${esc(DOC[r.kind])} ${esc(r.invoice)} · ${esc(L.fmtDate(r.date, { year: true }))}</p>
-        <button class="lq lq-p pay-slip-dl" type="button" data-dl="${esc(r.id)}">${ic("download", "ic")}Download ${esc(DOC[r.kind].toLowerCase())}</button>
+        <button class="lq lq-s pay-slip-dl" type="button" data-dl="${esc(r.id)}">${ic("download", "ic")}Download ${esc(DOC[r.kind].toLowerCase())}</button>
       </article></div>`;
   };
   const feed = n => {

@@ -539,7 +539,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
           <h1 class="home-greet">${esc(greeting(now))}, ${esc(first(s.me.name))}.</h1>
           <p class="home-lede">${esc(lede)} <span class="sample">Sample data</span></p>
         </header>
-        <div class="ll-stack home-stack">
+        <div class="ll-stack home-secs">
           ${isNew ? post + creators : needs + nums + post + creators}
         </div>
       </div>`;
