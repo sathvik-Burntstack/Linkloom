@@ -537,13 +537,13 @@
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
 }
+/* "· 10 days left" wraps as a whole under the date when the cell is narrow, instead of being cut off */
 .bk-meta dd .muted {
   font-weight: 500;
+  white-space: nowrap;
 }
 /* creators: coral family only */
 .avatar.bk-cav {

@@ -36,7 +36,9 @@
   };
   const buzz = ms => {
     try {
-      if (!mFine.matches && navigator.vibrate) navigator.vibrate(ms);
+      /* browsers block (and log) a vibration before the person has tapped the page, e.g. on page load */
+      const active = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
+      if (!mFine.matches && navigator.vibrate && (!active || active.hasBeenActive)) navigator.vibrate(ms);
     } catch (_) {}
   };
   const ss = {

@@ -43,6 +43,7 @@
   const daysLeft = s => istDay(D(s)) - istDay(LLD.today());
   const ago = s => {
     const m = Math.round((LLD.today() - D(s)) / 6e4);
+    if (m < 1) return "just now";
     if (m < 60) return m + " min ago";
     const h = Math.round(m / 60);
     if (h < 24) return h + " h ago";

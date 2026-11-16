@@ -67,7 +67,7 @@ function render(el: HTMLElement): () => void {
       <section class="focus-form light auth-form">
         <div class="auth-in">
           <div class="auth-head">
-            <p class="row wrap"><span class="pill ${pc}">${esc(pt)}</span><span class="t-eyebrow muted">${doneN} of 3 saved</span></p>
+            <p class="row wrap"><span class="pill ${pc}">${esc(pt)}</span>${doneN ? `<span class="t-eyebrow muted">${doneN} of 3 saved</span>` : ""}</p>
             <h1 class="t-h1" tabindex="-1">${st === "verified" ? "Your business is verified" : st === "pending" ? "We're checking your details" : "Verify your business"}</h1>
             <p class="muted">${
               st === "verified"
@@ -87,7 +87,7 @@ function render(el: HTMLElement): () => void {
               `<div class="field"><label for="bkPan">PAN number</label><input class="input" id="bkPan" maxlength="10" autocomplete="off" spellcheck="false" placeholder="ABCDE1234F"><p class="help">Your company PAN, or your own if you're a sole proprietor.</p></div>
                <div class="field"><label for="bkPanName">Name as printed on the PAN</label><input class="input" id="bkPanName" autocomplete="organization" value="${esc(steps.pan?.nameOnPan || "")}"></div>
                <p class="err" data-err="pan" aria-live="assertive"></p>
-               <button class="lq lq-p lq-sm" type="button" data-save="pan">Save PAN</button>${trust}`,
+               <button class="lq lq-p lq-sm" type="button" data-save="pan">${icon("lock", "ic")}Save PAN</button>${trust}`,
             )}
             ${sec(
               "id",
@@ -97,7 +97,7 @@ function render(el: HTMLElement): () => void {
               `<div class="field"><label for="bkIdType">Document type</label><select class="select" id="bkIdType">${ID_TYPES.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join("")}</select></div>
                <div class="field"><label for="bkIdFile">Photo or PDF of the front side</label><input class="input" id="bkIdFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"><p class="help">JPG, PNG, WebP or PDF, up to 10 MB. All four corners in frame.</p></div>
                <p class="err" data-err="id" aria-live="assertive"></p>
-               <button class="lq lq-p lq-sm" type="button" data-save="id">Upload and save</button>${trust}`,
+               <button class="lq lq-p lq-sm" type="button" data-save="id">${icon("lock", "ic")}Upload and save</button>${trust}`,
             )}
             ${sec(
               "bank",
@@ -109,7 +109,7 @@ function render(el: HTMLElement): () => void {
                <div class="field"><label for="bkIfsc">IFSC</label><input class="input" id="bkIfsc" maxlength="11" autocomplete="off" placeholder="HDFC0001234"></div>
                <div class="field"><label for="bkHolder">Account holder name</label><input class="input" id="bkHolder" autocomplete="organization" value="${esc(steps.bank?.accountHolderName || "")}"><p class="help">Refunds from escrow go back to this account.</p></div>
                <p class="err" data-err="bank" aria-live="assertive"></p>
-               <button class="lq lq-p lq-sm" type="button" data-save="bank">Save bank account</button>${trust}`,
+               <button class="lq lq-p lq-sm" type="button" data-save="bank">${icon("lock", "ic")}Save bank account</button>${trust}`,
             )}
           </div>
           <p class="profile-formerr" role="alert" data-ferr hidden></p>
@@ -119,7 +119,7 @@ function render(el: HTMLElement): () => void {
                 ? `<button class="lq lq-p" type="button" data-done>${returnTo ? "Back to where you were" : "Go to your dashboard"}</button>`
                 : locked
                   ? `<a class="lq lq-s" href="#home">Back to your dashboard</a>`
-                  : `<a class="lq lq-s" href="#home">Save and exit</a><button class="lq lq-p" type="button" data-submit ${doneN === 3 ? "" : "disabled"}>Submit for review</button>`
+                  : `<a class="lq lq-s" href="#home">Save and exit</a><button class="lq lq-p" type="button" data-submit ${doneN === 3 ? "" : "disabled"}>${icon("lock", "ic")}Submit for review</button><p class="ll-trust profile-setup-trust">${icon("lock")}Encrypted. Only Linkloom's review team sees this.</p>`
             }
           </div>
         </div>

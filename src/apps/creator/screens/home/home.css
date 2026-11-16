@@ -404,6 +404,12 @@
     align-items: start;
     column-gap: 32px;
   }
+  /* a lone card on a very wide screen stops at a card's width instead of stretching to ~1400px with its match and
+     deadline floating mid-card */
+  .home-more > .jobs-card:only-child {
+    width: 100%;
+    max-width: 960px;
+  }
   .home-more > .jobs-card:last-child:nth-child(odd) > .jobs-card-top {
     grid-area: top;
   }

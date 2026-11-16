@@ -212,7 +212,7 @@
                   <label id="pjBudgetL" for="pjBudget">Budget</label>
                   <div class="money-in pj-money">
                     <span aria-hidden="true">₹</span>
-                    <input id="pjBudget" type="text" inputmode="numeric" autocomplete="off" maxlength="11" placeholder="0" value="${esc(group(d.budget))}" aria-describedby="pjBudgetHelp pjBudgetErr">
+                    <input id="pjBudget" type="text" inputmode="numeric" autocomplete="off" maxlength="11" placeholder="15,000" value="${esc(group(d.budget))}" aria-describedby="pjBudgetHelp pjBudgetErr">
                     <button class="pj-step" type="button" data-step="-500" aria-label="Lower by ₹500">${ic("minus")}</button>
                     <button class="pj-step" type="button" data-step="500" aria-label="Raise by ₹500">${ic("plus")}</button>
                   </div>

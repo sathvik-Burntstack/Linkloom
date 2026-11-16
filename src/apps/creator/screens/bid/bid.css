@@ -7,8 +7,14 @@
   flex-direction: column;
   gap: 8px;
 }
+/* " · Sample brief": the separator is inside the .sample wrapper, so the signed-in app (which hides .sample) shows no
+   dangling " ·" after the bid count; the wrapper itself keeps the line's own type */
 .bid-h-s {
   white-space: nowrap;
+}
+.bid-h-s.sample {
+  font: inherit;
+  opacity: 1;
 }
 .bid-h .t-h1 {
   max-width: 22ch;
@@ -51,6 +57,14 @@
 }
 .bid-kyc .lq {
   flex: none;
+}
+/* the ID button and its reassurance line, one beside the other */
+.bid-kyc-a {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .bid-layout {
@@ -594,11 +608,19 @@
   .bid-side-note {
     padding: 0 16px;
   }
+  .bid-kyc-a {
+    flex-basis: 100%;
+    align-items: stretch;
+  }
   .bid-kyc .lq {
     width: 100%;
   }
-  .bid-foot .lq {
-    width: 100%;
+  .bid-kyc-a .ll-trust {
+    justify-content: center;
+  }
+  /* the dock below carries the one filled "Review bid" on phones and tablets */
+  .bid-foot .bid-review-btn {
+    display: none;
   }
   .bid-dock {
     position: fixed;

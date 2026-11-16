@@ -1511,6 +1511,12 @@ img {
     min-height: 44px;
     margin-block: -12px;
   }
+  /* the header crumb ("Briefs", "Deals", "Find creators"): 44px tall inside the 54px header box */
+  .top .crumb a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 } /* 44px targets; the 54px header box keeps an equal 5px inset */
 @media (prefers-reduced-motion: reduce) {
   .lq:hover {

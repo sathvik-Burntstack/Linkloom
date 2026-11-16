@@ -279,12 +279,10 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
             </div>
           </section>
 
-          <section class="earnings-sec" aria-labelledby="payHisH">
-            <div class="earnings-sec-top">
-              <h2 class="earnings-sec-h" id="payHisH">Payment history</h2>
-              <div class="chips earnings-filter" role="group" aria-label="Filter payments">
-                ${FILTERS.map(([k, n]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${k === f}">${n} <span class="earnings-chip-n">${cnt(k)}</span></button>`).join("")}
-              </div>
+          <section class="ll-panel earnings-sec pay-sec" aria-labelledby="payHisH">
+            <div class="ll-panel-head"><div><h2 class="ll-panel-h" id="payHisH">Payment history</h2><p class="ll-panel-sub">Open a row for its slip and invoice</p></div></div>
+            <div class="chips earnings-filter" role="group" aria-label="Filter payments">
+              ${FILTERS.map(([k, n]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${k === f}">${n} <span class="earnings-chip-n">${cnt(k)}</span></button>`).join("")}
             </div>
             <ol class="earnings-list pay-list">${rows
               .map(r => {
@@ -305,8 +303,8 @@ tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;fon
             <p class="help pay-hint">${ic("file")}<span>Each row has an invoice with your billing details: ${esc((s.me.billing || {}).legal || s.me.brand)}, GSTIN ${esc((s.me.billing || {}).gstin || "not added")}.</span><a class="lq lq-s lq-sm" href="#profile">${ic("edit", "ic")}Edit billing</a></p>
           </section>
 
-          <section class="earnings-sec" aria-labelledby="payRefH">
-            <div class="earnings-sec-top"><h2 class="earnings-sec-h" id="payRefH">Refunds</h2><span class="help">${refunds.length ? `${L.inr(m.refunds)} back to you` : "None so far"}</span></div>
+          <section class="ll-panel earnings-sec pay-sec" aria-labelledby="payRefH">
+            <div class="ll-panel-head"><div><h2 class="ll-panel-h" id="payRefH">Refunds</h2><p class="ll-panel-sub">${refunds.length ? `${L.inr(m.refunds)} back to you` : "None so far"}</p></div></div>
             <div class="pay-ref-why">
               <p class="pay-ref-h">When you get a refund</p>
               <ul class="chat-rules pay-rules">

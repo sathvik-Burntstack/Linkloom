@@ -1077,20 +1077,13 @@
   flex: none;
 }
 
-/* paperwork sections */
+/* paperwork sections: each one a white section panel (.ll-panel, shared/layout.css) with a real heading */
 .cw-sec {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   min-width: 0;
 }
-.cw-sec-h {
-  font-weight: 700;
-  font-size: 12px;
-  line-height: 16px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ll-slate);
+/* the rule under the panel heading already separates; the first date row starts right under it */
+.cw-sec .kv:first-child {
+  padding-top: 0;
 }
 .cw-brief {
   font-size: 18px;

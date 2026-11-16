@@ -461,7 +461,7 @@
       case "approved":
         return `${head(`Release ${L.inr(c.price)} to ${f}`)}
           <p class="cw-now-p">You approved v${(last || {}).v || 1} on ${esc(L.fmtDate(logAt(c, "approved") || K().nowISO()))}. Releasing moves the money from escrow to ${esc(f)}. This can’t be undone.</p>
-          <button class="lq lq-p" type="button" data-release>Release payment</button>`;
+          <button class="lq lq-p" type="button" data-release>${ic("lock", "ic")}Release payment</button>`;
       case "released": {
         const top = `${head(c.review && !ui.editReview ? "Done. Thank you." : `Rate and review ${f}`)}
           <p class="cw-now-p">${L.inr(c.price)} was released to ${esc(f)} on ${esc(L.fmtDate(logAt(c, "released") || c.released || K().nowISO()))}.${c.views ? ` The post has ${esc(L.compact(c.views))} views so far.` : ""}</p>
@@ -552,8 +552,8 @@
         <div class="cw-grid">
           <div class="cw-main">
             <section class="card cw-now" aria-labelledby="cwNowH" aria-live="polite">${nowPanel(c, ui)}</section>
-            <section class="cw-sec" aria-labelledby="cwBriefH">
-              <h2 class="cw-sec-h" id="cwBriefH">${c.source === "job" ? "Brief" : "What you asked for"}</h2>
+            <section class="ll-panel cw-sec" aria-labelledby="cwBriefH">
+              <div class="ll-panel-head"><div><h2 class="ll-panel-h" id="cwBriefH">${c.source === "job" ? "Brief" : "What you asked for"}</h2></div></div>
               ${d.brief ? `<p class="cw-brief">${esc(d.brief)}</p>` : `<p class="cw-brief">${c.source === "job" ? "The brief was agreed when you confirmed the bid. Changes since then are in the chat." : `A direct invitation for one ${esc((c.format || "post").toLowerCase())} on ${esc(K().plat(c.platform))}.`}</p>`}
               <dl class="cw-facts">
                 <div><dt>Platform</dt><dd>${esc(K().plat(c.platform) + " " + (c.format || ""))}</dd></div>
@@ -564,8 +564,8 @@
               ${d.items.length ? `<ol class="cw-dl">${d.items.map((x, i) => `<li class="${c.stage === "released" || c.stage === "approved" ? "is-ok" : ""}"><span class="cw-dl-n" aria-hidden="true">0${i + 1}</span><span class="cw-dl-t">${x.p ? K().glyph(x.p) : ""}<span>${esc(x.t)}${x.sub ? `<span class="muted">${esc(x.sub)}</span>` : ""}</span></span>${c.stage === "released" || c.stage === "approved" ? '<span class="pill pill-ok">Approved</span>' : ""}</li>`).join("")}</ol>` : ""}
               ${c.job ? `<a class="lq lq-s lq-sm" href="#job-${esc(c.job)}">Open the brief${ic("arrow", "ic")}</a>` : ""}
             </section>
-            <section class="cw-sec" aria-labelledby="cwFilesH">
-              <h2 class="cw-sec-h" id="cwFilesH">Deliveries</h2>
+            <section class="ll-panel cw-sec" aria-labelledby="cwFilesH">
+              <div class="ll-panel-head"><div><h2 class="ll-panel-h" id="cwFilesH">Deliveries</h2><p class="ll-panel-sub">Every version ${esc(f)} sends, newest first</p></div></div>
               ${
                 dv.length
                   ? `<ol class="cw-files">${dv
@@ -594,8 +594,8 @@
                 ? `<a class="cw-chat" href="#chat-${esc(t.id)}">${K().cav(k)}<span class="cw-chat-t"><b>Chat with ${esc(f)}</b><span class="muted">${last ? esc((last.from === "brand" ? "You: " : "") + (last.text || (last.file ? last.file.name : ""))) : "Say hello"}</span></span>${t.unread ? `<span class="cw-chat-n" aria-label="${t.unread} unread">${t.unread}</span>` : ic("chevron")}</a>`
                 : `<div class="cw-chat is-locked"><span class="cw-lockic" aria-hidden="true">${ic("lock")}</span><span class="cw-chat-t"><b>Chat opens after payment</b><span class="muted">${isEnd(c) ? "This deal closed before any payment." : c.stage === "invited" ? `Once ${esc(f)} accepts and you pay into escrow, you can message and share files here.` : `Pay into escrow and you can message ${esc(f)} and share files here.`}</span></span></div>`
             }
-            <section class="cw-sec" aria-labelledby="cwDatesH">
-              <h2 class="cw-sec-h" id="cwDatesH">Dates</h2>
+            <section class="ll-panel cw-sec" aria-labelledby="cwDatesH">
+              <div class="ll-panel-head"><div><h2 class="ll-panel-h" id="cwDatesH">Dates</h2></div></div>
               <dl>
                 <div class="kv"><dt>${c.source === "job" ? "Hired" : "Invited"}</dt><dd>${esc(L.fmtDate(logAt(c, "invited") || logAt(c, "accepted") || c.funded || K().nowISO()))}</dd></div>
                 <div class="kv"><dt>Paid into escrow</dt><dd>${c.funded ? esc(L.fmtDate(c.funded)) : "—"}</dd></div>
@@ -605,7 +605,7 @@
             </section>
             ${
               (c.log || []).length
-                ? `<section class="cw-sec" aria-labelledby="cwLogH"><h2 class="cw-sec-h" id="cwLogH">Log</h2>
+                ? `<section class="ll-panel cw-sec" aria-labelledby="cwLogH"><div class="ll-panel-head"><div><h2 class="ll-panel-h" id="cwLogH">Log</h2><p class="ll-panel-sub">What happened on this deal, newest first</p></div></div>
               <ol class="cw-log">${c.log
                 .slice()
                 .reverse()

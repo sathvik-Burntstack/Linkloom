@@ -526,7 +526,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
       const creators = `<section class="ll-panel home-sec home-crs" aria-labelledby="homeCrH">
           <div class="ll-panel-head">
             <div><h2 class="ll-panel-h" id="homeCrH">Creators for you</h2><p class="ll-panel-sub">Ranked on ${esc((s.me.industry || "your industry").toLowerCase())}, verification, availability and rating.</p></div>
-            <a class="ll-panel-more" href="#creators" aria-label="See all creators">See all →</a>
+            ${crs.length ? `<a class="ll-panel-more" href="#creators" aria-label="See all creators">See all →</a>` : ""}
           </div>
           ${
             crs.length

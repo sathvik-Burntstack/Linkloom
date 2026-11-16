@@ -430,7 +430,7 @@ const TRUST = "Encrypted. Never shown to brands.";
           <p class="muted">${BID_BEFORE_KYC ? "You can bid now. Brands need your ID check before a deal starts, and it's needed for your first payout." : "Brands only accept bids from verified creators."} You can stop and pick up where you left off.</p></div>
         <ol class="kyc-need">${need.map((n, i) => `<li data-st><span class="kyc-need-n num">0${i + 1}</span><span><b>${esc(n[0])}</b><span>${esc(n[1])}</span></span></li>`).join("")}</ol>
         <div class="kyc-ask">
-          <div class="kyc-actions"><button class="lq lq-p lq-xl" type="button" data-begin>Start verification ${icon("arrow", "ic")}</button><span class="kyc-time">${icon("clock")}About 4 minutes</span><button class="lq lq-s lq-sm kyc-exit" type="button" data-leave>Not now</button></div>
+          <div class="kyc-actions"><button class="lq lq-p lq-xl" type="button" data-begin>${icon("lock", "ic")}Start verification</button><span class="kyc-time">${icon("clock")}About 4 minutes</span><button class="lq lq-s lq-sm kyc-exit" type="button" data-leave>Not now</button></div>
           <p class="ll-trust">${icon("lock")}${TRUST}</p>
         </div>`;
       main.querySelector("[data-begin]").addEventListener("click", e => {
@@ -1077,7 +1077,7 @@ const TRUST = "Encrypted. Never shown to brands.";
           <p class="err" data-agree-e aria-live="polite"></p>
           <p class="kyc-formerr" role="alert" data-formerr hidden></p>
           <div class="kyc-ask">
-            <div class="kyc-actions"><button class="lq lq-p lq-xl" type="submit" data-submit ${mismatch || missing.length ? "disabled" : ""}>Submit for review</button><button class="lq lq-s lq-sm kyc-exit" type="button" data-leave>Save and exit</button></div>
+            <div class="kyc-actions"><button class="lq lq-p lq-xl" type="submit" data-submit ${mismatch || missing.length ? "disabled" : ""}>${icon("lock", "ic")}Submit for review</button><button class="lq lq-s lq-sm kyc-exit" type="button" data-leave>Save and exit</button></div>
             <p class="ll-trust">${icon("lock")}${TRUST}</p>
           </div>
         </form>`;

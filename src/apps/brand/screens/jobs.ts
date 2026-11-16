@@ -136,6 +136,9 @@
     return `<span class="pill ${m.pill}" data-pill>${ic(m.ic)}${esc(label || m.label)}</span>`;
   };
 
+  /* "Instagram Reel · Food": only the parts that are filled in, so no dangling "·" */
+  const platLine = j => [[plat(j.platform), j.format].filter(Boolean).join(" "), j.category].filter(Boolean).join(" · ");
+
   /* a confirm sheet in the creator "Withdraw this bid?" pattern: a mini slip, plain consequences, one clear choice */
   function confirm({
     title,
@@ -151,7 +154,7 @@
     L.openSheet({
       title,
       body: `<div class="stack jl-sheet">${mini}<ul class="jl-conseq">${bullets.map(b => `<li>${esc(b)}</li>`).join("")}</ul>${extra}
-        <div class="row wrap"><button class="lq ${danger ? "lq-p bk-danger" : "lq-p"}" type="button" data-yes>${esc(yes)}</button><button class="lq lq-s" type="button" data-no>${esc(no)}</button></div>${trust ? `<p class="ll-trust">${ic("lock")}${esc(trust)}</p>` : ""}</div>`,
+        <div class="row wrap"><button class="lq ${danger ? "lq-p bk-danger" : "lq-p"}" type="button" data-yes>${trust ? ic("lock", "ic") : ""}${esc(yes)}</button><button class="lq lq-s" type="button" data-no>${esc(no)}</button></div>${trust ? `<p class="ll-trust">${ic("lock")}${esc(trust)}</p>` : ""}</div>`,
       onMount(b, close) {
         b.querySelector("[data-no]").addEventListener("click", () => close());
         b.querySelector("[data-yes]").addEventListener("click", () => {
@@ -162,7 +165,7 @@
     });
   }
   const jobMini =
-    j => `<div class="jl-mini"><span class="bk-plat">${glyph(j.platform)}<span>${esc(plat(j.platform))} ${esc(j.format)} · ${esc(j.category)}</span></span>
+    j => `<div class="jl-mini"><span class="bk-plat">${glyph(j.platform)}<span>${esc(platLine(j))}</span></span>
     <p class="t-money jl-mini-p">${L.inr(j.budget)}</p><p class="t-small muted">${esc(j.title)}</p></div>`;
   const OPEN_BID = ["new", "viewed", "shortlisted"];
 
@@ -391,7 +394,7 @@
         <p class="jl-stub-d">${draft ? "Not posted yet" : "Posted " + esc(L.fmtDate(j.posted))}</p>
       </div>
       <div class="jl-body">
-        <div class="jl-top"><span class="bk-plat">${glyph(j.platform)}<span>${esc(plat(j.platform))} ${esc(j.format)} · ${esc(j.category)}</span></span><span class="row jl-pills">${st}</span></div>
+        <div class="jl-top"><span class="bk-plat">${glyph(j.platform)}<span>${esc(platLine(j))}</span></span><span class="row jl-pills">${st}</span></div>
         <h3 class="jl-t" id="jt-${esc(j.id)}"><a href="#${draft ? "post" : "job"}-${esc(j.id)}">${esc(j.title)}</a></h3>
         <dl class="bk-meta jl-meta">
           <div><dt>Deadline</dt><dd>${esc(L.fmtDate(j.deadline))}${j.status === "open" || draft ? ` <span class="muted">· ${esc(daysTxt(dl))}</span>` : ""}</dd></div>

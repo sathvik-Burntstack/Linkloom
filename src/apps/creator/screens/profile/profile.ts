@@ -12,6 +12,8 @@ import { kycWaitText } from "../../core/kyc-gate";
 (() => {
   const { esc, icon, store } = LLD;
   const pct = n => (Math.round(n * 10) / 10).toFixed(1).replace(/\.0$/, "") + "%";
+  /* an unshared number in the dark Audience band: words at a readable size, not a giant "—" that reads like a bar */
+  const NS = '<span class="profile-nums-ns">Not shared</span>';
   const href = u => (/^https?:\/\//i.test(u) ? u : "https://" + u);
   const platOf = u =>
     /instagram\.com/i.test(u) ? "instagram" : /youtube\.com|youtu\.be/i.test(u) ? "youtube" : "web";
@@ -96,9 +98,9 @@ import { kycWaitText } from "../../core/kyc-gate";
             ${
               st.ps.length
                 ? `<dl class="profile-nums">
-              <div><dt>Followers</dt><dd class="t-money" data-n="${st.followers}" data-f="c">${st.followers ? esc(LLD.compact(st.followers)) : "—"}</dd><p>${esc(st.ps.map(([key]) => (PLAT[key] ? PLAT[key][0] : key)).join(" and "))}</p></div>
-              <div><dt>Avg views</dt><dd class="t-money" data-n="${st.views}" data-f="c">${st.views ? esc(LLD.compact(st.views)) : "—"}</dd><p>per post</p></div>
-              <div><dt>Engagement</dt><dd class="t-money" data-n="${st.er}" data-f="p">${st.er ? esc(pct(st.er)) : "—"}</dd><p>engagement rate</p></div>
+              <div><dt>Followers</dt><dd class="t-money" data-n="${st.followers}" data-f="c">${st.followers ? esc(LLD.compact(st.followers)) : NS}</dd><p>${esc(st.ps.map(([key]) => (PLAT[key] ? PLAT[key][0] : key)).join(" and "))}</p></div>
+              <div><dt>Avg views</dt><dd class="t-money" data-n="${st.views}" data-f="c">${st.views ? esc(LLD.compact(st.views)) : NS}</dd><p>per post</p></div>
+              <div><dt>Engagement</dt><dd class="t-money" data-n="${st.er}" data-f="p">${st.er ? esc(pct(st.er)) : NS}</dd><p>engagement rate</p></div>
             </dl>`
                 : `<p class="profile-band-empty">No audience numbers yet.<span data-own ${own}> Add Instagram or YouTube in <button type="button" class="btn-q" data-edit2>Edit profile</button> to show your audience here.</span></p>`
             }

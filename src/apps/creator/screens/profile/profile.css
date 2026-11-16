@@ -243,6 +243,14 @@
   line-height: 18px;
   color: var(--ll-mist);
 }
+.profile-nums .profile-nums-ns {
+  display: block;
+  font-family: var(--ll-sans);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 28px;
+  color: var(--ll-mist);
+}
 
 /* two blocks side by side inside a panel (platforms | geography, selected work | track record); the panel head's
    rule already separates them from the heading */

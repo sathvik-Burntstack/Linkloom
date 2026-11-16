@@ -297,6 +297,9 @@
   font-size: 12px;
   line-height: 1;
 }
+.creators-tab-n[hidden] {
+  display: none;
+}
 .creators-tabs button[aria-pressed="true"] .creators-tab-n {
   background: var(--ll-ink-text);
   color: var(--ll-white);

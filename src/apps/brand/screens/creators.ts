@@ -709,11 +709,13 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
   /* ---------- the tabs above both screens: All creators / Saved ---------- */
   const tabs = mode => `<div class="seg creators-tabs" role="group" aria-label="Show">
       <button type="button" aria-pressed="${mode === "all"}" data-go="#creators">${L.icon("users")}All creators</button>
-      <button type="button" aria-pressed="${mode === "saved"}" data-go="#saved">${L.icon("heart")}Saved <span class="creators-tab-n num" data-favn>${S().favorites.length}</span></button>
+      <button type="button" aria-pressed="${mode === "saved"}" data-go="#saved">${L.icon("heart")}Saved <span class="creators-tab-n num" data-favn ${S().favorites.length ? "" : "hidden"}>${S().favorites.length}</span></button>
     </div>`;
   const syncFavN = el =>
     L.$$("[data-favn]", el).forEach(n => {
-      n.textContent = S().favorites.length;
+      const k = S().favorites.length;
+      n.textContent = k;
+      n.hidden = !k; /* no "Saved 0" for a new brand: the count shows once something is saved */
     });
 
   /* ---------- #creators ---------- */

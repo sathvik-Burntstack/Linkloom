@@ -633,7 +633,7 @@
             <h2 class="profile-check-h" id="profile-check-h">Business check <span class="pill ${c.pill}">${c.tone === "ok" ? icon("check") : ""}${esc(c.state)}</span></h2>
             <p class="muted">${esc(c.sub)}</p>
           </div>
-          ${c.todo ? `<div class="profile-check-a"><a class="lq lq-p" href="#kyc" data-kyc>${esc(c.todo)}</a><p class="ll-trust">${icon("lock")}Encrypted. Never shown to creators.</p></div>` : ""}
+          ${c.todo ? `<div class="profile-check-a"><a class="lq lq-p" href="#kyc" data-kyc>${icon("lock", "ic")}${esc(c.todo)}</a><p class="ll-trust">${icon("lock")}Encrypted. Never shown to creators.</p></div>` : ""}
         </section>`;
 
   function renderProfile(el, param) {
@@ -649,7 +649,9 @@
       const hiredNames = st.hiredIds.map(id => (L.creator(id) || {}).name).filter(Boolean);
       const where = [me.city, me.state].filter(Boolean).join(", ");
       const check = bizCheck(s.kyc);
-      /* the "On Linkloom" numbers show for every brand: a new brand sees 0 and what fills it, not a missing band */
+      /* the "On Linkloom" band shows for every brand; a count of 0 shows the next step in its slot, never a big 0 */
+      const num = (n, none) =>
+        n ? `<dd class="t-money" data-n="${n}">${n}</dd>` : `<dd class="profile-none">${esc(none)}</dd>`;
       el.innerHTML = `
       <div class="view-in profile">
         <header class="profile-mast">
@@ -668,9 +670,9 @@
           <div class="profile-band-h"><h2 class="t-eyebrow" id="profile-on">On Linkloom</h2>
             <p class="profile-src">${p ? "Since " + esc(L.fmtDate(p.since, { year: true })) + " · " : ""}counted by Linkloom, not self-reported <span class="sample">Sample</span></p></div>
           <dl class="profile-nums">
-            <div><dt>Creators hired</dt><dd class="t-money" data-n="${st.hired}">${st.hired}</dd><p>${hiredNames.length ? esc(hiredNames.join(" and ")) : st.hired ? "Paid through escrow" : "None yet. Hire from a brief or Find creators"}</p></div>
-            <div><dt>Deals</dt><dd class="t-money" data-n="${st.funded}">${st.funded}</dd><p>${st.funded ? "funded through escrow" : "None funded yet"}</p></div>
-            <div><dt>Briefs posted</dt><dd class="t-money" data-n="${st.jobs}">${st.jobs}</dd><p>${st.drafts ? `${st.drafts} draft not counted` : st.jobs ? "open, hired or closed" : "None posted yet"}</p></div>
+            <div><dt>Creators hired</dt>${num(st.hired, "None yet")}<p>${hiredNames.length ? esc(hiredNames.join(" and ")) : st.hired ? "Paid through escrow" : "Hire from a brief or Find creators"}</p></div>
+            <div><dt>Deals</dt>${num(st.funded, "None yet")}<p>${st.funded ? "funded through escrow" : "Fund a deal after you hire"}</p></div>
+            <div><dt>Briefs posted</dt>${num(st.jobs, "None yet")}<p>${st.drafts ? `${st.drafts} draft not counted` : st.jobs ? "open, hired or closed" : "Post a brief to hear from creators"}</p></div>
           </dl>
         </section>
 

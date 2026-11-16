@@ -564,13 +564,10 @@
 /* touch: each step is a 44px target even when only its 4px bar shows (phones); the hit area grows into the
    sticky line's own padding, so the line keeps its height */
 @media (pointer: coarse) {
+  /* the step bars: a 44px+ tall button (the padding is the hit box), the negative margin keeps the bar where it was */
   .pj-st {
-    position: relative;
-  }
-  .pj-st::before {
-    content: "";
-    position: absolute;
-    inset: -16px 0;
+    padding-block: 20px;
+    margin-block: -16px;
   }
   /* the budget's minus / plus */
   .pj-step {

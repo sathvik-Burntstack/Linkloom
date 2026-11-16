@@ -324,13 +324,18 @@
   font-size: 15px;
   line-height: 20px;
 }
+/* the deal name wraps to a second line instead of being cut to "Morning routine R…"; past two lines it is clamped */
 .earnings-what span {
   font-size: 13px;
   line-height: 18px;
   color: var(--ll-slate);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
 }
 .earnings-amt {
   display: flex;

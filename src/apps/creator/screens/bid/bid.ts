@@ -143,7 +143,7 @@ import { openKyc } from "../../core/kyc-gate";
         <header class="bid-h">
           <div class="job-src">${K.brandChip(j)}<span class="jobs-plat">${K.glyph(j.platform)}<span>${esc(K.platName(j.platform))} ${esc(j.format)}</span></span></div>
           <h1 class="t-h1">Your bid for ${esc(j.title)}</h1>
-          <p class="muted t-small">Budget ${L.inr(j.budget)} · post by ${esc(L.fmtDate(j.deadline))} · ${j.bids} bids so far<span class="bid-h-s"> · <span class="sample">Sample brief</span></span></p>
+          <p class="muted t-small">${[`Budget ${L.inr(j.budget)}`, `post by ${esc(L.fmtDate(j.deadline))}`, j.bids > 0 ? `${j.bids} ${j.bids === 1 ? "bid" : "bids"} so far` : ""].filter(Boolean).join(" · ")}<span class="sample bid-h-s"> · <span class="sample">Sample brief</span></span></p>
         </header>
         ${
           verified
@@ -151,7 +151,7 @@ import { openKyc } from "../../core/kyc-gate";
             : `<div class="bid-kyc" role="status">
           <img src="assets/trust-id-card.svg" width="72" height="56" alt="">
           <div class="bid-kyc-t"><span class="pill ${kb[0]}">${kb[0] === "pill-err" ? L.icon("alert") : ""}${esc(kb[1])}</span><p>${esc((/action_needed|rejected/.test(kyc) && s.kyc.note) || kb[2])}</p></div>
-          <button class="lq lq-s lq-sm" type="button" data-kyc>${esc(kb[3])}</button>
+          <div class="bid-kyc-a"><button class="lq lq-s lq-sm" type="button" data-kyc>${L.icon("lock", "ic")}${esc(kb[3])}</button><p class="ll-trust">${L.icon("lock")}Encrypted. Never shown to brands.</p></div>
         </div>`
         }
         <div class="bid-layout">
@@ -162,7 +162,7 @@ import { openKyc } from "../../core/kyc-gate";
                 <label id="bidPriceL" for="bidPrice">Your price</label>
                 <div class="money-in bid-money">
                   <span aria-hidden="true">₹</span>
-                  <input id="bidPrice" name="price" type="text" inputmode="numeric" autocomplete="off" maxlength="11" placeholder="0" value="${esc(group(d.price))}" aria-describedby="bidPriceHelp bidPriceErr bidPriceWarn">
+                  <input id="bidPrice" name="price" type="text" inputmode="numeric" autocomplete="off" maxlength="11" placeholder="${esc(group(String(Math.round(j.budget / 100))))}" value="${esc(group(d.price))}" aria-describedby="bidPriceHelp bidPriceErr bidPriceWarn">
                   <button class="bid-step" type="button" data-step="-500" aria-label="Lower by ₹500">${L.icon("minus")}</button>
                   <button class="bid-step" type="button" data-step="500" aria-label="Raise by ₹500">${L.icon("plus")}</button>
                 </div>

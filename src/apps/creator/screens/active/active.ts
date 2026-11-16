@@ -461,23 +461,23 @@
           <div class="work-main">
             <section class="card work-now" aria-labelledby="workNowH" aria-live="polite">${nowPanel(a)}</section>
 
-            <section class="work-sec" aria-labelledby="workBriefH">
-              <h2 class="work-sec-h" id="workBriefH">Brief</h2>
+            <section class="ll-panel work-sec" aria-labelledby="workBriefH">
+              <div class="ll-panel-head"><h2 class="ll-panel-h" id="workBriefH">Brief</h2></div>
               <p class="work-brief">${esc(d.brief || "The brand’s brief is attached to the accepted bid.")}</p>
               <dl class="work-facts">
                 <div><dt>Platform</dt><dd>${esc(C.plat(d.platform) + " " + (d.format || ""))}</dd></div>
                 <div><dt>Usage rights</dt><dd>${esc(d.usage || "As agreed in the bid")}</dd></div>
-                ${d.languages ? `<div><dt>Languages</dt><dd>${esc(d.languages.join(", "))}</dd></div>` : ""}
+                ${d.languages && d.languages.length ? `<div><dt>Languages</dt><dd>${esc(d.languages.join(", "))}</dd></div>` : ""}
               </dl>
             </section>
 
-            <section class="work-sec" aria-labelledby="workDelH">
-              <h2 class="work-sec-h" id="workDelH">Deliverables</h2>
+            <section class="ll-panel work-sec" aria-labelledby="workDelH">
+              <div class="ll-panel-head"><h2 class="ll-panel-h" id="workDelH">Deliverables</h2></div>
               <ol class="work-dl">${dl.map((x, i) => `<li class="${a.stage === "approved" ? "is-ok" : ""}"><span class="work-dl-n" aria-hidden="true">0${i + 1}</span><span>${esc(x)}</span>${a.stage === "approved" ? `<span class="pill pill-ok">Approved</span>` : ""}</li>`).join("")}</ol>
             </section>
 
-            <section class="work-sec" aria-labelledby="workFilesH">
-              <h2 class="work-sec-h" id="workFilesH">Uploads</h2>
+            <section class="ll-panel work-sec" aria-labelledby="workFilesH">
+              <div class="ll-panel-head"><h2 class="ll-panel-h" id="workFilesH">Uploads</h2></div>
               ${
                 files.length
                   ? `<ol class="work-files">${files
@@ -495,8 +495,8 @@
           <aside class="work-side" aria-label="Deal details">
             ${C.slip ? C.slip({ price: a.price, head: a.pay === "released" ? "Payout slip" : "Payout if approved", brand: a.brand, job: a.title, status: a.pay === "released" ? `<span class="pill pill-ok">${ic("check")}Released from escrow</span>` : C.escrowPill("Held in escrow until approval") }) : ""}
 
-            <section class="work-sec" aria-labelledby="workDatesH">
-              <h2 class="work-sec-h" id="workDatesH">Dates</h2>
+            <section class="ll-panel work-sec" aria-labelledby="workDatesH">
+              <div class="ll-panel-head"><h2 class="ll-panel-h" id="workDatesH">Dates</h2></div>
               <dl>
                 <div class="kv"><dt>Bid accepted</dt><dd>${a.accepted ? L.fmtDate(a.accepted) : "—"}</dd></div>
                 <div class="kv"><dt>Escrow funded</dt><dd>${a.funded ? L.fmtDate(a.funded) : "—"}</dd></div>
@@ -515,8 +515,8 @@
                 : ""
             }
 
-            <section class="work-sec" aria-labelledby="workLogH">
-              <h2 class="work-sec-h" id="workLogH">Log</h2>
+            <section class="ll-panel work-sec" aria-labelledby="workLogH">
+              <div class="ll-panel-head"><h2 class="ll-panel-h" id="workLogH">Log</h2></div>
               <ol class="work-log">${(a.log || [])
                 .slice()
                 .reverse()

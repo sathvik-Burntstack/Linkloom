@@ -84,7 +84,7 @@
             acts.push(`<button class="lq lq-s lq-sm" type="button" data-undo="${esc(b.id)}">Undo decline</button>`);
         } else if (canHire()) {
           acts.push(
-            `<button class="lq lq-s lq-sm" type="button" data-hire="${esc(b.id)}">Confirm ${esc(K.first(c))}</button>`,
+            `<button class="lq lq-s lq-sm" type="button" data-hire="${esc(b.id)}">${ic("lock", "ic")}Confirm ${esc(K.first(c))}</button>`,
           );
           acts.push(
             `<button class="chip jd-short" type="button" data-short="${esc(b.id)}" aria-pressed="${b.status === "shortlisted"}">${ic("bookmark")}<span>${b.status === "shortlisted" ? "Shortlisted" : "Shortlist"}</span></button>`,
@@ -98,6 +98,9 @@
           acts.push(
             `<button class="lq lq-s lq-sm jd-seen" type="button" data-seen="${esc(b.id)}">${ic("eye", "ic")}Mark as viewed</button>`,
           );
+        /* the lock line closes the actions of a bid that can still be confirmed (Confirm leads to escrow) */
+        if (acts.some(x => x.includes("data-hire=")))
+          acts.push(`<p class="ll-trust jd-trust">${ic("lock")}Held safely until you approve.</p>`);
         return `<article class="jd-bid is-${b.status}" data-id="${esc(b.id)}" aria-labelledby="jb-${esc(b.id)}">
           <div class="jd-bid-h">
             <a class="jd-bid-who" href="#creator-${esc(c.id)}" data-prof="${esc(b.id)}" id="jb-${esc(b.id)}">${K.crChip(c, `${c.handle} · ${c.city}`)}</a>
@@ -106,7 +109,7 @@
           <div class="jd-bid-g">
             <div class="jd-bid-p"><p class="jd-lab">Bid</p><p class="t-money jd-bid-price">${L.inr(b.price)}</p><p class="jd-bid-vs${b.price > j.budget ? " is-over" : ""}">${esc(vsBudget(b.price))}</p></div>
             <dl class="bk-meta jd-bid-m">
-              <div><dt>${esc(p ? K.plat(p.p) : "Followers")}</dt><dd>${p ? `${L.compact(p.followers)} <span class="muted">· ${p.er}% ER</span>` : "—"}</dd></div>
+              <div><dt>${esc(p ? K.plat(p.p) : "Followers")}</dt><dd>${p ? `${L.compact(p.followers)}${p.er > 0 ? ` <span class="muted">· ${p.er}% ER</span>` : ""}` : "—"}</dd></div>
               <div><dt>Rating</dt><dd>${c.rating ? `${Number(c.rating).toFixed(1)} <span class="muted">· ${c.reviews} reviews</span>` : '<span class="muted">New</span>'}</dd></div>
               <div><dt>Post date</dt><dd>${b.postDate ? esc(L.fmtDate(b.postDate)) : "—"}</dd></div>
               <div><dt>Expected views</dt><dd>${b.views ? esc(L.compact(b.views)) : '<span class="muted">Not given</span>'}</dd></div>
@@ -189,9 +192,9 @@
           <div class="jd-layout">
             <article class="jd-main" aria-labelledby="jdH">
               <header class="jd-h">
-                <div class="bk-src"><span class="bk-plat">${K.glyph(j.platform)}<span>${esc(K.plat(j.platform))} ${esc(j.format)} · ${esc(j.category)}</span></span>${K.pill(K.JST, j.status)}</div>
+                <div class="bk-src"><span class="bk-plat">${K.glyph(j.platform)}<span>${esc([[K.plat(j.platform), j.format].filter(Boolean).join(" "), j.category].filter(Boolean).join(" · "))}</span></span>${K.pill(K.JST, j.status)}</div>
                 <h1 class="t-h1" id="jdH">${esc(j.title)}</h1>
-                <p class="muted t-small">${j.posted ? "Posted " + esc(L.ago(j.posted)) : "Not posted yet"} · <span class="sample">Sample brief</span></p>
+                <p class="muted t-small">${j.posted ? "Posted " + esc(L.ago(j.posted)) : "Not posted yet"}<span class="sample"> · Sample brief</span></p>
                 <div class="jd-tools-h" role="group" aria-label="Brief actions">
                   ${j.status === "open" || j.status === "draft" ? `<a class="chip" href="#post-${esc(j.id)}">${ic("edit")}<span>Edit</span></a>` : ""}
                   ${j.status === "open" || j.status === "hired" ? `<button class="chip" type="button" data-closejob>${ic("close")}<span>${j.status === "hired" ? "Close listing" : "Close brief"}</span></button>` : ""}
@@ -394,7 +397,7 @@
               cols.map(({ c }) => {
                 const p = K.pf(c, j.platform);
                 return cell(
-                  p ? `${L.compact(p.followers)}<span class="muted"> · ${p.er}% ER</span>` : "—",
+                  p ? `${L.compact(p.followers)}${p.er > 0 ? `<span class="muted"> · ${p.er}% ER</span>` : ""}` : "—",
                   p && p.followers === reach,
                 );
               }),
@@ -447,7 +450,7 @@
                 ({
                   b,
                   c,
-                }) => `<div class="jd-cmp-c"><button class="lq lq-p lq-sm" type="button" data-chire="${esc(b.id)}">Confirm ${esc(K.first(c))}</button>
+                }) => `<div class="jd-cmp-c"><button class="lq lq-p lq-sm" type="button" data-chire="${esc(b.id)}">${ic("lock", "ic")}Confirm ${esc(K.first(c))}</button>
               <button class="chip" type="button" data-cshort="${esc(b.id)}" aria-pressed="${b.status === "shortlisted"}">${ic("bookmark")}<span>${b.status === "shortlisted" ? "Shortlisted" : "Shortlist"}</span></button></div>`,
               )
               .join("")}</div>

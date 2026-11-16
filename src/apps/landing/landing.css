@@ -6991,3 +6991,105 @@ html.lenis body {
     min-height: 44px;
   }
 }
+/* touch: the demo widgets' controls are 44px tall boxes. A transparent border band
+   (with the fill clipped to the padding box) adds the height, and an equal negative
+   margin gives it back, so the pills look and sit exactly as on desktop. */
+@media (pointer: coarse) {
+  .sd-sb {
+    border-block: 7px solid transparent;
+    background-clip: padding-box;
+    margin-block: -7px;
+  }
+  .tr-seg button {
+    border-block: 7px solid transparent;
+    background-clip: padding-box;
+    margin-block: -7px;
+  }
+  /* the quick-price chips draw their 1.5px ring as an inset shadow here, so the
+     transparent band can sit outside it */
+  .tr-chips button {
+    border: 0;
+    border-block: 4px solid transparent;
+    background-clip: padding-box;
+    padding: 8px 16px;
+    margin-block: -4px;
+    box-shadow: inset 0 0 0 1.5px rgba(254, 254, 254, 0.22);
+    transition:
+      background-color 0.3s,
+      box-shadow 0.3s,
+      color 0.3s;
+  }
+  .tr-chips button[aria-pressed="true"] {
+    box-shadow: inset 0 0 0 1.5px var(--ll-butter);
+  }
+  .sd-acc {
+    border-block: 7px solid transparent;
+    background-clip: padding-box;
+    margin-block: -7px;
+  }
+  /* newsletter arrow: 40px circle inside a 44px box */
+  .sub {
+    width: 44px;
+    height: 44px;
+    margin: -2px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  /* the selected states set the background shorthand, which would reset the clip */
+  .sd-sb[aria-pressed="true"],
+  .tr-seg button[aria-checked="true"],
+  .tr-chips button[aria-pressed="true"],
+  .sd-acc[aria-pressed="true"],
+  .sd-acc:hover {
+    background-clip: padding-box;
+  }
+  /* the bid row is already 44px tall (the ± steppers), so the field fills it */
+  .sd-in-bid {
+    min-height: 44px;
+  }
+}
+/* touch tablets in the wide layout: the refund node gets a 44px box, margins keep it in place */
+@media (pointer: coarse) and (min-width: 1001px) {
+  .tr-node-r {
+    min-height: 44px;
+    margin-top: 86px;
+    margin-bottom: -9px;
+  }
+}
+@media (pointer: coarse) and (max-width: 380px) {
+  .tr-chips button {
+    padding-inline: 13px;
+  }
+}
+/* very large screens: the hero's sub copy and buttons scale with the screen, and the
+   hero stops at a comfortable height so the headline isn't floating over a wide gap */
+@media (min-width: 1920px) {
+  .hx-foot {
+    max-width: clamp(520px, 27vw, 680px);
+    gap: clamp(28px, 1.5vw, 40px);
+  }
+  .hx-sub {
+    font-size: clamp(20px, 1.02vw, 26px);
+  }
+  .hx-ctas {
+    gap: clamp(12px, 0.66vw, 18px);
+  }
+  .hx-ctas .lq {
+    padding: clamp(16px, 0.86vw, 22px) clamp(24px, 1.4vw, 36px);
+    font-size: clamp(14px, 0.76vw, 19px);
+    line-height: 1.4;
+  }
+  .hx-ctas .lq:focus-visible .t {
+    transform: translateY(calc(-100% - 32px));
+  }
+}
+@media (min-width: 1920px) and (hover: hover) {
+  .hx-ctas .lq:hover .t {
+    transform: translateY(calc(-100% - 32px));
+  }
+}
+@media (min-width: 2200px) and (min-height: 1200px) {
+  .hx-in {
+    min-height: min(100svh, 1180px);
+  }
+}

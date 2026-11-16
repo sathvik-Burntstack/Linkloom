@@ -397,6 +397,10 @@
   padding-top: 16px;
   border-top: 1px solid var(--ll-rule);
 }
+/* the lock line under a bid's Confirm: its own row at the end of the actions */
+.jd-acts .jd-trust {
+  flex-basis: 100%;
+}
 .jd-acts .chip svg {
   width: 16px;
   height: 16px;
@@ -523,7 +527,16 @@
   color: var(--ll-mist);
 }
 .jd-tray .row {
+  flex: none;
   gap: 12px;
+}
+/* the buttons keep their label on one line; the count text gives way instead */
+.jd-tray .lq {
+  flex: none;
+  white-space: nowrap;
+}
+.jd-tray-t {
+  min-width: 0;
 }
 body:has(.jd-tray:not([hidden])) {
   --toast-offset: 72px;
@@ -586,6 +599,12 @@ body:has(.jd-tray:not([hidden])) {
   vertical-align: -2px;
   margin-right: 2px;
   fill: var(--ll-butter);
+}
+.jd-cmp-c .lq svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 0;
+  fill: none;
 }
 .jd-cmp-c.is-top {
   font-weight: 600;
@@ -688,6 +707,15 @@ body:has(.jd-tray:not([hidden])) {
   }
   .jd-tray-t > span:last-child {
     white-space: normal;
+  }
+  /* phones: when the count and both buttons do not fit on one line, the buttons drop to a row of their own */
+  .jd-tray {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .jd-tray .row {
+    flex: 1 0 auto;
+    justify-content: flex-end;
   }
   @keyframes jdTrayIn {
     from {

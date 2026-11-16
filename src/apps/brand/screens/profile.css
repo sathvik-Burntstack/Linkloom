@@ -60,6 +60,12 @@
 .profile-web a:hover {
   border-color: currentColor;
 }
+@media (pointer: coarse) {
+  .profile-web a {
+    padding-block: 11px;
+    margin-block: -11px;
+  }
+}
 .profile-web svg {
   width: 18px;
   height: 18px;
@@ -215,6 +221,13 @@
   font-size: 13px;
   line-height: 18px;
   color: var(--ll-mist);
+}
+/* a count of 0: the next step sits in the number's place, at heading size */
+.profile-nums dd.profile-none {
+  font-family: var(--ll-display);
+  font-size: clamp(26px, 2.2vw, 32px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 /* two columns */
@@ -545,6 +558,15 @@
   width: 18px;
   height: 18px;
 }
+/* the lock line under "Submit for review": its own row inside the nav (so it stays with the sticky bar on phones) */
+.profile-setup-nav {
+  flex-wrap: wrap;
+}
+.profile-setup-trust {
+  flex-basis: 100%;
+  justify-content: flex-end;
+  text-align: right;
+}
 .setup .auth-head .row {
   justify-content: space-between;
 }
@@ -633,6 +655,10 @@
     grid-area: n;
     font-size: 52px;
     min-width: 1.2em;
+  }
+  .profile-nums dd.profile-none {
+    font-size: 28px;
+    align-self: center;
   }
   .profile-nums p {
     grid-area: p;
