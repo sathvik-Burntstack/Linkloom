@@ -24,6 +24,7 @@ import { initSession } from "./session";
 import "./ui/select";
 import "./core/legacy-bridge"; // must stay here: after core and select, before anything that reads the globals
 import "../../shared/motion";
+import "../../shared/datepicker"; // themed calendar on every date field
 import "./screens/login/login";
 import "./screens/setup/setup";
 import "./screens/kyc/kyc";

@@ -817,3 +817,72 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- brand verification (#kyc): step cards ---------- */
+/* each step is a padded card; the step to do next gets a violet edge so it's clear where to start */
+.bk-sec {
+  padding: 24px;
+  gap: 16px;
+  border: 1.5px solid transparent;
+}
+.bk-sec.is-now {
+  border-color: var(--ll-violet);
+}
+.bk-sec-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ll-rule);
+}
+.bk-sec-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.bk-sec-head .t-h3 {
+  margin: 0;
+}
+.bk-sec > .lq {
+  align-self: flex-start;
+}
+.bk-sec .ll-trust {
+  margin-top: -8px;
+}
+.bk-progress {
+  margin-top: 4px;
+}
+/* styled file picker: a real button plus the chosen file's name */
+.bk-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.bk-file-n {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.bk-file input:focus-visible + label {
+  outline: 2px solid var(--ll-violet);
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .bk-sec {
+    padding: 20px;
+  }
+}
+/* phones/tablets: the Save and exit / Submit bar only pins to the bottom once Submit can be pressed; before that it
+   sits after the steps, so it never covers a step's own Save button */
+@media (max-width: 900px) {
+  .bk-nav:not(.is-ready) {
+    position: static;
+  }
+  html:has(.bk-nav.is-ready) {
+    scroll-padding-bottom: 130px;
+  }
+}

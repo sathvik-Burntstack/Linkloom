@@ -1,0 +1,383 @@
+/* Linkloom date picker (see datepicker.ts). Ink card like the sidebar boxes; the selected day in the dashboard's
+   colour (violet for brands, coral for creators) with dark text; today ringed in butter. */
+
+/* the hidden original input: still in the form, never seen or tabbed to */
+.dp-native {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  clip-path: inset(50%) !important;
+}
+
+/* ---------- the field button ---------- */
+.dp-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-size: 16px;
+}
+.dp-trigger > svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--ll-ink-text, #121212);
+}
+.dp-trigger-t {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.dp-trigger-t.is-ph {
+  font-weight: 400;
+  color: var(--ll-slate, #5b5b66);
+}
+.dp-trigger-rel {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  background: var(--ll-paper-raised, #efefef);
+  color: var(--ll-ink-text, #121212);
+}
+.dp-trigger[aria-expanded="true"] {
+  border-color: var(--ll-ink-text, #121212);
+  box-shadow: 0 0 0 3px rgba(18, 18, 18, 0.08);
+}
+.dp-trigger[aria-invalid="true"] {
+  border-color: var(--ll-error, #b8361f);
+}
+.dp-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ---------- the calendar card ---------- */
+.dp {
+  --dp-accent: #eb6273;
+  --dp-ink: #0a0a12;
+  --dp-line: rgba(254, 254, 254, 0.1);
+  --dp-dim: rgba(254, 254, 254, 0.58);
+  position: fixed;
+  z-index: 200;
+  width: 332px;
+  padding: 16px;
+  border-radius: 24px;
+  color: #fefefe;
+  background:
+    radial-gradient(120% 60% at 0% 0%, color-mix(in srgb, var(--dp-accent) 22%, transparent), transparent 60%),
+    var(--dp-ink);
+  box-shadow:
+    0 30px 60px -24px rgba(10, 10, 18, 0.55),
+    0 0 0 1px rgba(254, 254, 254, 0.06) inset;
+  font-family: var(--ll-sans, "Figtree", system-ui, sans-serif);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top left;
+  transition:
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.dp[data-role="brand"] {
+  --dp-accent: #8981ee;
+}
+.dp.is-on {
+  opacity: 1;
+  transform: none;
+}
+.dp[hidden],
+.dp-scrim[hidden] {
+  display: none;
+}
+.dp-scrim {
+  display: none;
+}
+.dp-grab {
+  display: none;
+}
+
+.dp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.dp-title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 10px;
+  margin-left: -10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.dp-title[tabindex="-1"] {
+  cursor: default;
+}
+.dp-title-m {
+  font-family: var(--ll-display, Georgia, serif);
+  font-size: 26px;
+  line-height: 32px;
+  letter-spacing: -0.01em;
+}
+.dp-title-y {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dp-dim);
+}
+.dp-title > svg {
+  width: 16px;
+  height: 16px;
+  align-self: center;
+  color: var(--dp-dim);
+}
+.dp-nav {
+  display: flex;
+  gap: 6px;
+}
+.dp-arrow {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--dp-line);
+  border-radius: 50%;
+  background: rgba(254, 254, 254, 0.04);
+  color: #fefefe;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.dp-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+.dp-arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.dp-week,
+.dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.dp-week span {
+  padding-bottom: 6px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dp-dim);
+}
+.dp-grid {
+  gap: 2px 0;
+}
+.dp-day {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #fefefe;
+  cursor: pointer;
+  font: 600 15px/1 var(--ll-sans, system-ui, sans-serif);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    transform 0.15s;
+}
+.dp-day.is-out {
+  color: rgba(254, 254, 254, 0.3);
+}
+.dp-day.is-off {
+  color: rgba(254, 254, 254, 0.18);
+  cursor: not-allowed;
+  text-decoration: line-through;
+  text-decoration-color: rgba(254, 254, 254, 0.18);
+}
+.dp-day.is-today::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px #ffef85 inset;
+  pointer-events: none;
+}
+.dp-day.is-sel {
+  background: var(--dp-accent);
+  color: var(--dp-ink);
+  box-shadow: 0 8px 18px -8px var(--dp-accent);
+}
+.dp-day.is-sel::after {
+  box-shadow: none;
+}
+.dp-day:focus-visible,
+.dp-cell:focus-visible,
+.dp-chip:focus-visible,
+.dp-arrow:focus-visible,
+.dp-title:focus-visible {
+  outline: 2px solid #ffef85;
+  outline-offset: 2px;
+}
+
+.dp-mgrid,
+.dp-ygrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.dp-ygrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.dp-cell {
+  height: 48px;
+  border: 1px solid var(--dp-line);
+  border-radius: 14px;
+  background: rgba(254, 254, 254, 0.03);
+  color: #fefefe;
+  cursor: pointer;
+  font: 600 15px/1 var(--ll-sans, system-ui, sans-serif);
+  font-variant-numeric: tabular-nums;
+}
+.dp-cell.is-sel {
+  background: var(--dp-accent);
+  border-color: var(--dp-accent);
+  color: var(--dp-ink);
+}
+.dp-cell.is-off {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.dp-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dp-line);
+}
+.dp-chip {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--dp-accent) 55%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dp-accent) 14%, transparent);
+  color: #fefefe;
+  cursor: pointer;
+  font: 600 13px/1 var(--ll-sans, system-ui, sans-serif);
+  transition: background-color 0.15s;
+}
+.dp-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--dp-dim);
+}
+.dp-foot b {
+  color: #fefefe;
+  font-weight: 600;
+}
+
+@media (hover: hover) {
+  .dp-day:not(.is-off):not(.is-sel):hover,
+  .dp-cell:not(.is-off):not(.is-sel):hover {
+    background: rgba(254, 254, 254, 0.1);
+  }
+  .dp-arrow:not(:disabled):hover,
+  .dp-title:not([tabindex="-1"]):hover {
+    background: rgba(254, 254, 254, 0.1);
+  }
+  .dp-chip:hover {
+    background: color-mix(in srgb, var(--dp-accent) 30%, transparent);
+  }
+  .dp-trigger:not(:disabled):hover {
+    border-color: var(--ll-ink-text, #121212);
+  }
+}
+@media (pointer: coarse) {
+  .dp-chip {
+    min-height: 44px;
+  }
+  .dp-arrow {
+    width: 44px;
+    height: 44px;
+  }
+  .dp-day {
+    height: 44px;
+  }
+}
+
+/* phones: a bottom sheet with a grab handle and a dimmed page */
+@media (max-width: 600px) {
+  .dp-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    background: rgba(10, 10, 18, 0.45);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .dp-scrim.is-on {
+    opacity: 1;
+  }
+  .dp {
+    left: 0 !important;
+    right: 0;
+    top: auto !important;
+    bottom: 0;
+    width: auto;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    border-radius: 28px 28px 0 0;
+    transform: translateY(24px);
+    transform-origin: bottom center;
+  }
+  .dp-grab {
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 0 auto 12px;
+    border-radius: 2px;
+    background: rgba(254, 254, 254, 0.25);
+  }
+  .dp-day {
+    height: 46px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dp,
+  .dp-scrim,
+  .dp-day {
+    transition: none;
+  }
+}

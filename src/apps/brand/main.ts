@@ -22,6 +22,7 @@ import "./seed";
 import "./core";
 import "./select";
 import "../../shared/motion";
+import "../../shared/datepicker"; // themed calendar on every date field
 import "./screens/auth";
 import "./screens/profile";
 import "./screens/home";
