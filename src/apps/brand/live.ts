@@ -27,6 +27,7 @@ import {
   settle,
   splitLocation,
   toneOf,
+  usageRightsFor,
   usageText,
 } from "@/shared/live";
 
@@ -753,16 +754,49 @@ export async function refresh(): Promise<void> {
 
 /* ---------- actions ---------- */
 
+/* what the API's field names mean on screen, for "Invalid input." with details */
+const FIELD_LABEL: Record<string, string> = {
+  title: "Title",
+  brief: "The brief",
+  platform: "Platform",
+  deliverables: "Deliverables",
+  budgetMin: "Budget",
+  budgetMax: "Budget",
+  budget: "Budget",
+  closesAt: "Live-by date",
+  deadline: "Date",
+  usageRights: "Usage rights",
+  message: "Message",
+  creatorId: "Creator",
+  deliverable: "Deliverable",
+};
+
 export function errorText(e: unknown): string {
   if (e instanceof ApiError) {
     if (e.code === "KYC_REQUIRED") return "Verify your business first. It takes a few minutes.";
+    /* name the field the server refused instead of a bare "Invalid input." */
+    const d = e.details;
+    if (d && typeof d === "object" && !Array.isArray(d)) {
+      for (const [k, v] of Object.entries(d as Record<string, unknown>)) {
+        const first = Array.isArray(v) ? v.find(x => typeof x === "string") : typeof v === "string" ? v : null;
+        const nested =
+          !first && v && typeof v === "object"
+            ? Object.values(v as Record<string, unknown>)
+                .flat()
+                .find(x => typeof x === "string")
+            : null;
+        const msg = first || nested;
+        if (msg) return `${FIELD_LABEL[k] || k}: ${String(msg).replace(/\.$/, "")}.`;
+      }
+    }
     return e.message;
   }
   return (e as Error)?.message || "Something went wrong. Please try again.";
 }
 export const isKycRequired = (e: unknown): boolean => e instanceof ApiError && e.code === "KYC_REQUIRED";
 
-const usageFor = (u: unknown): string => String(u || "");
+/* the API takes usage rights as an object; the form keeps the chosen label */
+const usageFor = usageRightsFor;
 
 export const brandApi = {
   errorText,
@@ -839,7 +873,7 @@ export const brandApi = {
     message: string;
     usageRights: string;
   }): Promise<void> {
-    await api("/v1/offers/", { method: "POST", body: o });
+    await api("/v1/offers/", { method: "POST", body: { ...o, usageRights: usageRightsFor(o.usageRights) } });
   },
   async withdrawOffer(offerId: string): Promise<void> {
     await api(`/v1/offers/${offerId}/withdraw/`, { method: "POST" });

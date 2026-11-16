@@ -26,6 +26,13 @@
   font: inherit;
   font-size: 16px;
 }
+/* clicks land on the button itself, never on the text inside it */
+.dp-trigger > * {
+  pointer-events: none;
+}
+.dp-trigger-rel[hidden] {
+  display: none;
+}
 .dp-trigger > svg {
   flex: none;
   width: 20px;

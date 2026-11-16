@@ -91,6 +91,38 @@ export function usageText(v: unknown): string {
   return parts.join(" · ");
 }
 
+export interface UsageRights {
+  duration: "perpetual" | "12m" | "6m" | "3m";
+  channels: string[];
+  exclusivity: boolean;
+  territory: string;
+}
+const ur = (duration: UsageRights["duration"], channels: string[]): UsageRights => ({
+  duration,
+  channels,
+  exclusivity: false,
+  territory: "India",
+});
+/** The choices a brand picks from when posting a brief. The API takes usage rights as an object (a plain sentence
+    is refused with "Invalid input."), so each choice is one object; its label is exactly what usageText shows for
+    it, so a brief opened for editing finds its own choice again. The first is the default. */
+export const USAGE_OPTIONS: { label: string; value: UsageRights }[] = [
+  ur("3m", ["organic_social"]),
+  ur("6m", ["organic_social"]),
+  ur("12m", ["organic_social"]),
+  ur("3m", ["organic_social", "paid_ads"]),
+  ur("12m", ["organic_social", "paid_ads"]),
+  ur("perpetual", ["organic_social", "paid_ads"]),
+].map(value => ({ label: usageText(value), value }));
+
+/** Usage rights to send to the API: an object as-is, a known choice's label as its object, anything else (older
+    text, "As agreed in chat") as the default choice. */
+export function usageRightsFor(v: unknown): UsageRights {
+  if (v && typeof v === "object") return v as UsageRights;
+  const hit = USAGE_OPTIONS.find(o => o.label === String(v || "").trim());
+  return (hit || USAGE_OPTIONS[0]).value;
+}
+
 /** "1 Reel + 2 Stories" or a list → ["1 Reel", "2 Stories"]. */
 export function listOf(v: unknown): string[] {
   if (Array.isArray(v))

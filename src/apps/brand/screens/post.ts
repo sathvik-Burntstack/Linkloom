@@ -7,6 +7,8 @@
    Drafts save themselves every few seconds and when the brand leaves (B4); there is no draft endpoint, so a draft lives
    in LLD_DATA.jobs (status "draft") and session.ts keeps it on this device. Publish checks everything.
    The working copy lives in LLD_DATA.ui.post[<id>|new]. */
+import { USAGE_OPTIONS } from "@/shared/live";
+
 (() => {
   const L = window.LLD,
     esc = L.esc,
@@ -57,13 +59,8 @@
     [100000, "1L+ followers"],
     [250000, "2.5L+ followers"],
   ];
-  const USAGE = [
-    "No repost",
-    "Brand can repost for 30 days",
-    "Brand can repost for 90 days",
-    "Brand can embed on site",
-    "Paid ads for 30 days",
-  ];
+  /* the API's usage rights choices (shared/live.ts): each label is one usage object the API accepts */
+  const USAGE = USAGE_OPTIONS.map(o => o.label);
   const R = {
     titleMin: 8,
     titleMax: 80,
@@ -104,7 +101,7 @@
     languages: (j.languages || []).slice(),
     minFollowers: j.minFollowers || 0,
     deliverables: (j.deliverables && j.deliverables.length ? j.deliverables : [""]).slice(),
-    usage: j.usage || USAGE[1],
+    usage: j.usage || USAGE[0],
     brief: j.brief || "",
   });
   /* B6: nothing preset. Choose a category, any city, no languages, no minimum followers. */
@@ -116,7 +113,7 @@
       languages: [],
       minFollowers: 0,
       deliverables: [""],
-      usage: USAGE[1],
+      usage: USAGE[0],
     });
 
   L.register("post", {

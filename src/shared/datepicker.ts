@@ -80,6 +80,11 @@ function enhance(input: HTMLInputElement): void {
   input.setAttribute("aria-hidden", "true");
   input.after(btn);
 
+  /* built once: repainting must never replace the nodes under the pointer. Validation on blur (aria-invalid) repaints
+     between mousedown and mouseup; swapping the inner nodes then made the browser drop the click. */
+  btn.innerHTML = `${ICON_CAL}<span class="dp-trigger-t"></span><span class="dp-trigger-rel" hidden></span>`;
+  const tEl = btn.querySelector<HTMLElement>(".dp-trigger-t")!,
+    relEl = btn.querySelector<HTMLElement>(".dp-trigger-rel")!;
   const paint = () => {
     const d = parse(rawGet(input));
     const t = today();
@@ -88,7 +93,11 @@ function enhance(input: HTMLInputElement): void {
       const n = days(t, d);
       rel = n === 0 ? "today" : n === 1 ? "tomorrow" : n > 1 && n < 400 ? `in ${n} days` : "";
     }
-    btn.innerHTML = `${ICON_CAL}<span class="dp-trigger-t${d ? "" : " is-ph"}">${d ? esc(fmtLong(d)) : "Pick a date"}</span>${rel ? `<span class="dp-trigger-rel">${rel}</span>` : ""}`;
+    const text = d ? fmtLong(d) : "Pick a date";
+    if (tEl.textContent !== text) tEl.textContent = text;
+    tEl.classList.toggle("is-ph", !d);
+    if (relEl.textContent !== rel) relEl.textContent = rel;
+    relEl.hidden = !rel;
     btn.disabled = input.disabled;
     const inv = input.getAttribute("aria-invalid");
     if (inv) btn.setAttribute("aria-invalid", inv);
