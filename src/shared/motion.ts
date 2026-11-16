@@ -10,9 +10,13 @@
    - no layout shift (numbers change in place), nothing blocks input, nothing is left behind,
    - prefers-reduced-motion is read live: a short fade or nothing, and every Promise still resolves,
    - the ui-select dropdown animates itself; this file leaves it alone (NOMO). */
-(() => {
+/* Start-up order: in the production build this file sits in a chunk shared by both dashboards, and that chunk runs
+   BEFORE the dashboard's own code has created window.LLD. Starting right away then found no LLD and quietly turned
+   every animation off on the live site. So it starts now if LLD is ready (dev), otherwise once all module scripts
+   have run (DOMContentLoaded), when LLD is always there. Until then screens use core's plain fallbacks. */
+const startMotion = () => {
   const LLD = window.LLD;
-  if (!LLD || !LLD.motion) return;
+  if (!LLD || !LLD.motion || LLD.motion.ready) return;
   const defaultColor = document.body.dataset.motionColor === "coral" ? "coral" : "violet";
   const G = window.gsap || null;
   const doc = document,
@@ -2728,4 +2732,7 @@
     ready: true,
   });
   root.classList.add("mo-on");
-})();
+};
+if (window.LLD && window.LLD.motion) startMotion();
+else if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startMotion, { once: true });
+else queueMicrotask(startMotion);
