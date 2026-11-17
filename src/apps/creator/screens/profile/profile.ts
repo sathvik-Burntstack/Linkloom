@@ -82,6 +82,13 @@ import { kycWaitText } from "../../core/kyc-gate";
                 ? `<span class="profile-langs">Creates in ${esc(langs.join(", "))}</span>`
                 : `<button type="button" class="lq lq-s lq-sm profile-addlang" data-addlang data-own ${own}>${icon("plus", "ic")}Add languages</button>`
             }</p>
+            ${
+              me.startPrice
+                ? `<p class="profile-price"><span>From</span><b class="t-money">${esc(LLD.inr(me.startPrice.price))}</b><span>per ${esc(me.startPrice.format)}${me.startPrice.deliveryDays ? ` · delivered in ${esc(me.startPrice.deliveryDays)} ${me.startPrice.deliveryDays === 1 ? "day" : "days"}` : ""}</span></p>`
+                : me.startPrice === null
+                  ? `<div class="profile-noprice" data-own ${own}><p><b>Add your starting price.</b> Brands see "Rate on request" on your card until you do.</p><button type="button" class="lq lq-s lq-sm" data-addprice>${icon("plus", "ic")}Add starting price</button></div>`
+                  : ""
+            }
           </div>
           <div class="profile-act">
             <button type="button" class="profile-switch" role="switch" aria-checked="${brand}" data-switch><span class="profile-knob" aria-hidden="true"></span>See what brands see</button>
@@ -258,12 +265,20 @@ import { kycWaitText } from "../../core/kyc-gate";
       try {
         LLD.motion.press(el.querySelector("[data-switch]"));
       } catch (e) {}
-      el.querySelectorAll("[data-edit],[data-edit2],[data-edit3],[data-addlang]").forEach(b =>
+      el.querySelectorAll("[data-edit],[data-edit2],[data-edit3],[data-addlang],[data-addprice]").forEach(b =>
         b.addEventListener("click", () => {
           try {
             LLD.motion.press(b);
           } catch (e) {}
-          openEdit(b.hasAttribute("data-edit3") ? "links" : b.hasAttribute("data-addlang") ? "langs" : "");
+          openEdit(
+            b.hasAttribute("data-edit3")
+              ? "links"
+              : b.hasAttribute("data-addlang")
+                ? "langs"
+                : b.hasAttribute("data-addprice")
+                  ? "price"
+                  : "",
+          );
         }),
       );
       const so = el.querySelector("[data-signout]");
@@ -310,6 +325,11 @@ import { kycWaitText } from "../../core/kyc-gate";
         },
         yt: { ...(me.platforms.youtube || {}) },
         portfolio: (me.portfolio || []).map(w => ({ ...w })),
+        price: {
+          format: (me.startPrice && me.startPrice.format) || "",
+          price: me.startPrice ? String(Math.round(me.startPrice.price / 100)) : "",
+          days: me.startPrice && me.startPrice.deliveryDays ? String(me.startPrice.deliveryDays) : "",
+        },
       };
       const opt = (type, name, val, on) =>
         `<label class="setup-opt"><input type="${type}" name="${name}" value="${esc(val)}" ${on ? "checked" : ""}><span>${esc(val)}</span></label>`;
@@ -338,6 +358,7 @@ import { kycWaitText } from "../../core/kyc-gate";
           <fieldset class="setup-fs"><legend>What you make <span class="setup-opt-l">up to ${A.CAT_MAX}</span></legend><div class="setup-opts" data-cats>${[...A.CATS, ...d.categories.filter(c => !A.CATS.includes(c))].map(c => opt("checkbox", "pe-cat", c, d.categories.includes(c))).join("")}</div></fieldset>
           <fieldset class="setup-fs"><legend>Gender <span class="setup-opt-l">optional, never shown to brands</span></legend><div class="setup-opts">${A.GENDERS.map(g => opt("radio", "pe-gender", g, d.gender === g)).join("")}</div></fieldset>
           ${platRow("ig", "Instagram")}${platRow("yt", "YouTube")}
+          ${A.priceFields ? A.priceFields(fld, "pe-", d.price) : ""}
           <fieldset class="setup-fs" data-links><legend>Selected work</legend><ul class="profile-pe-links" data-linklist></ul>
             <div class="profile-pe-add">
               ${fld("lt", "Title", `<input class="input" id="pe-lt" placeholder="30 days with a ceramide moisturiser">`)}
@@ -462,6 +483,11 @@ import { kycWaitText } from "../../core/kyc-gate";
               q("[data-links]").scrollIntoView({ block: "start" });
               q("#pe-lt").focus({ preventScroll: true });
             }, 60);
+          else if (at === "price" && q("[data-price]"))
+            setTimeout(() => {
+              q("[data-price]").scrollIntoView({ block: "start" });
+              q("#pe-price-format").focus({ preventScroll: true });
+            }, 60);
           else if (at === "langs")
             setTimeout(() => {
               const fs = q('[data-pf="langs"]');
@@ -503,6 +529,15 @@ import { kycWaitText } from "../../core/kyc-gate";
               const er = V.er(v(kk + "-er"));
               if (er) errs.push([kk + "-er", er]);
             });
+            const hasPrice = !!q("[data-price]");
+            if (hasPrice) {
+              const pf = V.format(v("price-format")),
+                pa = V.price(v("price-amount")),
+                pd = V.days(v("price-days"));
+              if (pf) errs.push(["price-format", pf]);
+              if (pa) errs.push(["price-amount", pa]);
+              if (pd) errs.push(["price-days", pd]);
+            }
             if (errs.length) {
               errs.forEach(x => errAt(x[0], x[1]));
               const f = q(
@@ -552,6 +587,21 @@ import { kycWaitText } from "../../core/kyc-gate";
             };
             const photo = picker && picker.has() ? picker.exportURL() : null;
             const before = store.s.me.photo;
+            const sp = store.s.me.startPrice;
+            const price = hasPrice
+              ? {
+                  format: v("price-format"),
+                  rupees: n(v("price-amount")),
+                  deliveryDays: n(v("price-days")),
+                }
+              : null;
+            const priceChanged =
+              price &&
+              (!sp ||
+                !sp.id ||
+                sp.format !== price.format ||
+                sp.price !== price.rupees * 100 ||
+                sp.deliveryDays !== price.deliveryDays);
             store.set(s => {
               const m = s.me;
               m.name = v("name").trim().replace(/\s+/g, " ");
@@ -577,6 +627,14 @@ import { kycWaitText } from "../../core/kyc-gate";
               m.handle = ig.h ? "@" + ig.h : yt.h || m.handle;
               m.portfolio = d.portfolio;
               m.photo = photo;
+              if (price)
+                m.startPrice = {
+                  id: (sp && sp.id) || "",
+                  format: price.format,
+                  platform: price.format === "Video" || price.format === "Short" ? "youtube" : "instagram",
+                  price: price.rupees * 100,
+                  deliveryDays: price.deliveryDays,
+                };
             }, "profile-edited");
             if (LLD.live) {
               const m = store.s.me;
@@ -617,6 +675,16 @@ import { kycWaitText } from "../../core/kyc-gate";
                     );
                 })
                 .catch(er => LLD.toast(LLD.live.errorText(er), "alert"));
+              if (priceChanged)
+                LLD.live
+                  .saveStartPrice(price)
+                  .then(() => paint())
+                  .catch(er => {
+                    /* say it plainly and put back what the server has, so the screen never shows an unsaved price */
+                    store.set(s => (s.me.startPrice = sp === undefined ? null : sp), "profile-edited");
+                    paint();
+                    LLD.toast("Your starting price wasn't saved. " + LLD.live.errorText(er), "alert");
+                  });
             }
             close();
             paint();

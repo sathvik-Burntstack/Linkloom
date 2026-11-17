@@ -95,6 +95,19 @@ export interface Me {
   totalBids: number;
   portfolio: PortfolioItem[];
   reviews: Review[];
+  /** null until the creator sets one; undefined until it has loaded. */
+  startPrice?: StartPrice | null;
+}
+
+/** The creator's lowest price, kept on the server as a package. Brands see it as "From ₹X per <format>". */
+export interface StartPrice {
+  /** Package id on the server; "" when the price came from `startingPrice` only. */
+  id: string;
+  format: "Reel" | "Story" | "Carousel" | "Video" | "Short";
+  platform: Platform;
+  /** paise */
+  price: number;
+  deliveryDays: number;
 }
 
 /* ---------- KYC ---------- */

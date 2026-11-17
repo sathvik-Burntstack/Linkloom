@@ -18,6 +18,7 @@ import type {
   Me,
   Message,
   Notification,
+  StartPrice,
   State,
   Thread,
   WorkStage,
@@ -590,9 +591,39 @@ function mapMe(c: Obj, user: ApiUser | null, x: Partial<CreatorExtras>, prev: Me
   };
 }
 
+/** The lowest active package is the starting price brands see ("From ₹X per Reel"); `startingPrice` alone is read
+    when there are no packages. null = none set. */
+function mapStartPrice(pkgs: unknown, startingPrice: unknown, primary: unknown): StartPrice | null {
+  const list = (Array.isArray(pkgs) ? (pkgs as Obj[]) : [])
+    .filter(p => p && p.active !== false && amount(p.price as never) > 0)
+    .sort((a, b) => amount(a.price as never) - amount(b.price as never));
+  const p = list[0];
+  if (p)
+    return {
+      id: String(p.id || ""),
+      format: formatOf(p.deliverables || p.title, String(p.platform || "")),
+      platform: platformOf(p.platform),
+      price: amount(p.price as never),
+      deliveryDays: Number(p.deliveryDays) || 0,
+    };
+  const sp = amount(startingPrice as never);
+  if (!sp) return null;
+  const plat = platformOf(primary);
+  return { id: "", format: plat === "youtube" ? "Video" : "Reel", platform: plat, price: sp, deliveryDays: 0 };
+}
+
+/** Reads the creator's packages; leaves the price as it was when the list can't be read. */
+async function loadStartPrice(): Promise<void> {
+  const pkgs = await apiAll<Obj>("/v1/creators/me/packages/").catch(() => null);
+  if (!pkgs) return;
+  store.set(s => {
+    s.me.startPrice = mapStartPrice(pkgs, null, null) || s.me.startPrice || null;
+  }, "profile-live");
+}
+
 /* ---------- loading ---------- */
 
-type Store = { s: State; set(fn: (s: State) => void, why?: string): void };
+type Store ={ s: State; set(fn: (s: State) => void, why?: string): void };
 let store: Store;
 let creatorId = "";
 let userId = "";
@@ -692,6 +723,7 @@ export async function loadCreator(st: Store): Promise<ApiUser> {
     s.session.method = user.phone && !user.email ? "mobile" : "email";
     s.session.firstLogin = !!user.needsOnboarding;
     s.me = mapMe(cme, user, x, s.me);
+    s.me.startPrice = mapStartPrice(cme.packages, cme.startingPrice, cme.primaryPlatform);
     if (kyc) s.kyc = mapKyc(kyc, s.kyc);
     else if (user.kycStatus) s.kyc.status = KYC_STATUS[user.kycStatus] || "not_started";
     s.jobs = camps.map(c => mapJob(c, s.me));
@@ -722,6 +754,7 @@ export async function loadCreator(st: Store): Promise<ApiUser> {
     applyEarnings(s, earnings);
   }, "live-loaded");
   if (errors.length) console.warn("Some sections could not load:", errors.join(", "));
+  void loadStartPrice();
   startLive();
   wireLive();
   return user;
@@ -1071,6 +1104,31 @@ export const creatorApi = {
       ),
     );
     return { unsaved: [...words] };
+  },
+  /** Saves the starting price as the creator's package: updates the one shown, or creates it. Price in rupees. */
+  async saveStartPrice(p: {
+    format: StartPrice["format"];
+    rupees: number;
+    deliveryDays: number;
+  }): Promise<void> {
+    const platform = p.format === "Video" || p.format === "Short" ? "youtube" : "instagram";
+    const where = platform === "youtube" ? "YouTube" : "Instagram";
+    const body = {
+      title: `1 ${where} ${p.format}`,
+      description: `Starting price for one ${where} ${p.format}.`,
+      platform,
+      deliverables: `1 ${p.format}`,
+      price: Math.round(p.rupees * 100),
+      deliveryDays: Math.round(p.deliveryDays),
+      active: true,
+    };
+    const id = store.s.me.startPrice?.id;
+    const saved = id
+      ? await api<Obj>(`/v1/creators/me/packages/${id}/`, { method: "PATCH", body })
+      : await api<Obj>("/v1/creators/me/packages/", { method: "POST", body });
+    const now = mapStartPrice([{ ...body, ...(saved || {}) }], null, null);
+    if (now) store.set(s => (s.me.startPrice = now), "profile-live");
+    await loadStartPrice();
   },
   async uploadAvatar(file: Blob): Promise<string | null> {
     const r = await uploadFile("avatar", file);

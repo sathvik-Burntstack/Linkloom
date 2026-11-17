@@ -595,3 +595,41 @@
     height: 168px;
   }
 }
+
+/* starting price: a card like the platform cards, its three fields in one row like the platform numbers */
+.setup-price {
+  border: 0;
+  margin: 0;
+  padding: var(--pad-card);
+  min-width: 0;
+  border-radius: var(--r-md);
+  background: #fff;
+  box-shadow: var(--ll-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.setup-price > legend {
+  float: left; /* keeps the legend inside the card instead of on its edge */
+  width: 100%;
+  padding: 0;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 24px;
+  color: var(--ll-ink-text);
+}
+.setup-price > legend + * {
+  clear: both;
+}
+.setup-price .help {
+  margin: 0;
+}
+@media (max-width: 520px) {
+  /* "For one" gets a full row on phones, so the format name isn't cut off */
+  .setup-price .setup-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .setup-price .setup-metrics > :first-child {
+    grid-column: 1 / -1;
+  }
+}

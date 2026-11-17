@@ -116,7 +116,7 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
     {
       id: "platforms",
       t: "Your platforms",
-      sub: "Add at least one. Numbers you type are marked self-reported until the account is connected.",
+      sub: "Add at least one, and your starting price. Numbers you type are marked self-reported until the account is connected.",
     },
     { id: "work", t: "Your work", sub: "A short line about what you make, and where your audience is." },
     {
@@ -136,6 +136,21 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
   };
   const maskPhone = d => "+91 " + d.slice(0, 2) + "•••••" + d.slice(7);
   const digits = v => String(v || "").replace(/[,\s]/g, "");
+
+  /* what a starting price can be for: Instagram formats, then YouTube ones */
+  const PRICE_FORMATS = ["Reel", "Story", "Carousel", "Video", "Short"];
+  /** The starting-price fields, shared with the profile edit sheet. `fld(id, label, input)` is the caller's field helper,
+      `pre` its id prefix ("setup-" or "pe-"), `d` = { format, price, days }. */
+  const priceFields = (fld, pre, d) => `
+    <fieldset class="setup-fs setup-price" data-price>
+      <legend class="lab">Your starting price <span class="setup-opt-l">required</span></legend>
+      <p class="help">Your lowest price for one post. Brands see "From ₹…" on your card, and you can still bid any amount on a brief.</p>
+      <div class="setup-metrics">
+        ${fld("price-format", "For one", `<select class="select" id="${pre}price-format"><option value="">Choose</option>${PRICE_FORMATS.map(f => `<option ${d.format === f ? "selected" : ""}>${f}</option>`).join("")}</select>`)}
+        ${fld("price-amount", "Price (₹)", `<input class="input num" id="${pre}price-amount" inputmode="numeric" value="${esc(d.price || "")}" placeholder="5000">`)}
+        ${fld("price-days", "Delivery (days)", `<input class="input num" id="${pre}price-days" inputmode="numeric" value="${esc(d.days || "")}" placeholder="7">`)}
+      </div>
+    </fieldset>`;
 
   /* ---------- validators shared with the profile edit sheet ---------- */
   const V = {
@@ -193,6 +208,21 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
       const n = Number(d);
       return isFinite(n) && n >= 0 && n <= 100 ? "" : "Use a percentage between 0 and 100.";
     },
+    /* starting price, in rupees: required, whole rupees, ₹100 to ₹10,00,000 */
+    price: v => {
+      const d = digits(v).replace(/^₹/, "");
+      if (!d) return "Add your starting price. Brands see it on your card.";
+      if (!/^\d{1,7}$/.test(d)) return "Use whole rupees, like 5000.";
+      const n = +d;
+      if (n < 100) return "The lowest starting price is ₹100.";
+      return n > 1000000 ? "Keep it at ₹10,00,000 or less." : "";
+    },
+    days: v => {
+      const d = digits(v);
+      if (!d) return "Add how many days you need to deliver.";
+      return /^\d{1,2}$/.test(d) && +d >= 1 && +d <= 60 ? "" : "Use a number of days from 1 to 60.";
+    },
+    format: v => (PRICE_FORMATS.includes(v) ? "" : "Choose what this price is for."),
     url: v => {
       v = v.trim();
       if (!v) return "Paste a link.";
@@ -432,6 +462,8 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
   LLA.GENDERS = GENDERS;
   LLA.BIO_MAX = BIO_MAX;
   LLA.CAT_MAX = CAT_MAX;
+  LLA.PRICE_FORMATS = PRICE_FORMATS;
+  LLA.priceFields = priceFields;
 
   /* ---------- draft: survives step changes and leaving the screen; reset on a new sign-in ---------- */
   let D = null;
@@ -470,6 +502,11 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
       city: pre ? me.city : "",
       region: pre ? me.region : "",
       photo: pre ? me.photo : null,
+      price: {
+        format: (pre && me.startPrice && me.startPrice.format) || "",
+        price: pre && me.startPrice ? String(Math.round(me.startPrice.price / 100)) : "",
+        days: pre && me.startPrice && me.startPrice.deliveryDays ? String(me.startPrice.deliveryDays) : "",
+      },
     };
   }
   function fillSample(step) {
@@ -509,6 +546,7 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
   function render(el) {
     const sess = store.s.session;
     if (!D) D = fresh();
+    if (!D.price) D.price = { format: "", price: "", days: "" };
     el.innerHTML = `
     <div class="focus setup">
       <section class="focus-art dark setup-art" aria-label="Profile setup progress">
@@ -719,8 +757,20 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
     const stepPlatforms = () =>
       plat("ig", "Instagram", "ig", "@yourname") +
       plat("yt", "YouTube", "yt", "@YourChannel") +
+      priceFields(fld, "setup-", D.price) +
       `<p class="help setup-note">${icon("info")}Linkloom works with Instagram and YouTube for now.</p>`;
     function wirePlatforms() {
+      [
+        ["format", "change"],
+        ["amount", "input"],
+        ["days", "input"],
+      ].forEach(([f, ev]) => {
+        const i = el.querySelector(`#setup-price-${f}`);
+        i.addEventListener(ev, () => {
+          D.price[f === "amount" ? "price" : f] = i.value;
+          clearErr(`price-${f}`);
+        });
+      });
       ["ig", "yt"].forEach(k =>
         ["handle", "followers", "avgViews", "er"].forEach(f => {
           const i = el.querySelector(`#setup-${k}-${f}`);
@@ -733,6 +783,9 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
     }
     function checkPlatforms() {
       const errs = [];
+      const pf = V.format(D.price.format),
+        pa = V.price(D.price.price),
+        pd = V.days(D.price.days);
       let any = false;
       ["ig", "yt"].forEach(k => {
         const p = D[k],
@@ -751,6 +804,9 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
           errs.push([k + "-handle", "Add the username these numbers belong to."]);
       });
       if (!any && !errs.length) errs.push(["ig-handle", "Add at least one platform: Instagram or YouTube."]);
+      if (pf) errs.push(["price-format", pf]);
+      if (pa) errs.push(["price-amount", pa]);
+      if (pd) errs.push(["price-days", pd]);
       return errs;
     }
 
@@ -863,6 +919,7 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
         <dl>
           <div class="kv"><dt>Name</dt><dd>${esc(D.name)}</dd></div>
           <div class="kv"><dt>Platforms</dt><dd>${[ig && "Instagram @" + ig, yt && "YouTube " + yt].filter(Boolean).map(esc).join(" · ")}</dd></div>
+          <div class="kv"><dt>Starting price</dt><dd>From ₹${esc(Number(digits(D.price.price)).toLocaleString("en-IN"))} per ${esc(D.price.format)}</dd></div>
           <div class="kv"><dt>City</dt><dd>${esc(D.city)}, ${esc(D.region)}</dd></div>
           <div class="kv"><dt>Languages</dt><dd>${esc(D.languages.join(", "))}</dd></div>
         </dl>`;
@@ -953,6 +1010,7 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
           yt = V.yt(String(D.yt.handle)).h,
           day = todayISO();
         const n = v => +digits(v) || 0;
+        const price = { ...D.price };
         const platform = (h, url, p) => ({
           handle: h,
           url,
@@ -981,6 +1039,13 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
             D.yt,
           );
           me.handle = ig ? "@" + ig : yt || me.handle;
+          me.startPrice = {
+            id: (me.startPrice && me.startPrice.id) || "",
+            format: price.format,
+            platform: price.format === "Video" || price.format === "Short" ? "youtube" : "instagram",
+            price: n(price.price) * 100,
+            deliveryDays: n(price.days),
+          };
           if (D.email) s.session.email = D.email.trim();
           if (D.mobile) s.session.mobile = maskPhone(D.mobile.replace(/\D/g, ""));
           s.session.firstLogin = false;
@@ -996,6 +1061,14 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
               extras: { dob: me.dob, gender: me.gender },
             })
             .catch(() => undefined)
+            .then(() =>
+              LLD.live.saveStartPrice({
+                format: price.format,
+                rupees: +digits(price.price),
+                deliveryDays: +digits(price.days),
+              }),
+            )
+            .catch(er => LLD.toast("Your profile is saved, but not your starting price. " + LLD.live.errorText(er), "alert"))
             .then(() => LLD.live.reload())
             .catch(() => undefined);
         }
