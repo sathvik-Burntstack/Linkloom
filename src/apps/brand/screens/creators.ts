@@ -494,23 +494,17 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
     c.rating
       ? `${L.icon("star")}<span>${c.rating.toFixed(1)}</span><span class="muted">(${c.reviews})</span>`
       : `<span class="muted">New</span>`;
-  /* the price reads at the same size as the other stats: fit first, then price */
   const priceHTML = (c, types) => {
     if (!hasRates(c.rates)) return `<span class="creators-from">${RATE_ON_REQUEST}</span>`;
     const r = fromRate(c, types);
     return r
-      ? `<span class="creators-from">From</span><b class="num">${L.inr(r.price)}</b><span class="creators-per">per ${esc(r.fmt)}</span>`
+      ? `<span class="creators-from">From</span><b class="t-money">${L.inr(r.price)}</b><span class="creators-per">per ${esc(r.fmt)}</span>`
       : `<span class="creators-from">No rate for that format</span>`;
   };
   const niche = c =>
-    (c.categories || []).length
-      ? `<ul class="creators-niche" aria-label="Niches">${c.categories
-          .slice(0, 3)
-          .map(x => `<li>${esc(x)}</li>`)
-          .join("")}${c.categories.length > 3 ? `<li class="is-more">+${c.categories.length - 3}</li>` : ""}</ul>`
-      : "";
+    (c.categories || []).length ? `<p class="creators-cats">${c.categories.map(esc).join(" · ")}</p>` : "";
 
-  /* order on the card: name and badge, niches, followers and engagement, then price */
+  /* order on the card: name and badge, niches, followers, engagement and rating, then the from-price */
   function card(c, o = {}) {
     const tid = `cc-${o.ctx || "x"}-${c.id}`,
       ui = S().ui.creators;
@@ -530,7 +524,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       </dl>
       <div class="creators-pricerow"><p class="creators-price" data-price>${priceHTML(c, o.content !== undefined ? o.content : ui.content)}</p>${availPill(c)}</div>
       <div class="creators-acts">
-        <button class="lq lq-s lq-sm creators-cart${inCart(c.id) ? " is-in" : ""}" type="button" data-cart>${cartLabel(c.id)}</button>
+        <button class="lq ${inCart(c.id) ? "lq-s is-in" : "lq-p"} lq-sm creators-cart" type="button" data-cart>${cartLabel(c.id)}</button>
         <span class="creators-acts-grow"></span>
         ${heartBtn(c)}
         ${o.hide === false ? "" : `<button class="ibtn creators-hide" type="button" aria-label="Hide: ${esc(c.name)}" title="Hide (or swipe left)">${L.icon("close")}</button>`}
@@ -578,7 +572,9 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       const b = k.querySelector("[data-cart]");
       if (b) {
         const inn = inCart(id);
-        b.classList.toggle("is-in", inn); /* always secondary: one card button per creator is not the screen's primary */
+        b.classList.toggle("is-in", inn);
+        b.classList.toggle("lq-s", inn);
+        b.classList.toggle("lq-p", !inn);
         b.querySelectorAll(".t,.t2").forEach(x => {
           x.innerHTML = cartLabel(id);
         });
