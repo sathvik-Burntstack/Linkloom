@@ -54,11 +54,21 @@ const FORMAT_KEY: Record<string, string> = {
   Short: "short",
 };
 
-/** Platform rows with handle and profile link. The API documents `platforms: { instagram?, youtube? }` (handle, url,
-    followers, avgViews, er); a list of { platform, ... } is read too. Without it there is one row for the primary
-    platform and no handle.
-    TODO(backend): GET /v1/creators/ and /v1/creators/{id}/ don't return the platform handles or profile links yet, so
-    the brand view can't link to the creator's Instagram or YouTube until they do. */
+/** A stored handle can be a full profile link ("https://www.instagram.com/name/"): show "@name" and keep the link. */
+function handleAndUrl(rawHandle: unknown, rawUrl: unknown): { handle: string; url: string } {
+  let h = String(rawHandle || "").trim();
+  let url = String(rawUrl || "").trim();
+  if (/^(https?:\/\/)?(www\.)?(instagram\.com|youtube\.com|youtu\.be)\//i.test(h)) {
+    url = url || h;
+    h = h.replace(/[?#].*$/, "").replace(/\/+$/, "").split("/").pop() || "";
+  }
+  h = h.replace(/^@/, "");
+  return { handle: h ? "@" + h : "", url };
+}
+
+/** Platform rows with handle and profile link. The live API sends `platforms: { instagram?, youtube? }` with handle,
+    followersCount, avgViews and engagementRate; the older names (followers, er) and a list of { platform, ... } are
+    read too. Without it there is one row for the primary platform and no handle. */
 function platformRows(c: Obj, primary: string): S[] {
   const raw = c.platforms;
   const list: [string, Obj][] = Array.isArray(raw)
@@ -70,14 +80,17 @@ function platformRows(c: Obj, primary: string): S[] {
       : [];
   const rows = list
     .filter(([k]) => k === "instagram" || k === "youtube")
-    .map(([k, x]) => ({
-      p: k,
-      handle: x.handle ? "@" + String(x.handle).replace(/^@/, "") : "",
-      url: String(x.url || ""),
-      followers: Number(x.followers ?? x.followerCount) || 0,
-      er: Number(x.er) || 0,
-      avgViews: Number(x.avgViews) || 0,
-    }))
+    .map(([k, x]) => {
+      const { handle, url } = handleAndUrl(x.handle, x.url);
+      return {
+        p: k,
+        handle,
+        url,
+        followers: Number(x.followersCount ?? x.followers ?? x.followerCount) || 0,
+        er: Number(x.engagementRate ?? x.er) || 0,
+        avgViews: Number(x.avgViews) || 0,
+      };
+    })
     .sort((a, b) => (a.p === primary ? -1 : b.p === primary ? 1 : 0));
   const total = Number(c.followerCount) || 0;
   if (!rows.length) return [{ p: primary, handle: "", url: "", followers: total, er: 0, avgViews: 0 }];

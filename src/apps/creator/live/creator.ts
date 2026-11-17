@@ -529,14 +529,14 @@ function serverPlatforms(c: Obj): Me["platforms"] {
     const p = given[key];
     if (!p || typeof p !== "object") continue;
     const handle = String(p.handle || "");
-    const followers = Number(p.followers ?? p.followerCount) || 0;
+    const followers = Number(p.followersCount ?? p.followers ?? p.followerCount) || 0;
     if (!handle && !followers) continue;
     out[key] = {
       handle: handle && !handle.startsWith("@") && key === "instagram" ? "@" + handle : handle,
       url: String(p.url || ""),
       followers,
       avgViews: Number(p.avgViews) || 0,
-      er: Number(p.er ?? p.engagementRate) || 0,
+      er: Number(p.engagementRate ?? p.er) || 0,
       updated: day(p.updated || p.updatedAt) || updated,
       source: String(p.source || "Self-reported"),
     };
@@ -986,8 +986,8 @@ export const creatorApi = {
   /* profile */
   /** Saves to /v1/creators/me/ and reads the profile back, so the screen shows what brands will see (C6). Fields brands
       see are never kept on the device. Returns the ones the server has no place for yet, for the screen to say so.
-      TODO(backend): `languages` and per-platform `instagram` / `youtube` (handle, followers, avgViews, er) on
-      PATCH /v1/creators/me/, returned on GET /v1/creators/me/ and /v1/creators/<id>/. */
+      Platforms go as `instagram` / `youtube`: { handle, followersCount, avgViews, engagementRate (a percentage) }, or
+      null to clear one. Any other key inside them is a 400. `followerCount` is derived by the server, so not sent. */
   async saveProfile(p: {
     name?: string;
     bio?: string;
@@ -1012,23 +1012,26 @@ export const creatorApi = {
     const wanted: Obj = {};
     if (p.languages !== undefined) wanted.languages = p.languages;
     if (p.platforms) {
-      const num = (n: unknown) => Math.max(0, Math.round(Number(n) || 0));
+      /* a blank or zero number is sent as null ("not shared"), never as 0 */
+      const count = (n: unknown) => {
+        const v = Math.round(Number(n) || 0);
+        return v > 0 ? v : null;
+      };
+      const rate = (n: unknown) => {
+        const v = Number(String(n ?? "").replace("%", "")) || 0;
+        return v > 0 ? Math.min(100, Math.round(v * 100) / 100) : null;
+      };
       (["instagram", "youtube"] as const).forEach(k => {
         const x = p.platforms?.[k];
         wanted[k] = x?.handle
           ? {
               handle: x.handle,
-              followers: num(x.followers),
-              avgViews: num(x.avgViews),
-              er: Number(x.er) || 0,
+              followersCount: count(x.followers),
+              avgViews: count(x.avgViews),
+              engagementRate: rate(x.er),
             }
           : null;
       });
-      const primary =
-        p.primaryPlatform ||
-        (p.platforms.instagram?.handle ? "instagram" : p.platforms.youtube?.handle ? "youtube" : "instagram");
-      const f = p.platforms[primary]?.followers;
-      if (f !== undefined) wanted.followerCount = num(f);
     }
     const has = (k: string) =>
       k === "instagram" || k === "youtube" ? serverKeys.has("platforms") : serverKeys.has(k);
