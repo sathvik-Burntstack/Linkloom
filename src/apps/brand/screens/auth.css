@@ -886,3 +886,142 @@
     scroll-padding-bottom: 130px;
   }
 }
+
+/* #kyc left panel: the three steps with live progress, the review time and what stays private. No rings art. */
+.bk-art {
+  gap: 32px;
+}
+.bk-art .auth-line {
+  max-width: 11ch;
+  font-size: clamp(40px, 4.4vw, 64px);
+  margin-top: 0;
+}
+.bk-art-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 440px;
+}
+.bk-art-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.bk-art-steps li.is-now {
+  box-shadow: inset 0 0 0 1.5px var(--brand, var(--ll-violet));
+}
+.bk-art-steps li > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.bk-art-steps b {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  color: #fff;
+}
+.bk-art-steps b + span {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-mist);
+}
+.bk-art-n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.35);
+  font: 600 14px/1 var(--ll-sans);
+  color: #fff;
+}
+.bk-art-steps li.is-now .bk-art-n {
+  background: var(--brand, var(--ll-violet));
+  box-shadow: none;
+  color: var(--ll-ink-text);
+}
+.bk-art-steps li.is-done .bk-art-n {
+  background: var(--ll-ok-fg);
+  box-shadow: none;
+}
+.bk-art-n svg {
+  width: 16px;
+  height: 16px;
+}
+.bk-art-time {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 440px;
+  padding: 16px 20px;
+  border-radius: var(--r-md);
+  background: var(--ll-butter, #ffef85);
+  color: var(--ll-ink-text);
+}
+.bk-art-time svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+}
+.bk-art-time p {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+}
+.bk-art-time b {
+  font-weight: 600;
+}
+.bk-art-trust {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 440px;
+}
+.bk-art-trust li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ll-mist);
+}
+.bk-art-trust svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: #fff;
+}
+.bk-caps {
+  text-transform: uppercase;
+}
+.bk-caps::placeholder {
+  text-transform: none;
+}
+@media (max-width: 900px) {
+  /* phones: the form already shows the steps and the privacy lines, so the panel keeps just the heading and review time */
+  .bk-art {
+    min-height: 0;
+    gap: 20px;
+  }
+  .bk-art-steps,
+  .bk-art-trust {
+    display: none;
+  }
+}

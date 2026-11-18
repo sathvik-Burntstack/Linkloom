@@ -39,6 +39,10 @@
       const u = K.ui("job");
       u.sort = SORTS[u.sort] ? u.sort : "newest";
       u.f = u.f || "";
+      /* arriving from "View bid" on Home: show every bid so the one asked for is on screen */
+      const focusBid = u.focusBid;
+      u.focusBid = "";
+      if (focusBid) u.f = "";
       u.cmp = u.cmp || {};
       const cmp = () =>
         (u.cmp[j.id] = (u.cmp[j.id] || []).filter(b =>
@@ -573,6 +577,17 @@
       paint();
       K.mo("count", el.querySelector("[data-budget]"), j.budget, L.inr);
       K.mo("stagger", L.$$(".jd-sec, .jd-deal, .jd-bid", el));
+      if (focusBid) {
+        const k = L.$$(".jd-bid", el).find(x => x.dataset.id === focusBid);
+        if (k)
+          setTimeout(() => {
+            k.scrollIntoView({ block: "center", behavior: L.RM ? "auto" : "smooth" });
+            k.setAttribute("tabindex", "-1");
+            k.focus({ preventScroll: true });
+            k.classList.add("is-focus");
+            setTimeout(() => k.classList.remove("is-focus"), 2600);
+          }, 120);
+      }
       const off = L.store.on(why => {
         if (why === "escrow-paid") paint();
       });

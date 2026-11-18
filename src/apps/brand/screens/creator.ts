@@ -1,7 +1,7 @@
 // @ts-nocheck
 /* Creator profile as a brand sees it (#creator-<id>). Owner: Builder B.
    Mirrors the creator app's "See what brands see" profile: masthead, ink audience band, platform rows, work, reviews.
-   Actions: save to favourites, add to cart, Invite now (adds to the cart, then opens #cart on that creator).
+   Actions: save the creator, add to cart, Invite now (adds to the cart, then opens #cart on that creator).
    Uses the creator kit (LLD.ck) from creators.js. Classes are .creator-*; styles in creator.css. */
 (() => {
   const L = window.LLD,
@@ -227,10 +227,10 @@
           cart = K.inCart(c.id);
         $$("[data-fav]").forEach(b => {
           b.setAttribute("aria-pressed", String(fav));
-          b.innerHTML = `${L.icon("heart", "ic")}${fav ? "Saved" : "Save"}`;
+          b.innerHTML = `${L.icon("bookmark", "ic")}${fav ? "Saved" : "Save"}`;
           b.setAttribute(
             "aria-label",
-            fav ? `Saved. Remove ${c.name} from favourites` : `Save ${c.name} to favourites`,
+            fav ? `Saved. Remove ${c.name} from saved creators` : `Save ${c.name}`,
           );
         });
         $$("[data-cart]").forEach(b => {

@@ -575,3 +575,38 @@
     height: 44px;
   }
 }
+
+/* profile not complete: a card above the form with what's missing and one button */
+.pj-needprof {
+  flex-direction: row; /* .ll-panel stacks its children; this card is a row */
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 20px;
+  border: 1.5px solid var(--ll-warn-fg, #7a5400);
+}
+.pj-needprof-ic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-sm);
+  background: var(--ll-warn-bg, #fdf1d6);
+  color: var(--ll-warn-fg, #7a5400);
+}
+.pj-needprof-ic svg {
+  width: 22px;
+  height: 22px;
+}
+.pj-needprof-t {
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pj-needprof-t .ll-panel-h {
+  margin: 0;
+}
+

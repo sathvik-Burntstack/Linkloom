@@ -127,7 +127,7 @@
   --c: var(--ll-ink-text);
 }
 .creator-fav[aria-pressed="true"] .t svg {
-  color: var(--ll-coral-deep);
+  color: var(--ll-ink-text);
 }
 .creator-fav[aria-pressed="true"] svg path {
   fill: currentColor;

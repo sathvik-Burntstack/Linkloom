@@ -5,6 +5,7 @@
      the ink numbers card (only once a number is above 0), a quieter "Post a brief", then creators for you.
    Also owns the notifications sheet opened by the #bell button (attached on load). */
 import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
+import { REVIEW_TIME } from "../kyc";
 
 (() => {
   const L = window.LLD,
@@ -363,7 +364,16 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
             ${j.budget ? `<div><dt>Your budget</dt><dd class="t-money">${L.inr(j.budget)}</dd></div>` : ""}
             <div><dt>All bids</dt><dd class="t-money">${esc(Math.max(j.bids || 0, fresh.length))}</dd></div>
           </dl>
-          <div class="home-obj-act"><a class="${cta()}" href="#job-${esc(j.id)}">Compare bids</a>${openJobs[1] ? `<a class="lq lq-s lq-sm" href="#job-${esc(openJobs[1].j.id)}">+${openJobs[1].fresh.length} on ${esc(openJobs[1].j.title)}</a>` : ""}</div>
+          <ul class="home-bidrows">${fresh
+            .slice()
+            .sort((a, b) => L.D(b.sent) - L.D(a.sent))
+            .slice(0, 3)
+            .map(b => {
+              const c = L.creator(b.creator) || { name: "Creator" };
+              return `<li>${avatar(c)}<span class="home-bidrow-t"><b>${esc(c.name)}</b><span>${b.price ? L.inr(b.price) : "Price not given"}${b.postDate ? ` · posts by ${esc(L.fmtDate(b.postDate))}` : ""}</span></span><button class="lq lq-s lq-sm" type="button" data-viewbid="${esc(b.id)}" data-job="${esc(j.id)}">${icon("eye", "ic")}View bid</button></li>`;
+            })
+            .join("")}</ul>
+          <div class="home-obj-act"><a class="${cta()}" href="#job-${esc(j.id)}">Compare bids</a>${fresh.length > 3 ? `<a class="lq lq-s lq-sm" href="#job-${esc(j.id)}">All ${fresh.length} bids</a>` : ""}${openJobs[1] ? `<a class="lq lq-s lq-sm" href="#job-${esc(openJobs[1].j.id)}">+${openJobs[1].fresh.length} on ${esc(openJobs[1].j.title)}</a>` : ""}</div>
         </li>`);
       }
       s.campaigns
@@ -467,6 +477,30 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
           <a class="${cta().replace(" lq-sm", "")}" href="#post">${icon("plus", "ic")}Post a brief</a>
         </section>`;
 
+      /* business check: where it stands, on Home, so nobody has to dig into #kyc to find out */
+      const kyc = s.kyc || {},
+        kst = String(kyc.status || "not_started"),
+        kSteps = kyc.steps || {},
+        kDone = ["pan", "id", "bank"].filter(k => kSteps[k] && kSteps[k].done).length;
+      const KYC_CARD = {
+        not_started: ["pill-paper", "Not started", "Verify your business", "Needed before you post a brief, send an offer or pay into escrow. 3 steps, about 4 minutes.", "Start verification"],
+        in_progress: ["pill-info", `${kDone} of 3 done`, "Finish verifying your business", "Needed before you post a brief, send an offer or pay into escrow. Pick up where you left off.", "Continue verification"],
+        pending: ["pill-info", "Under review", "We're checking your business", REVIEW_TIME + " You'll get a notification when it's done.", "See status"],
+        rejected: ["pill-err", "Needs a fix", "Your verification needs a fix", kyc.rejectionReason ? String(kyc.rejectionReason) : "One detail didn't match. Fix it and send it again.", "Fix it"],
+      };
+      const kc = KYC_CARD[kst];
+      const kycCard = kc
+        ? `<section class="ll-panel home-sec home-kyc is-${esc(kst)}" aria-labelledby="homeKycH">
+          <span class="home-kyc-ic" aria-hidden="true">${icon(kst === "rejected" ? "alert" : kst === "pending" ? "clock" : "shield")}</span>
+          <div class="home-kyc-t">
+            <p class="home-kyc-top"><span class="pill ${kc[0]}">${esc(kc[1])}</span><span class="t-eyebrow">Business check</span></p>
+            <h2 class="ll-panel-h" id="homeKycH">${esc(kc[2])}</h2>
+            <p class="ll-panel-sub">${esc(kc[3])}</p>
+          </div>
+          <a class="lq lq-s" href="#kyc">${kst === "pending" ? "" : icon("lock", "ic")}${esc(kc[4])}</a>
+        </section>`
+        : "";
+
       /* the ink numbers card: only once there is something to count */
       const nums = showNums
         ? `<section class="home-band" aria-label="${esc(s.me.brand)} at a glance">
@@ -508,7 +542,7 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
         const cats = c.categories || [];
         return `<li><a class="home-cr" href="#creator-${esc(c.id)}">
               ${i === 0 ? '<span class="t-note home-note" aria-hidden="true">worth a look</span>' : ""}
-              <div class="home-cr-top">${avatar(c, "lg")}<span class="home-cr-tags">${saved ? `<span class="pill pill-line">${icon("heart")}Saved</span>` : ""}${inCart ? `<span class="pill pill-line">${icon("cart")}In cart</span>` : ""}</span></div>
+              <div class="home-cr-top">${avatar(c, "lg")}<span class="home-cr-tags">${saved ? `<span class="pill pill-line">${icon("bookmark")}Saved</span>` : ""}${inCart ? `<span class="pill pill-line">${icon("cart")}In cart</span>` : ""}</span></div>
               <p class="home-cr-n"><b>${esc(c.name)}</b>${c.verified ? `<span class="home-cr-v" title="Verified">${icon("verified")}<span class="sr-only">, verified</span></span>` : ""}</p>
               <p class="home-cr-h">${esc([c.handle, c.city].filter(Boolean).join(" · "))}</p>
               ${cats.length ? `<ul class="home-cr-niche" aria-label="Niches">${cats
@@ -539,13 +573,21 @@ import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
         <header class="home-hi">
           <h1 class="home-greet">${esc(greeting(now))}, ${esc(first(s.me.name))}.</h1>
           <p class="home-lede">${esc(lede)} <span class="sample">Sample data</span></p>
+          ${kst === "verified" ? `<p class="home-verified"><span class="pill pill-ok">${icon("verified")}Business verified</span><span>You can post briefs, send offers and hire with escrow.</span></p>` : ""}
         </header>
         <div class="ll-stack home-secs">
-          ${isNew ? post + creators : needs + nums + post + creators}
+          ${kycCard}${isNew ? post + creators : needs + nums + post + creators}
         </div>
       </div>`;
       L.liquid(el);
 
+      /* View bid: open the brief at that bid (job.ts scrolls to it and outlines it) */
+      el.querySelectorAll("[data-viewbid]").forEach(b =>
+        b.addEventListener("click", () => {
+          if (L.bk) L.bk.ui("job").focusBid = b.dataset.viewbid;
+          L.go("#job-" + b.dataset.job);
+        }),
+      );
       el.querySelectorAll("[data-pay]").forEach(b =>
         b.addEventListener("click", () => {
           if (typeof L.payEscrow === "function") L.payEscrow(b.dataset.pay);

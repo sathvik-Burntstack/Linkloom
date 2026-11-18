@@ -350,12 +350,9 @@ import { kycWaitText } from "../../core/kyc-gate";
           ${fld("name", "Display name", `<input class="input" id="pe-name" value="${esc(d.name)}" autocomplete="name">`)}
           <div class="field" data-pf="bio"><div class="row between"><label class="lab" for="pe-bio">Short bio</label><span class="setup-count num" data-bioc></span></div>
             <textarea class="textarea" id="pe-bio" rows="3">${esc(d.bio)}</textarea><p class="err" aria-live="polite"></p></div>
-          <div class="setup-two">
-            ${fld("city", "City", `<input class="input" id="pe-city" list="pe-cities" value="${esc(d.city)}"><datalist id="pe-cities">${A.CITIES.map(c => `<option value="${esc(c)}">`).join("")}</datalist>`)}
-            ${fld("region", "State or UT", `<select class="select" id="pe-region"><option value="">Choose</option>${A.STATES.map(x => `<option ${d.region === x ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>`)}
-          </div>
-          <fieldset class="setup-fs" data-pf="langs"><legend>Languages you create in</legend><div class="setup-opts">${A.LANGS.map(l => opt("checkbox", "pe-lang", l, d.languages.includes(l))).join("")}</div><p class="err" aria-live="polite"></p></fieldset>
-          <fieldset class="setup-fs"><legend>What you make <span class="setup-opt-l">up to ${A.CAT_MAX}</span></legend><div class="setup-opts" data-cats>${[...A.CATS, ...d.categories.filter(c => !A.CATS.includes(c))].map(c => opt("checkbox", "pe-cat", c, d.categories.includes(c))).join("")}</div></fieldset>
+          ${A.placeFields(fld, "pe-", d.region, d.city)}
+          <div class="field setup-pickf" data-pf="langs"><p class="lab">Languages you create in</p><div data-langpick></div><p class="err" aria-live="polite"></p></div>
+          <div class="field setup-pickf" data-pf="cats"><p class="lab">What you make <span class="setup-opt-l">up to ${A.CAT_MAX}</span></p><div data-catpick></div><p class="err" aria-live="polite"></p></div>
           <fieldset class="setup-fs"><legend>Gender <span class="setup-opt-l">optional, never shown to brands</span></legend><div class="setup-opts">${A.GENDERS.map(g => opt("radio", "pe-gender", g, d.gender === g)).join("")}</div></fieldset>
           ${platRow("ig", "Instagram")}${platRow("yt", "YouTube")}
           ${A.priceFields ? A.priceFields(fld, "pe-", d.price) : ""}
@@ -398,15 +395,36 @@ import { kycWaitText } from "../../core/kyc-gate";
           };
           bio.addEventListener("input", count);
           count();
-          const cap = () => {
-            const on = b.querySelectorAll("input[name=pe-cat]:checked").length >= A.CAT_MAX;
-            b.querySelectorAll("input[name=pe-cat]").forEach(x => {
-              x.disabled = on && !x.checked;
-              x.closest(".setup-opt").classList.toggle("is-off", x.disabled);
-            });
-          };
-          b.querySelectorAll("input[name=pe-cat]").forEach(x => x.addEventListener("change", cap));
-          cap();
+          /* niches and languages: chosen ones as chips, a button opens the picker */
+          A.chipPicker(q("[data-catpick]"), {
+            title: "What you make",
+            sub: `Pick up to ${A.CAT_MAX}. Brands search by these, so choose the ones most of your posts are about.`,
+            groups: [
+              ...A.NICHE_GROUPS,
+              ...(d.categories.some(c => !A.CATS.includes(c))
+                ? [{ label: "Yours", items: d.categories.filter(c => !A.CATS.includes(c)) }]
+                : []),
+            ],
+            get: () => d.categories,
+            set: v => (d.categories = v),
+            max: A.CAT_MAX,
+            noun: "niches",
+          });
+          A.chipPicker(q("[data-langpick]"), {
+            title: "Languages you create in",
+            sub: "Every language your posts are in. Brands filter by these.",
+            groups: [{ label: "Languages", items: A.LANGS }],
+            get: () => d.languages,
+            set: v => {
+              d.languages = v;
+              clear(q('[data-pf="langs"]'));
+            },
+            noun: "languages",
+          });
+          const place = A.wirePlace(b, "pe-", () => {
+            clear(q('[data-pf="city"]'));
+            clear(q('[data-pf="region"]'));
+          });
           const clear = f => {
             f.classList.remove("is-err");
             const e = f.querySelector(".err");
@@ -492,7 +510,7 @@ import { kycWaitText } from "../../core/kyc-gate";
             setTimeout(() => {
               const fs = q('[data-pf="langs"]');
               fs.scrollIntoView({ block: "start" });
-              const first = fs.querySelector("input");
+              const first = fs.querySelector("button");
               first && first.focus({ preventScroll: true });
             }, 60);
 
@@ -507,10 +525,11 @@ import { kycWaitText } from "../../core/kyc-gate";
             if (bn < 20) errs.push(["bio", "Add a line or two, at least 20 characters."]);
             else if (bn > A.BIO_MAX)
               errs.push(["bio", `${bn - A.BIO_MAX} characters over. Trim it to ${A.BIO_MAX}.`]);
-            if (!/^[\p{L}][\p{L} .'-]{1,40}$/u.test(v("city").trim()))
-              errs.push(["city", "Use the city name only, like Pune."]);
             if (!v("region")) errs.push(["region", "Choose your state or union territory."]);
-            const langs = [...b.querySelectorAll("input[name=pe-lang]:checked")].map(x => x.value);
+            else if (!place.city()) errs.push(["city", "Choose your city, or Other city to type it."]);
+            else if (!/^[\p{L}][\p{L} .'-]{1,40}$/u.test(place.city()))
+              errs.push(["city", "Use the city name only, like Pune."]);
+            const langs = d.languages;
             if (!langs.length) errs.push(["langs", "Pick at least one language."]);
             const ig = V.ig(v("ig-handle")),
               yt = V.yt(v("yt-handle"));
@@ -606,10 +625,10 @@ import { kycWaitText } from "../../core/kyc-gate";
               const m = s.me;
               m.name = v("name").trim().replace(/\s+/g, " ");
               m.bio = v("bio").trim();
-              m.city = v("city").trim();
+              m.city = place.city();
               m.region = v("region");
               m.languages = langs;
-              m.categories = [...b.querySelectorAll("input[name=pe-cat]:checked")].map(x => x.value);
+              m.categories = [...d.categories];
               const g = b.querySelector("input[name=pe-gender]:checked");
               m.gender = g ? g.value : "";
               m.platforms.instagram = plat(

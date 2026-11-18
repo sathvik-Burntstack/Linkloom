@@ -444,7 +444,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
   const MORE = ["er", "lang", "city", "state", "country", "rating", "verified", "avail", "gender", "age"];
   const isMore = k => k.startsWith("ct:") || MORE.includes(k);
 
-  /* ---------- favourites and cart (shared) ---------- */
+  /* ---------- saved creators and cart (shared) ---------- */
   function setFav(id, on) {
     L.store.set(s => {
       s.favorites = s.favorites.filter(x => x !== id);
@@ -455,7 +455,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
     const on = force === undefined ? !isFav(id) : force,
       c = L.creator(id);
     setFav(id, on);
-    L.toast(on ? `${c.name} saved to favourites` : `${c.name} removed from saved`, on ? "heart" : "close");
+    L.toast(on ? `${c.name} saved` : `${c.name} removed from saved creators`, on ? "bookmark" : "close");
     return on;
   }
   /* add to cart: a short thread runs from the button to the cart in the top bar, so you see where it went */
@@ -486,7 +486,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       : "";
   const heartBtn = (c, cls = "ibtn creators-fav") => {
     const on = isFav(c.id);
-    return `<button class="${cls}" type="button" aria-pressed="${on}" aria-label="${on ? "Saved" : "Save"}: ${esc(c.name)}" title="${on ? "Remove from saved" : "Save to favourites"} (or swipe right)">${L.icon("heart")}</button>`;
+    return `<button class="${cls}" type="button" aria-pressed="${on}" aria-label="${on ? "Saved" : "Save"}: ${esc(c.name)}" title="${on ? "Remove from saved creators" : "Save this creator"} (or swipe right)">${L.icon("bookmark")}</button>`;
   };
   const cartLabel = id =>
     inCart(id) ? `${L.icon("check", "ic")}In cart` : `${L.icon("cart", "ic")}Add to cart`;
@@ -531,7 +531,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       </div>
     </article>`;
   }
-  /* sew the heart shut when saved: dashes close into a line, then it fills (CSS .is-stitch) */
+  /* sew the bookmark shut when saved: dashes close into a line, then it fills (CSS .is-stitch) */
   function stitch(btn, on) {
     if (!btn) return;
     btn.classList.remove("is-stitch");
@@ -566,7 +566,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       if (h && h.getAttribute("aria-pressed") !== String(on)) {
         h.setAttribute("aria-pressed", on);
         h.setAttribute("aria-label", `${on ? "Saved" : "Save"}: ${c.name}`);
-        h.title = on ? "Remove from saved" : "Save to favourites (or swipe right)";
+        h.title = on ? "Remove from saved creators" : "Save this creator (or swipe right)";
         stitch(h, on);
       }
       const b = k.querySelector("[data-cart]");
@@ -636,7 +636,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       const id = k.dataset.id;
       const off = mo("swipe", k, {
         rightLabel: "Save",
-        rightIcon: "heart",
+        rightIcon: "bookmark",
         rightTone: "coral",
         ...(onHide && k.querySelector(".creators-hide")
           ? { leftLabel: "Hide", leftIcon: "close", leftTone: "ink", onLeft: () => onHide(id, k) }
@@ -705,7 +705,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
   /* ---------- the tabs above both screens: All creators / Saved ---------- */
   const tabs = mode => `<div class="seg creators-tabs" role="group" aria-label="Show">
       <button type="button" aria-pressed="${mode === "all"}" data-go="#creators">${L.icon("users")}All creators</button>
-      <button type="button" aria-pressed="${mode === "saved"}" data-go="#saved">${L.icon("heart")}Saved <span class="creators-tab-n num" data-favn ${S().favorites.length ? "" : "hidden"}>${S().favorites.length}</span></button>
+      <button type="button" aria-pressed="${mode === "saved"}" data-go="#saved">${L.icon("bookmark")}Saved creators <span class="creators-tab-n num" data-favn ${S().favorites.length ? "" : "hidden"}>${S().favorites.length}</span></button>
     </div>`;
   const syncFavN = el =>
     L.$$("[data-favn]", el).forEach(n => {
@@ -725,14 +725,13 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       countries = uniq(all.map(c => c.country));
     const chip = (attr, v, label, extra = "") =>
       `<button class="chip" type="button" data-${attr}="${esc(v)}" ${extra}>${label}</button>`;
-    const chipRow = (
-      id,
-      label,
-      attr,
-      opts,
-      opt,
-    ) => `<div class="field"><span class="lab" id="${id}">${label}${opt ? ' <span class="creators-opt">Optional</span>' : ""}</span>
-        <div class="chips" role="group" aria-labelledby="${id}">${opts.map(([v, t]) => chip(attr, v, esc(t))).join("")}</div></div>`;
+    /* each filter is one collapsible row: its name, then what's chosen ("Any" when nothing is), then the controls */
+    const acc = (k, label, body) => `<details class="creators-acc" data-acc="${k}"${(ui.open || []).includes(k) ? " open" : ""}>
+        <summary><span class="creators-acc-l" id="crAcc-${k}">${label}</span><span class="creators-acc-v" data-accv="${k}">Any</span>${L.icon("down")}</summary>
+        <div class="creators-acc-b">${body}</div>
+      </details>`;
+    const chips = (labelId, attr, opts) =>
+      `<div class="chips" role="group" aria-labelledby="${labelId}">${opts.map(([v, t]) => chip(attr, v, esc(t))).join("")}</div>`;
     el.innerHTML = `<div class="view-in creators">
       <header class="creators-head">
         <div class="creators-head-t">
@@ -750,53 +749,49 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
         <aside class="creators-filters" id="crFilters" aria-label="Filters">
           <div class="creators-f-h"><p class="t-label">Filters</p><button class="lq lq-s lq-sm creators-clear" type="button" data-clear>Clear all</button></div>
 
-          <div class="creators-g creators-g-main">
-            <div class="field"><span class="lab" id="crCatL">Category</span>
-              <div class="chips" role="group" aria-labelledby="crCatL">${cats.map(c => chip("cat", c, esc(c))).join("")}</div></div>
-            <div class="field"><span class="lab" id="crPlatL">Platform</span>
-              <div class="seg creators-seg" role="group" aria-labelledby="crPlatL">
+          <div class="creators-accs">
+            ${acc("cat", "Category", `<div class="chips" role="group" aria-labelledby="crAcc-cat">${cats.length ? cats.map(c => chip("cat", c, esc(c))).join("") : '<p class="help">No categories yet.</p>'}</div>`)}
+            ${acc("plat", "Platform", `<div class="seg creators-seg" role="group" aria-labelledby="crAcc-plat">
                 <button type="button" data-plat="">All</button><button type="button" data-plat="instagram">${L.icon("ig")}Instagram</button><button type="button" data-plat="youtube">${L.icon("yt")}YouTube</button>
-              </div></div>
-            ${chipRow("crFolL", "Followers", "fol", FOLLOW)}
-            <div class="field creators-pricef"><span class="lab" id="crPriceL">Price per post</span>
-              <div class="creators-pin" role="group" aria-labelledby="crPriceL">
+              </div>`)}
+            ${acc("fol", "Followers", chips("crAcc-fol", "fol", FOLLOW))}
+            ${acc(
+              "price",
+              "Price per post",
+              `<div class="field creators-pricef"><div class="creators-pin" role="group" aria-labelledby="crAcc-price">
                 <label class="creators-pi"><span class="sr-only">Minimum, in rupees</span><span aria-hidden="true">₹</span><input class="input num" id="crPmin" inputmode="numeric" autocomplete="off" placeholder="Min" value="${esc(ui.pmin)}"></label>
                 <span class="creators-dash" aria-hidden="true">to</span>
                 <label class="creators-pi"><span class="sr-only">Maximum, in rupees</span><span aria-hidden="true">₹</span><input class="input num" id="crPmax" inputmode="numeric" autocomplete="off" placeholder="Max" value="${esc(ui.pmax)}"></label>
               </div>
               <p class="err" id="crPriceE" aria-live="polite"></p>
-              <p class="help">Any listed rate in this range counts.</p></div>
+              <p class="help">Any listed rate in this range counts.</p></div>`,
+            )}
           </div>
 
           <button class="creators-more" type="button" data-more aria-expanded="false" aria-controls="crMore">${L.icon("filter")}<span data-morel>More filters</span>${L.icon("down")}</button>
-          <div class="creators-more-b" id="crMore" hidden>
-            <fieldset class="creators-g"><legend class="t-eyebrow">Content</legend>
-              <div class="field"><span class="lab" id="crCtL">Content type</span>
-                <div class="chips" role="group" aria-labelledby="crCtL">${CONTENT.map(c => chip("ct", c, esc(c))).join("")}</div></div>
-            </fieldset>
-
-            <fieldset class="creators-g"><legend class="t-eyebrow">Audience</legend>
-              ${chipRow("crErL", "Engagement rate", "er", ERS)}
-              <div class="field"><label for="crLang">Language</label>
-                <select class="select" id="crLang"><option value="">Any language</option>${langs.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></div>
-              <div class="creators-loc">
+          <div class="creators-more-b creators-accs" id="crMore" hidden>
+            ${acc("ct", "Content type", `<div class="chips" role="group" aria-labelledby="crAcc-ct">${CONTENT.map(c => chip("ct", c, esc(c))).join("")}</div>`)}
+            ${acc("er", "Engagement rate", chips("crAcc-er", "er", ERS))}
+            ${acc("lang", "Language", `<label class="sr-only" for="crLang">Language</label><select class="select" id="crLang"><option value="">Any language</option>${langs.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select>`)}
+            ${acc(
+              "loc",
+              "Location",
+              `<div class="creators-loc">
                 <div class="field"><label for="crCountry">Country</label><select class="select" id="crCountry"><option value="">Any country</option>${countries.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select></div>
                 <div class="field"><label for="crState">State</label><select class="select" id="crState"></select></div>
                 <div class="field"><label for="crCity">City</label><select class="select" id="crCity"></select></div>
-              </div>
-            </fieldset>
-
-            <fieldset class="creators-g"><legend class="t-eyebrow">Trust</legend>
-              ${chipRow("crRateL", "Rating", "rating", RATINGS)}
-              ${chipRow("crAvL", "Availability", "avail", AVAIL)}
-              <label class="check creators-verified"><input type="checkbox" id="crVer"> <span>Verified creators only<span class="help">ID and platform checked by Linkloom</span></span></label>
-            </fieldset>
-
-            <fieldset class="creators-g"><legend class="t-eyebrow">Optional</legend>
-              ${chipRow("crGenL", "Gender", "gender", GENDERS, true)}
-              ${chipRow("crAgeL", "Age range", "age", AGES, true)}
-              <p class="help">Creators choose whether to share these. Leave them on Any unless the brief needs it.</p>
-            </fieldset>
+              </div>`,
+            )}
+            ${acc("rating", "Rating", chips("crAcc-rating", "rating", RATINGS))}
+            ${acc("avail", "Availability", chips("crAcc-avail", "avail", AVAIL))}
+            ${acc("ver", "Verification", `<label class="check creators-verified"><input type="checkbox" id="crVer"> <span>Verified creators only<span class="help">ID and platform checked by Linkloom</span></span></label>`)}
+            ${acc(
+              "who",
+              "Gender and age",
+              `<div class="field"><span class="lab" id="crGenL">Gender</span>${chips("crGenL", "gender", GENDERS)}</div>
+              <div class="field"><span class="lab" id="crAgeL">Age range</span>${chips("crAgeL", "age", AGES)}</div>
+              <p class="help">Creators choose whether to share these. Leave them on Any unless the brief needs it.</p>`,
+            )}
           </div>
           <button class="lq lq-p creators-f-done" type="button" data-done>Show creators</button>
         </aside>
@@ -825,6 +820,15 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
 
     L.liquid(el);
     const $ = q => el.querySelector(q);
+    L.$$(".creators-acc", el).forEach(d =>
+      d.addEventListener("toggle", () => {
+        const k = d.dataset.acc,
+          o = new Set(ui.open || []);
+        if (d.open) o.add(k);
+        else o.delete(k);
+        ui.open = [...o];
+      }),
+    );
     const list = $("#crList");
     const cards = new Map(L.$$(".creators-card", list).map(k => [k.dataset.id, k]));
     const wired = wire(list, {
@@ -913,6 +917,40 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
       });
       const nMore = actives(ui).filter(a => isMore(a.k)).length;
       $("[data-morel]").textContent = nMore ? `More filters · ${nMore} active` : "More filters";
+      accSummaries();
+    }
+    /* the value shown on each collapsed row */
+    function accSummaries() {
+      const lab = (opts, v) => (opts.find(o => String(o[0]) === String(v)) || [, ""])[1];
+      const inr = v => "₹" + Number(v).toLocaleString("en-IN");
+      const price =
+        ui.pmin && ui.pmax
+          ? `${inr(ui.pmin)}–${inr(ui.pmax)}`
+          : ui.pmin
+            ? `From ${inr(ui.pmin)}`
+            : ui.pmax
+              ? `Up to ${inr(ui.pmax)}`
+              : "";
+      const val = {
+        cat: ui.cats.join(", "),
+        plat: ui.platform ? PLAT[ui.platform].name : "",
+        fol: ui.followers ? lab(FOLLOW, ui.followers) : "",
+        price,
+        ct: ui.content.join(", "),
+        er: +ui.er ? lab(ERS, ui.er) : "",
+        lang: ui.lang,
+        loc: [ui.city, ui.state, ui.country === "India" && (ui.city || ui.state) ? "" : ui.country].filter(Boolean).join(", "),
+        rating: +ui.rating ? lab(RATINGS, ui.rating) : "",
+        avail: ui.avail ? lab(AVAIL, ui.avail) : "",
+        ver: ui.verified ? "Verified only" : "",
+        who: [ui.gender && lab(GENDERS, ui.gender), ui.age && lab(AGES, ui.age)].filter(Boolean).join(", "),
+      };
+      L.$$("[data-accv]", el).forEach(v => {
+        const t = val[v.dataset.accv] || "";
+        v.textContent = t || "Any";
+        v.title = t;
+        v.closest(".creators-acc").classList.toggle("is-set", !!t);
+      });
     }
     function showMore(on) {
       ui.more = !!on;
@@ -1151,7 +1189,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
     };
   }
 
-  /* ---------- #saved (favourites) ---------- */
+  /* ---------- #saved (saved creators) ---------- */
   function renderSaved(el) {
     const s = ensure();
     const paint = () => {
@@ -1176,7 +1214,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
           <div class="empty creators-empty" ${favs.length ? "hidden" : ""}>
             <img src="assets/step-04-orbit.svg" width="160" height="117" alt="">
             <p class="t-h2">Nobody saved yet.</p>
-            <p class="muted">Tap the heart on a creator to keep them here while you decide.</p>
+            <p class="muted">Tap Save on a creator to keep them here while you decide.</p>
             <button class="lq lq-p" type="button" data-go="#creators">Find creators</button>
           </div>
           <p class="creators-hidden-line" aria-live="polite"></p>
@@ -1262,7 +1300,7 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
   L.register("saved", {
     title: "Saved creators",
     nav: "creators",
-    crumb: '<a href="#creators">Find creators</a> / Saved',
+    crumb: '<a href="#creators">Find creators</a> / Saved creators',
     render: el => renderSaved(el),
   });
 })();

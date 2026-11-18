@@ -604,7 +604,7 @@
         pill: "pill-info",
         state: "In review",
         icon: "clock",
-        sub: "Usually within a day. We check it by hand and send you a notification when it's done.",
+        sub: "Usually 1 to 2 hours, up to 24 hours. We check it by hand and send you a notification when it's done.",
       };
     if (st === "rejected")
       return {
@@ -1100,6 +1100,22 @@
             paint();
             const eb = el.querySelector(toBilling ? "[data-editbill]" : "[data-edit]");
             eb && eb.focus({ preventScroll: true });
+            let back = "";
+            try {
+              back = sessionStorage.getItem("ll-brand-profile-return") || "";
+            } catch (e) {
+              /* no storage */
+            }
+            if (back && !L.brandMissing().length) {
+              try {
+                sessionStorage.removeItem("ll-brand-profile-return");
+              } catch (e) {
+                /* ignore */
+              }
+              L.toast("Profile complete. You can publish your brief now.", "check");
+              L.go(back);
+              return;
+            }
             L.toast(toBilling ? "Billing details updated" : "Profile updated", "check");
           });
         },
@@ -1107,6 +1123,8 @@
     }
 
     paint();
+    /* #profile-edit (from "Complete your profile" on Post a brief): open the editor straight away */
+    if (param === "edit") setTimeout(() => openEdit(), 60);
     /* deep links from Payments and Reports: #profile-billing, #profile-budget */
     if (param === "billing" || param === "budget") {
       const sec = el.querySelector("#" + param);
@@ -1119,6 +1137,36 @@
         }, 120);
     }
   }
+
+  /* ---------- a complete brand profile before posting a brief ---------- */
+  /** What's still missing from the brand profile, as words for the screen. Only fields the server keeps count. */
+  L.brandMissing = () => {
+    const me = store.s.me || {},
+      b = me.billing || {};
+    const brand = String(me.brand || "").trim();
+    return [
+      (!brand || brand === "Your brand") && "brand name",
+      !String(me.website || "").trim() && "website",
+      !String(me.industry || "").trim() && "industry",
+      !String(b.legal || "").trim() && "legal name",
+      !String(b.address || "").trim() && "billing address",
+    ].filter(Boolean);
+  };
+  /** True (and off to the profile editor) when the brand profile isn't complete. Comes back to `returnTo` once it is. */
+  L.needProfile = (returnTo = location.hash) => {
+    const miss = L.brandMissing();
+    if (!miss.length) return false;
+    try {
+      sessionStorage.setItem("ll-brand-profile-return", returnTo);
+    } catch (e) {
+      /* no storage: the brand finds the way back */
+    }
+    L.toast(`Complete your brand profile first: add your ${listWords(miss)}.`, "alert");
+    L.go("#profile-edit");
+    return true;
+  };
+  const listWords = a => (a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]);
+  L.listWords = listWords;
 
   L.register("setup", { title: "Set up your brand", shell: "focus", render: renderSetup });
   L.register("profile", { title: "Brand profile", nav: "profile", render: renderProfile });

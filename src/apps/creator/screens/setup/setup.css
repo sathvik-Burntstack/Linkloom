@@ -633,3 +633,32 @@
     grid-column: 1 / -1;
   }
 }
+
+/* niches and languages: the chosen ones as chips, then a button that opens the picker */
+.setup-pickf {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.setup-picked {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.setup-picked .chip svg {
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+}
+.setup-pickbtn {
+  align-self: flex-start;
+}
+.setup-cityx {
+  margin-top: 8px;
+}
+.setup-cityx[hidden] {
+  display: none;
+}

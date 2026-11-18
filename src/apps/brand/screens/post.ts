@@ -163,6 +163,17 @@ import { USAGE_OPTIONS } from "@/shared/live";
           <h1 class="t-h1">${j ? (isOpen ? "Edit brief" : "Finish your draft") : "Post a brief"}</h1>
           <p class="muted t-small">${isOpen ? `Live since ${esc(L.fmtDate(j.posted))} · ${j.bids} bids so far. Creators who bid see the changes.` : "Creators who fit bid with a price, a date and their reasons. You pick, then pay into escrow."}</p>
         </header>
+        ${(() => {
+          const miss = L.brandMissing ? L.brandMissing() : [];
+          return miss.length
+            ? `<section class="ll-panel pj-needprof" role="status" aria-labelledby="pjNeedH">
+            <span class="pj-needprof-ic" aria-hidden="true">${ic("user")}</span>
+            <div class="pj-needprof-t"><h2 class="ll-panel-h" id="pjNeedH">Complete your brand profile first</h2>
+              <p class="ll-panel-sub">Creators see your brand before they bid. Add your ${esc(L.listWords(miss))}, then publish. You can fill in this brief now; it saves as a draft.</p></div>
+            <a class="lq lq-s" href="#profile-edit" data-needprof>${ic("edit", "ic")}Complete profile</a>
+          </section>`
+            : "";
+        })()}
         <div class="pj-layout">
           <div class="pj-main">
           <form class="pj-form" id="pjForm" novalidate>
@@ -298,6 +309,14 @@ import { USAGE_OPTIONS } from "@/shared/live";
       L.liquid(el);
 
       const $ = q => el.querySelector(q);
+      /* "Complete profile": remember this brief, so saving the profile comes straight back here */
+      $("[data-needprof]")?.addEventListener("click", () => {
+        try {
+          sessionStorage.setItem("ll-brand-profile-return", location.hash || "#post");
+        } catch (e) {
+          /* no storage: the brand finds the way back */
+        }
+      });
       const form = $("#pjForm"),
         titleIn = $("#pjTitle"),
         budgetIn = $("#pjBudget"),
@@ -713,6 +732,8 @@ import { USAGE_OPTIONS } from "@/shared/live";
 
       function publish(btn) {
         sync();
+        /* a complete brand profile comes first (creators see it); this brief stays as a draft meanwhile */
+        if (L.needProfile && L.needProfile(location.hash || "#post")) return;
         tried = true;
         const e = check(true);
         show(e);

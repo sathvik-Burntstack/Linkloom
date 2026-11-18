@@ -764,3 +764,13 @@ body:has(.jd-tray:not([hidden])) {
     align-items: center;
   }
 }
+
+/* the bid "View bid" on Home pointed at: a violet outline for a moment */
+.jd-bid.is-focus {
+  box-shadow:
+    0 0 0 2px var(--ll-violet),
+    var(--ll-shadow-card);
+}
+.jd-bid:focus {
+  outline: none;
+}

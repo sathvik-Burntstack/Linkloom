@@ -21,6 +21,9 @@ const ID_TYPES: [string, string][] = [
   ["voter_id", "Voter ID"],
   ["driving_licence", "Driving licence"],
 ];
+/** How long the manual review takes, said the same way everywhere on the brand side. */
+export const REVIEW_TIME = "Usually 1 to 2 hours. It can take up to 24 hours, as our team checks it by hand.";
+
 const STATUS: Record<string, [string, string]> = {
   not_started: ["pill-paper", "Not started"],
   in_progress: ["pill-info", "In progress"],
@@ -28,6 +31,13 @@ const STATUS: Record<string, [string, string]> = {
   verified: ["pill-ok", "Verified"],
   rejected: ["pill-err", "Needs a fix"],
 };
+
+/* the left panel's list: what each step is and why it's asked */
+const ART_STEPS: [string, string][] = [
+  ["PAN", "Your company PAN, or your own if you're a sole proprietor."],
+  ["ID document", "Aadhaar, passport, voter ID or driving licence of the person signing up."],
+  ["Bank account", "Where refunds from escrow are sent back."],
+];
 
 function render(el: HTMLElement): () => void {
   const L = w.LLD,
@@ -70,10 +80,24 @@ function render(el: HTMLElement): () => void {
       : `<div class="ll-steps bk-progress"><span class="ll-steps-t">${doneN ? `${doneN} of 3 done` : "3 steps"}${doneN < 3 ? " · about 4 minutes" : " · ready to submit"}</span><div class="ll-steps-bar" aria-hidden="true">${doneList.map((d, i) => `<i class="${d ? "is-done" : i === cur ? "is-now" : ""}"></i>`).join("")}</div></div>`;
 
     el.innerHTML = `<div class="focus auth setup">
-      <section class="focus-art dark auth-art" aria-label="Verification">
+      <section class="focus-art dark auth-art bk-art" aria-label="About verification">
         <p class="auth-brand"><img src="assets/logo-mark.svg" width="28" height="28" alt=""><span>linkloom</span><span class="auth-for">for brands</span></p>
         <h2 class="t-display auth-line">Verify once. Hire with escrow.</h2>
-        <img class="auth-rings" src="assets/hero-rings.svg" width="610" height="660" alt="">
+        <ol class="bk-art-steps">
+          ${ART_STEPS.map(
+            ([t, d], i) => `<li class="${doneList[i] ? "is-done" : i === cur && !locked ? "is-now" : ""}">
+              <span class="bk-art-n" aria-hidden="true">${doneList[i] ? icon("check") : i + 1}</span>
+              <span><b>${esc(t)}</b><span>${esc(d)}</span></span>
+              ${doneList[i] ? '<span class="sr-only">, saved</span>' : ""}
+            </li>`,
+          ).join("")}
+        </ol>
+        <div class="bk-art-time">${icon("clock")}<p><b>Review time</b><span>${esc(REVIEW_TIME)}</span></p></div>
+        <ul class="bk-art-trust">
+          <li>${icon("lock")}<span>Encrypted. Creators never see your PAN, ID or bank details.</span></li>
+          <li>${icon("shield")}<span>Once verified, you can post briefs, send offers and pay into escrow.</span></li>
+          <li>${icon("bell")}<span>You get a notification, and Home shows the status, the moment it's done.</span></li>
+        </ul>
       </section>
       <section class="focus-form light auth-form">
         <div class="auth-in">
@@ -84,7 +108,7 @@ function render(el: HTMLElement): () => void {
               st === "verified"
                 ? "You can post briefs, send offers and hire with escrow."
                 : st === "pending"
-                  ? "Our team reviews it by hand, usually within a day. You'll get a notification when it's done."
+                  ? `${REVIEW_TIME} You'll get a notification when it's done.`
                   : "Posting a brief, sending an offer and checking out need a verified account. Numbers are encrypted and never shown to creators."
             }</p>
             ${st === "rejected" && k.rejectionReason ? `<div class="profile-formerr" role="alert">${icon("alert")} ${esc(k.rejectionReason)}</div>` : ""}
@@ -97,7 +121,7 @@ function render(el: HTMLElement): () => void {
               "PAN",
               done(steps.pan),
               row("PAN", "••••••" + (steps.pan?.panLast4 || "")) + row("Name on PAN", steps.pan?.nameOnPan || ""),
-              `<div class="field"><label for="bkPan">PAN number</label><input class="input" id="bkPan" maxlength="10" autocomplete="off" spellcheck="false" placeholder="e.g. ABCDE1234F"><p class="help">Your company PAN, or your own if you're a sole proprietor.</p></div>
+              `<div class="field"><label for="bkPan">PAN number</label><input class="input bk-caps" id="bkPan" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. ABCDE1234F" data-caps><p class="help">Your company PAN, or your own if you're a sole proprietor.</p></div>
                <div class="field"><label for="bkPanName">Name as printed on the PAN</label><input class="input" id="bkPanName" autocomplete="organization" value="${esc(steps.pan?.nameOnPan || "")}"></div>
                <p class="err" data-err="pan" aria-live="assertive"></p>
                <button class="${saveCls(0)}" type="button" data-save="pan">${icon("lock", "ic")}Save PAN</button>${trust}`,
@@ -123,7 +147,7 @@ function render(el: HTMLElement): () => void {
               row("Account", "••••" + (steps.bank?.accountLast4 || "")) + row("IFSC", steps.bank?.ifsc || "") + row("Holder", steps.bank?.accountHolderName || ""),
               `<div class="field"><label for="bkAcc">Account number</label><input class="input" id="bkAcc" inputmode="numeric" autocomplete="off"></div>
                <div class="field"><label for="bkAcc2">Re-enter account number</label><input class="input" id="bkAcc2" inputmode="numeric" autocomplete="off"></div>
-               <div class="field"><label for="bkIfsc">IFSC</label><input class="input" id="bkIfsc" maxlength="11" autocomplete="off" placeholder="e.g. HDFC0001234"></div>
+               <div class="field"><label for="bkIfsc">IFSC</label><input class="input bk-caps" id="bkIfsc" maxlength="11" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. HDFC0001234" data-caps></div>
                <div class="field"><label for="bkHolder">Account holder name</label><input class="input" id="bkHolder" autocomplete="organization" value="${esc(steps.bank?.accountHolderName || "")}"><p class="help">Refunds from escrow go back to this account.</p></div>
                <p class="err" data-err="bank" aria-live="assertive"></p>
                <button class="${saveCls(2)}" type="button" data-save="bank">${icon("lock", "ic")}Save bank account</button>${trust}`,
@@ -167,6 +191,17 @@ function render(el: HTMLElement): () => void {
   };
 
   function wire(): void {
+    /* PAN and IFSC are capitals only: change them as they're typed, keeping the cursor where it was */
+    el.querySelectorAll<HTMLInputElement>("[data-caps]").forEach(i =>
+      i.addEventListener("input", () => {
+        const at = i.selectionStart;
+        const up = i.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (up !== i.value) {
+          i.value = up;
+          if (at != null) i.setSelectionRange(Math.min(at, up.length), Math.min(at, up.length));
+        }
+      }),
+    );
     /* the styled file picker: show the chosen file's name beside the button */
     el.querySelector<HTMLInputElement>("#bkIdFile")?.addEventListener("change", e => {
       const f = (e.currentTarget as HTMLInputElement).files?.[0];
@@ -247,6 +282,7 @@ export function needKyc(returnTo = location.hash): boolean {
 
 export function registerBrandKyc(): void {
   w.LLD.register("kyc", { title: "Verify your business", shell: "focus", render });
+  w.LLD.kycReviewTime = REVIEW_TIME;
   w.LLD.kycGate = brandKycGate;
   w.LLD.needKyc = needKyc;
 }

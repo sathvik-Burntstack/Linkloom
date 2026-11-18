@@ -217,9 +217,9 @@
   --c: var(--ll-ink-text);
 }
 .creators-fav[aria-pressed="true"] {
-  background: var(--ll-coral);
-  border-color: var(--ll-coral);
-  color: var(--ll-ink-text);
+  background: var(--ll-ink-text);
+  border-color: var(--ll-ink-text);
+  color: #fff;
 }
 .creators-fav[aria-pressed="true"] svg path {
   fill: currentColor;
@@ -713,4 +713,88 @@
   .creators-meta > div {
     padding: 8px;
   }
+}
+
+/* ---------- filters as collapsible rows: name, current choice, chevron; the controls only when opened ---------- */
+.creators-accs {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border-radius: var(--r-md);
+  background: var(--ll-white);
+  box-shadow: inset 0 0 0 1px var(--ll-rule);
+  overflow: hidden;
+}
+.creators-more-b.creators-accs {
+  gap: 0;
+  margin-top: -8px;
+}
+.creators-more-b.creators-accs[hidden] {
+  display: none;
+}
+.creators-acc + .creators-acc {
+  border-top: 1px solid var(--ll-rule);
+}
+.creators-acc > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 16px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 14px;
+  line-height: 20px;
+}
+.creators-acc > summary::-webkit-details-marker {
+  display: none;
+}
+.creators-acc > summary:hover {
+  background: var(--ll-paper);
+}
+.creators-acc > summary:focus-visible {
+  outline: 2px solid var(--ll-violet);
+  outline-offset: -2px;
+}
+.creators-acc-l {
+  flex: none;
+  font-weight: 600;
+  color: var(--ll-ink-text);
+}
+.creators-acc-v {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  color: var(--ll-slate);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.creators-acc.is-set .creators-acc-v {
+  font-weight: 600;
+  color: var(--ll-violet-deep);
+}
+.creators-acc > summary > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ll-slate);
+  transition: transform 0.2s var(--ll-ease);
+}
+.creators-acc[open] > summary > svg {
+  transform: rotate(180deg);
+}
+.creators-acc-b {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 16px 20px;
+}
+.creators-acc-b .creators-loc {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.creators-acc-b .creators-seg {
+  align-self: flex-start;
 }

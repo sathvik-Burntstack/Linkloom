@@ -7,6 +7,8 @@
    Also defines window.LLA.photo (shared photo picker + crop), reused by the profile edit sheet. */
 import { ApiError, apiEnabled } from "@/shared/api/client";
 import { submitCreatorOnboarding } from "@/shared/api/onboarding";
+import { openPicker } from "@/shared/picker";
+import { CITIES_BY_STATE, OTHER_CITY } from "@/shared/india-cities";
 
 (() => {
   const { esc, icon, store } = LLD;
@@ -26,21 +28,22 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
     "Punjabi",
     "Odia",
     "Urdu",
+    "Assamese",
+    "Bhojpuri",
+    "Konkani",
+    "Haryanvi",
   ];
-  const CATS = [
-    "Skincare",
-    "Beauty",
-    "Fashion",
-    "Lifestyle",
-    "Food & drink",
-    "Travel",
-    "Fitness",
-    "Home",
-    "Tech",
-    "Finance",
-    "Gaming",
-    "Education",
+  /* niches in groups, for the picker; the twelve names creators could pick before are all still here */
+  const NICHE_GROUPS = [
+    { label: "Beauty and fashion", items: ["Skincare", "Beauty", "Makeup", "Haircare", "Grooming", "Fragrance", "Fashion", "Jewellery and accessories", "Footwear"] },
+    { label: "Health and fitness", items: ["Fitness", "Yoga", "Health and wellness", "Nutrition", "Mental health"] },
+    { label: "Food and drink", items: ["Food & drink", "Cooking and recipes", "Restaurants and reviews", "Healthy eating"] },
+    { label: "Lifestyle", items: ["Lifestyle", "Travel", "Home", "Parenting", "Pets", "Weddings", "Sustainability"] },
+    { label: "Tech and money", items: ["Tech", "Gadgets", "Gaming", "Finance", "Business and startups", "Cars and bikes"] },
+    { label: "Learning", items: ["Education", "Science", "Books", "Careers"] },
+    { label: "Entertainment and creative", items: ["Comedy", "Music", "Dance", "Movies and TV", "Art and design", "Photography", "DIY and crafts", "Sports", "Cricket"] },
   ];
+  const CATS = NICHE_GROUPS.flatMap(g => g.items);
   const GENDERS = ["Woman", "Man", "Non-binary", "Another identity", "Prefer not to say"];
   const STATES = [
     "Andhra Pradesh",
@@ -79,33 +82,6 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
     "Ladakh",
     "Lakshadweep",
     "Puducherry",
-  ];
-  const CITIES = [
-    "Mumbai",
-    "Pune",
-    "Delhi",
-    "Bengaluru",
-    "Hyderabad",
-    "Chennai",
-    "Kolkata",
-    "Ahmedabad",
-    "Jaipur",
-    "Lucknow",
-    "Kochi",
-    "Indore",
-    "Chandigarh",
-    "Surat",
-    "Nagpur",
-    "Bhopal",
-    "Guwahati",
-    "Coimbatore",
-    "Visakhapatnam",
-    "Thane",
-    "Navi Mumbai",
-    "Noida",
-    "Gurugram",
-    "Mysuru",
-    "Nashik",
   ];
   const STEPS = [
     {
@@ -151,6 +127,96 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
         ${fld("price-days", "Delivery (days)", `<input class="input num" id="${pre}price-days" inputmode="numeric" value="${esc(d.days || "")}" placeholder="7">`)}
       </div>
     </fieldset>`;
+
+  /* ---------- choosing from a list: chosen ones as chips, one button that opens a picker (setup and profile) ---------- */
+  /** Draws into `host` the chosen items as removable chips and a "Choose…" button that opens the picker.
+      `get()` returns the current list, `set(list)` stores a new one. */
+  function chipPicker(host, { title, sub, groups, get, set, max, noun }) {
+    const paint = () => {
+      const v = get();
+      host.innerHTML =
+        (v.length
+          ? `<ul class="setup-picked" aria-label="Chosen ${esc(noun)}">${v
+              .map(
+                x =>
+                  `<li><button class="chip" type="button" aria-pressed="true" data-unpick="${esc(x)}" aria-label="Remove ${esc(x)}">${esc(x)}${icon("close")}</button></li>`,
+              )
+              .join("")}</ul>`
+          : "") +
+        `<button class="lq lq-s lq-sm setup-pickbtn" type="button" data-pickopen aria-haspopup="dialog">${icon("plus", "ic")}${v.length ? `Change ${esc(noun)}` : `Choose ${esc(noun)}`}</button>`;
+      LLD.liquid(host);
+    };
+    host.addEventListener("click", e => {
+      const t = e.target.closest("button");
+      if (!t) return;
+      if (t.dataset.unpick) {
+        set(get().filter(x => x !== t.dataset.unpick));
+        paint();
+        host.querySelector("[data-unpick], [data-pickopen]").focus();
+      } else if (t.hasAttribute("data-pickopen")) {
+        openPicker({
+          title,
+          sub,
+          groups,
+          selected: get(),
+          multi: true,
+          max,
+          onDone: v => {
+            set(v);
+            paint();
+            host.querySelector("[data-pickopen]").focus();
+          },
+        });
+      }
+    });
+    paint();
+    return { paint };
+  }
+  /* place: the state comes first, then that state's cities (or "Other city", typed in) */
+  const cityOpts = (state, city) => {
+    if (!state) return `<option value="">Choose a state first</option>`;
+    const list = CITIES_BY_STATE[state] || [];
+    const other = !!city && !list.includes(city);
+    return (
+      `<option value="">Choose a city</option>` +
+      list.map(c => `<option ${c === city ? "selected" : ""}>${esc(c)}</option>`).join("") +
+      `<option value="${OTHER_CITY}" ${other ? "selected" : ""}>Other city</option>`
+    );
+  };
+  /** State, then city, for a form whose field helper is `fld(id, label, input)` and whose ids start with `pre`. */
+  const placeFields = (fld, pre, state, city) => {
+    const other = !!city && !!state && !(CITIES_BY_STATE[state] || []).includes(city);
+    return `<div class="setup-two">
+      ${fld("region", "State or UT", `<select class="select" id="${pre}region" autocomplete="address-level1"><option value="">Choose</option>${STATES.map(s => `<option ${state === s ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>`)}
+      ${fld(
+        "city",
+        "City",
+        `<select class="select" id="${pre}city" ${state ? "" : "disabled"}>${cityOpts(state, city)}</select>
+        <input class="input setup-cityx" id="${pre}cityx" autocomplete="address-level2" placeholder="Type your city" aria-label="Your city" value="${other ? esc(city) : ""}" ${other ? "" : "hidden"}>`,
+      )}
+    </div>`;
+  };
+  /** Wires placeFields: a new state refills the cities; "Other city" shows a box. `onChange(state, city)` after each change. */
+  function wirePlace(root, pre, onChange = () => {}) {
+    const st = root.querySelector(`#${pre}region`),
+      ci = root.querySelector(`#${pre}city`),
+      x = root.querySelector(`#${pre}cityx`);
+    const city = () => (ci.value === OTHER_CITY ? x.value.trim() : ci.value);
+    st.addEventListener("change", () => {
+      ci.innerHTML = cityOpts(st.value, "");
+      ci.disabled = !st.value;
+      x.hidden = true;
+      x.value = "";
+      onChange(st.value, "");
+    });
+    ci.addEventListener("change", () => {
+      x.hidden = ci.value !== OTHER_CITY;
+      if (!x.hidden) x.focus();
+      onChange(st.value, city());
+    });
+    x.addEventListener("input", () => onChange(st.value, city()));
+    return { city };
+  }
 
   /* ---------- validators shared with the profile edit sheet ---------- */
   const V = {
@@ -458,10 +524,13 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
   LLA.LANGS = LANGS;
   LLA.CATS = CATS;
   LLA.STATES = STATES;
-  LLA.CITIES = CITIES;
   LLA.GENDERS = GENDERS;
   LLA.BIO_MAX = BIO_MAX;
   LLA.CAT_MAX = CAT_MAX;
+  LLA.NICHE_GROUPS = NICHE_GROUPS;
+  LLA.chipPicker = chipPicker;
+  LLA.placeFields = placeFields;
+  LLA.wirePlace = wirePlace;
   LLA.PRICE_FORMATS = PRICE_FORMATS;
   LLA.priceFields = priceFields;
 
@@ -818,19 +887,17 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
           <textarea class="textarea" id="setup-bio" rows="3" aria-describedby="setup-bio-c setup-bio-e" placeholder="Honest skincare for humid weather. Routines and 30-day tests.">${esc(D.bio)}</textarea>
           <p class="err" id="setup-bio-e" aria-live="polite"></p>
         </div>
-        <fieldset class="setup-fs" data-field="cats">
-          <legend class="lab">What you make <span class="setup-opt-l">up to ${CAT_MAX}</span></legend>
-          <div class="setup-opts" data-cats>${CATS.map(c => opt("checkbox", "cat", c, D.categories.includes(c))).join("")}</div>
-        </fieldset>
-        <fieldset class="setup-fs" data-field="langs">
-          <legend class="lab">Languages you create in</legend>
-          <div class="setup-opts">${LANGS.map(l => opt("checkbox", "lang", l, D.languages.includes(l))).join("")}</div>
-          <p class="err" id="setup-langs-e" aria-live="polite"></p>
-        </fieldset>
-        <div class="setup-two">
-          ${fld("city", "City", `<input class="input" id="setup-city" list="setup-cities" autocomplete="address-level2" value="${esc(D.city)}" placeholder="Mumbai" aria-describedby="setup-city-e"><datalist id="setup-cities">${CITIES.map(c => `<option value="${esc(c)}">`).join("")}</datalist>`)}
-          ${fld("region", "State or UT", `<select class="select" id="setup-region" autocomplete="address-level1" aria-describedby="setup-region-e"><option value="">Choose</option>${STATES.map(s => `<option ${D.region === s ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>`)}
+        <div class="field setup-pickf" data-field="cats">
+          <p class="lab">What you make <span class="setup-opt-l">up to ${CAT_MAX}</span></p>
+          <div data-catpick></div>
+          <p class="err" id="setup-cats-e" aria-live="polite"></p>
         </div>
+        <div class="field setup-pickf" data-field="langs">
+          <p class="lab">Languages you create in</p>
+          <div data-langpick></div>
+          <p class="err" id="setup-langs-e" aria-live="polite"></p>
+        </div>
+        ${placeFields(fld, "setup-", D.region, D.city)}
         <p class="help setup-note">${icon("pin")}Only your city and state appear on your profile. We never ask for your address.</p>`;
     }
     function bioCount() {
@@ -848,14 +915,6 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
         f.querySelector(".err").textContent = "";
       }
     }
-    function capCats() {
-      const boxes = [...el.querySelectorAll("input[name=cat]")],
-        full = D.categories.length >= CAT_MAX;
-      boxes.forEach(b => {
-        b.disabled = full && !b.checked;
-        b.closest(".setup-opt").classList.toggle("is-off", b.disabled);
-      });
-    }
     function wireWork() {
       const bio = el.querySelector("#setup-bio");
       bio.addEventListener("input", () => {
@@ -863,28 +922,34 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
         bioCount();
       });
       bioCount();
-      el.querySelectorAll("input[name=cat]").forEach(b =>
-        b.addEventListener("change", () => {
-          D.categories = [...el.querySelectorAll("input[name=cat]:checked")].map(x => x.value);
-          capCats();
-        }),
-      );
-      capCats();
-      el.querySelectorAll("input[name=lang]").forEach(b =>
-        b.addEventListener("change", () => {
-          D.languages = [...el.querySelectorAll("input[name=lang]:checked")].map(x => x.value);
-          clearErr("langs");
-        }),
-      );
-      const city = el.querySelector("#setup-city"),
-        reg = el.querySelector("#setup-region");
-      city.addEventListener("input", () => {
-        D.city = city.value;
-        clearErr("city");
+      chipPicker(el.querySelector("[data-catpick]"), {
+        title: "What you make",
+        sub: `Pick up to ${CAT_MAX}. Brands search by these, so choose the ones most of your posts are about.`,
+        groups: NICHE_GROUPS,
+        get: () => D.categories,
+        set: v => {
+          D.categories = v;
+          clearErr("cats");
+        },
+        max: CAT_MAX,
+        noun: "niches",
       });
-      reg.addEventListener("change", () => {
-        D.region = reg.value;
-        clearErr("region");
+      chipPicker(el.querySelector("[data-langpick]"), {
+        title: "Languages you create in",
+        sub: "Every language your posts are in. Brands filter by these.",
+        groups: [{ label: "Languages", items: LANGS }],
+        get: () => D.languages,
+        set: v => {
+          D.languages = v;
+          clearErr("langs");
+        },
+        noun: "languages",
+      });
+      wirePlace(el, "setup-", (st, c) => {
+        if (D.region !== st) clearErr("region");
+        D.region = st;
+        D.city = c;
+        clearErr("city");
       });
     }
     function checkWork() {
@@ -895,7 +960,9 @@ import { submitCreatorOnboarding } from "@/shared/api/onboarding";
       else if (n > BIO_MAX) errs.push(["bio", `${n - BIO_MAX} characters over. Trim it to ${BIO_MAX}.`]);
       if (!D.languages.length) errs.push(["langs", "Pick at least one language."]);
       const c = D.city.trim();
-      if (!c) errs.push(["city", "Add your city."]);
+      if (!D.region) {
+        /* the state comes first; the city list follows it */
+      } else if (!c) errs.push(["city", "Choose your city, or Other city to type it."]);
       else if (!/^[\p{L}][\p{L} .'-]{1,40}$/u.test(c))
         errs.push(["city", "Use the city name only, like Pune. No street or pin code."]);
       if (!D.region) errs.push(["region", "Choose your state or union territory."]);
