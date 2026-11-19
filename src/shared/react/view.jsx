@@ -50,6 +50,58 @@ export function useStore(match) {
   return window.LLD.store.s;
 }
 
+/* attribute names React wants instead of the HTML ones */
+const ATTR = {
+  class: "className",
+  for: "htmlFor",
+  tabindex: "tabIndex",
+  readonly: "readOnly",
+  maxlength: "maxLength",
+  colspan: "colSpan",
+  rowspan: "rowSpan",
+  "stroke-width": "strokeWidth",
+  "stroke-linecap": "strokeLinecap",
+  "stroke-linejoin": "strokeLinejoin",
+  "fill-rule": "fillRule",
+  "clip-rule": "clipRule",
+  "stop-color": "stopColor",
+  "xlink:href": "xlinkHref",
+};
+const cssObj = s =>
+  Object.fromEntries(
+    s
+      .split(";")
+      .map(d => d.split(":"))
+      .filter(([k, ...v]) => k && k.trim() && v.length)
+      .map(([k, ...v]) => {
+        k = k.trim();
+        return [
+          k.startsWith("--") ? k : k.replace(/-([a-z])/g, (_, ch) => ch.toUpperCase()),
+          v.join(":").trim(),
+        ];
+      }),
+  );
+const toReact = (n, key) => {
+  if (n.nodeType === 3) return n.nodeValue;
+  if (n.nodeType !== 1) return null;
+  const props = { key };
+  for (const a of n.attributes)
+    props[ATTR[a.name] || a.name] = a.name === "style" ? cssObj(a.value) : a.value;
+  const kids = [...n.childNodes].map((ch, i) => toReact(ch, i));
+  return createElement(n.localName, props, ...kids);
+};
+/**
+ * React elements from an HTML string made by the apps' older helpers (chips, glyphs, pills), with no wrapper element,
+ * so the page's markup stays exactly as before until those helpers move to React.
+ */
+export function fromHtml(html) {
+  if (!html) return null;
+  const t = document.createElement("template");
+  t.innerHTML = html;
+  const out = [...t.content.childNodes].map((ch, i) => toReact(ch, i));
+  return out.length === 1 ? out[0] : out;
+}
+
 /** An HTML string from the apps' older helpers (chips, avatars), shown as-is until those helpers move to React. */
 export const Html = ({ as = "span", html, ...rest }) =>
   createElement(as, { ...rest, dangerouslySetInnerHTML: { __html: html } });
@@ -69,7 +121,6 @@ export function Icon({ n, className = "" }) {
   if (!m) return null;
   const props = {};
   for (const [, k, v] of m[1].matchAll(/([\w:-]+)="([^"]*)"/g)) props[SVG_ATTR[k] || k] = v;
-  if (!props.className) delete props.className;
   return createElement("svg", { ...props, dangerouslySetInnerHTML: { __html: m[2] } });
 }
 
