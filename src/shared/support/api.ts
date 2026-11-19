@@ -164,10 +164,11 @@ export const support = {
     const r = await call(() =>
       api<Obj>(`/v1/support/tickets/${id}/messages/`, {
         method: "POST",
-        body: { text, ...(ids.length ? { attachmentUploadIds: ids } : {}) },
+        /* the live API names the reply field "message" (as on create), not "text" */
+        body: { message: text, ...(ids.length ? { attachmentUploadIds: ids } : {}) },
       }),
     );
-    return mapMessage({ author: "user", ...r });
+    return mapMessage({ author: "user", text, ...r });
   },
   async resolve(id: string): Promise<Ticket> {
     return mapTicket(await call(() => api<Obj>(`/v1/support/tickets/${id}/resolve/`, { method: "POST" })));
