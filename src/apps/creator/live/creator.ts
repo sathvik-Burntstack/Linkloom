@@ -352,6 +352,18 @@ export function mapOrder(o: Obj): ActiveJob {
       { at: funded, kind: "funded" },
     ],
   };
+  /* not paid into escrow yet: the backend refuses uploads until it is, so the creator waits instead of seeing the upload box */
+  const allowed = Array.isArray(o.allowedActions) ? (o.allowedActions as string[]).join(" ").toLowerCase() : "";
+  const sl = status.toLowerCase();
+  const waitingPay = /unpaid|await|pending_pay|payment_pending|to_pay/.test(sl);
+  const paidIn =
+    !waitingPay &&
+    (!!(o.fundedAt || o.paidAt || o.escrowFundedAt) || /funded|escrow|progress|started|active|paid/.test(sl) || /submit|deliver/.test(allowed));
+  if (!paidIn && (stage === "kickoff" || stage === "in_progress")) {
+    a.stage = "kickoff";
+    (a as ActiveJob & { awaitingPay: boolean }).awaitingPay = true;
+    a.log = [{ at: created, kind: "accepted" }];
+  }
   if (stage === "revision") {
     a.revision = String(o.revisionFeedback || o.lastRevision || "");
     a.revisionAt = isoOr(o.updatedAt, created);

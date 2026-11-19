@@ -79,7 +79,7 @@
   C.who = a =>
     a.stage === "approved"
       ? "done"
-      : a.stage === "review" || (a.stage === "submitted" && !a.draftOk)
+      : a.awaitingPay || a.stage === "review" || (a.stage === "submitted" && !a.draftOk)
         ? "brand"
         : "you";
   C.whoPill = a =>
@@ -97,7 +97,11 @@
   C.escrowPill = (text = "In escrow") =>
     `<span class="pill pill-escrow active-lockin">${C.lock()}${esc(text)}</span>`;
   C.payPill = a =>
-    a.pay === "released" ? `<span class="pill pill-ok">${ic("check")}Released</span>` : C.escrowPill();
+    a.pay === "released"
+      ? `<span class="pill pill-ok">${ic("check")}Released</span>`
+      : a.awaitingPay
+        ? '<span class="pill pill-violet">Awaiting payment</span>'
+        : C.escrowPill();
   C.deal = a => {
     const j = L.store.s.jobs.find(x => x.id === a.job) || {};
     return {
@@ -212,7 +216,7 @@
     }
     const list = sorted(s.active);
     const held = C.sum(
-      s.active.filter(a => a.pay === "escrow"),
+      s.active.filter(a => a.pay === "escrow" && !a.awaitingPay),
       a => a.price,
     );
     const count = k => (k === "all" ? list.length : list.filter(a => C.who(a) === k).length);
@@ -365,6 +369,9 @@
       `<div class="work-now-h">${C.whoPill(a)}<h2 class="t-h2" id="workNowH">${esc(title)}</h2></div>`;
     switch (a.stage) {
       case "kickoff":
+        if (a.awaitingPay)
+          return `${head("Waiting for payment")}
+          <p class="work-now-p">${esc(a.brand)} hasn't paid ${L.inr(a.price)} into escrow yet. You can start and upload once the money is held, and we'll let you know when it lands.</p>`;
         return `${head("Ready when you are")}
           <p class="work-now-p">${esc(a.brand)} paid ${L.inr(a.price)} into escrow. Start when you have the brief and any product you need.</p>
           <button class="lq lq-p" type="button" data-start>Start work</button>`;
@@ -563,17 +570,20 @@
           if (L.live) {
             const btn = L.$("[data-submit]", box),
               er = L.$(".work-up-err", box),
-              label = btn.textContent;
+              label = btn.innerHTML;
             btn.disabled = true;
             btn.setAttribute("aria-busy", "true");
-            btn.textContent = "Uploading…";
+            /* liquid buttons carry the label twice (.t and .t2): change the text spans, not the whole button */
+            const spans = btn.querySelectorAll(".t,.t2");
+            if (spans.length) spans.forEach(s => (s.textContent = "Uploading…"));
+            else btn.textContent = "Uploading…";
             er.hidden = true;
             try {
               await L.live.submitDeliverable(a.id, { file: file.raw, note });
             } catch (x) {
               btn.disabled = false;
               btn.removeAttribute("aria-busy");
-              btn.textContent = label;
+              btn.innerHTML = label;
               er.innerHTML = `${ic("alert")}<span>${esc(L.live.errorText(x))}</span>`;
               er.hidden = false;
               return;
