@@ -283,6 +283,7 @@ function mapOrder(o: Obj, deliveries: Obj[]): S {
     platform,
     format: formatOf(deliverablesTxt, String(platform)),
     price: amount((o.price ?? o.amount ?? o.total) as never),
+    invoiceNo: String(o.invoiceNumber || o.invoiceNo || ""),
     stage,
     status,
     allowed: Array.isArray(o.allowedActions) ? o.allowedActions : [],
@@ -544,6 +545,11 @@ function mapMe(b: Obj, u: ApiUser): S {
   };
 }
 
+/** A stable document number for a payment row until the backend issues real ones: kind, year, and the deal id.
+    LL-INV (paid into escrow), LL-REL (released), LL-CN (credit note for a refund). */
+const docNo = (prefix: string, orderId: string, date: string): string =>
+  `${prefix}-${String(date || "").slice(0, 4) || new Date().getFullYear()}-${String(orderId).replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase()}`;
+
 /** Escrow rows come from the orders: paid in when funded, released on approval, refunded on cancellation. */
 function payments(camps: S[]): S[] {
   const out: S[] = [];
@@ -558,7 +564,7 @@ function payments(camps: S[]): S[] {
       amount: c.price,
       status: c.stage === "released" ? "released" : c.stage === "refunded" ? "refunded" : "held",
       method: "Escrow",
-      invoice: "",
+      invoice: c.invoiceNo || docNo("LL-INV", c.id, day(c.funded)),
     });
     if (c.stage === "released")
       out.push({
@@ -570,7 +576,7 @@ function payments(camps: S[]): S[] {
         amount: c.price,
         status: "released",
         method: "From escrow",
-        invoice: "",
+        invoice: docNo("LL-REL", c.id, day(c.released)),
       });
     if (c.stage === "refunded")
       out.push({
@@ -582,7 +588,7 @@ function payments(camps: S[]): S[] {
         amount: c.price,
         status: "refunded",
         method: "To your account",
-        invoice: "",
+        invoice: docNo("LL-CN", c.id, day(c.refunded)),
       });
   }
   return out.sort((a, b) => String(b.date).localeCompare(String(a.date)));

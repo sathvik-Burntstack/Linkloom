@@ -112,45 +112,79 @@
           ? `Released on your approval. ${cr.name || "The creator"} receives the agreed price in full.`
           : "Linkloom holds this amount in escrow. It is released to the creator only when you approve the delivery, and refunded if the creator rejects after payment or does not deliver.";
     const x = s => esc(s == null ? "" : s);
+    const stTxt = { held: "Held in escrow", released: "Released", refunded: "Refunded" }[r.status] || r.status || "";
+    const stCls = r.status === "released" ? "ok" : r.status === "refunded" ? "butter" : "violet";
+    const live = !!L.live;
+    /* the date picker's look: a deep-ink card with a violet glow, Figtree text, Faculty Glyphic headings, round pills,
+       violet for the brand's own money and butter for the date (the calendar's "today" ring) */
     return `<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${x(doc)} ${x(r.invoice)} · Linkloom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Faculty+Glyphic&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
-:root{--ink:#121212;--slate:#575757;--rule:#e4e4e4;--paper:#f8f8f8;--plum:#7a2e6e;--plum-bg:#f6e3f1}
-*{box-sizing:border-box}html{background:var(--paper)}body{margin:0;padding:48px 16px;font:15px/1.5 "Figtree","Helvetica Neue",Arial,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
-.inv{max-width:760px;margin:0 auto;padding:48px;background:#fff;border-radius:20px;box-shadow:0 18px 40px -26px rgba(18,18,18,.18)}
-h1,h2,p{margin:0}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;padding-bottom:32px;border-bottom:1.5px solid var(--ink)}
-.logo{font:400 26px/1 "Faculty Glyphic",Georgia,serif;letter-spacing:-.02em}.logo small{display:block;margin-top:8px;font:500 13px/18px "Figtree",Arial,sans-serif;color:var(--slate);letter-spacing:0}
-.doc{text-align:right}.doc h1{font:400 34px/1.1 "Faculty Glyphic",Georgia,serif;letter-spacing:-.02em}.doc p{color:var(--slate);font-size:14px;font-variant-numeric:tabular-nums}.doc b{color:var(--ink)}
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:24px 48px;padding:32px 0}.k{margin-bottom:8px;font-weight:700;font-size:11px;line-height:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate)}
-.cols p{font-size:14px;line-height:21px}.cols p b{font-size:15px}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th{padding:0 0 12px;text-align:left;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);border-bottom:1px solid var(--rule)}
+:root{--ink:#0a0a12;--text:#121212;--slate:#5b5b66;--rule:#e7e6ef;--paper:#f8f8f8;--violet:#8981ee;--violet-deep:#5a4fd0;--violet-sub:#ecebfd;--butter:#ffef85;--sans:"Figtree","Helvetica Neue",Arial,sans-serif;--display:"Faculty Glyphic","Iowan Old Style",Georgia,serif}
+*{box-sizing:border-box}html{background:var(--paper)}body{margin:0;padding:40px 16px;font:15px/1.5 var(--sans);color:var(--text);-webkit-font-smoothing:antialiased;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+h1,h2,p{margin:0}.num{font-variant-numeric:tabular-nums}
+.bar{max-width:800px;margin:0 auto 16px;display:flex;justify-content:flex-end}
+.bar button{min-height:44px;padding:0 24px;border:0;border-radius:999px;background:var(--violet);color:var(--ink);font:600 14px/20px var(--sans);cursor:pointer;box-shadow:0 10px 24px -14px rgba(90,79,208,.8)}
+.bar button:hover{background:#9b94f2}.bar button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.inv{max-width:800px;margin:0 auto;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 30px 60px -30px rgba(10,10,18,.35),0 0 0 1px rgba(10,10,18,.04)}
+.top{position:relative;padding:36px 40px 32px;color:#fefefe;background:radial-gradient(120% 90% at 0% 0%,rgba(137,129,238,.38),transparent 60%),radial-gradient(80% 80% at 100% 100%,rgba(137,129,238,.14),transparent 60%),var(--ink)}
+.top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font:600 24px/1 var(--sans);letter-spacing:-.02em}
+.logo i{display:inline-block;width:26px;height:16px;position:relative}.logo i:before,.logo i:after{content:"";position:absolute;top:0;width:16px;height:16px;border-radius:50%;border:2.5px solid var(--violet)}.logo i:before{left:0}.logo i:after{left:10px;border-color:#eb6273}
+.tag{margin-top:10px;font-size:13px;color:rgba(254,254,254,.62)}
+.doc{text-align:right}.doc h1{font:400 40px/1.05 var(--display);letter-spacing:-.02em}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(254,254,254,.08);font:600 13px/1 var(--sans);color:#fefefe}
+.chip span{font-weight:500;color:rgba(254,254,254,.62)}
+.chip.date{background:transparent;box-shadow:inset 0 0 0 1.5px var(--butter)}
+.amt{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:28px;padding-top:24px;border-top:1px solid rgba(254,254,254,.1)}
+.amt .k{color:rgba(254,254,254,.58)}.amt b{display:block;font:400 44px/1 var(--display);letter-spacing:-.02em;color:#fefefe}
+.pill{display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;font:600 13px/1 var(--sans)}
+.pill.violet{background:var(--violet);color:var(--ink)}.pill.ok{background:#7ed6a5;color:var(--ink)}.pill.butter{background:var(--butter);color:var(--ink)}
+.body{padding:32px 40px 36px}
+.k{margin-bottom:8px;font-weight:700;font-size:11px;line-height:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.box{padding:18px 20px;border-radius:18px;background:var(--paper)}
+.box p{font-size:14px;line-height:21px}.box p b{font-size:15px;color:var(--text)}
+table{width:100%;margin-top:28px;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{padding:0 0 12px;text-align:left;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);border-bottom:1px solid var(--rule)}
 th:last-child,td:last-child{text-align:right}td{padding:16px 0;border-bottom:1px solid var(--rule);vertical-align:top}td small{display:block;color:var(--slate);font-size:13px}
-tr.tot td{border-bottom:0;border-top:1.5px solid var(--ink);padding-top:20px;font-weight:600}tr.tot td:last-child{font:400 30px/1 "Faculty Glyphic",Georgia,serif;letter-spacing:-.02em}
-.note{margin-top:32px;padding:16px 20px;border-radius:12px;background:var(--plum-bg);color:var(--plum);font-size:14px;line-height:20px}
-.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:32px;font-size:12px;line-height:18px;color:var(--slate)}
-.bar{max-width:760px;margin:0 auto 16px;display:flex;justify-content:flex-end}.bar button{min-height:44px;padding:0 24px;border:1.5px solid var(--ink);border-radius:999px;background:var(--ink);color:#fff;font:600 14px/20px "Figtree",Arial,sans-serif;cursor:pointer}
-.bar button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
-@media (max-width:600px){body{padding:16px}.inv{padding:24px 20px}.cols{grid-template-columns:1fr}.doc{text-align:left}}
-@media print{html,body{background:#fff}body{padding:0}.inv{box-shadow:none;padding:0;max-width:none}.bar{display:none}.note{border:1px solid var(--plum)}}
+tr.tot td{border-bottom:0;padding-top:20px;font-weight:600}
+tr.tot td:last-child{padding-top:14px}tr.tot td:last-child span{display:inline-block;padding:10px 18px;border-radius:999px;background:var(--violet);color:var(--ink);font:400 26px/1 var(--display);letter-spacing:-.02em}
+.note{display:flex;gap:12px;margin-top:28px;padding:16px 20px;border-radius:18px;background:var(--violet-sub);color:#2e2770;font-size:14px;line-height:20px}
+.note:before{content:"";flex:none;width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--violet-deep)}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding-top:18px;border-top:1px solid var(--rule);font-size:12px;line-height:18px;color:var(--slate)}
+@media (max-width:640px){body{padding:16px}.top{padding:24px 20px}.body{padding:24px 20px}.cols{grid-template-columns:1fr}.doc{text-align:left}.chips{justify-content:flex-start}.doc h1{font-size:32px}.amt b{font-size:36px}}
+@media print{html,body{background:#fff}body{padding:0;font-size:13px}.bar{display:none}.inv{box-shadow:none;max-width:none;border-radius:18px}@page{size:A4;margin:10mm}.top{padding:22px 26px 20px}.doc h1{font-size:32px}.chips{margin-top:10px}.amt{margin-top:16px;padding-top:14px}.amt b{font-size:32px}.body{padding:18px 26px 20px}.cols{gap:10px}.box{padding:12px 16px;border-radius:14px}.box p{font-size:12.5px;line-height:18px}.box p b{font-size:13.5px}table{margin-top:16px}td{padding:9px 0}td small{font-size:11.5px}tr.tot td{padding-top:12px}tr.tot td:last-child{padding-top:8px}tr.tot td:last-child span{font-size:20px;padding:8px 14px}.note{margin-top:14px;padding:12px 16px;font-size:12.5px;line-height:18px}.foot{margin-top:14px;padding-top:12px;font-size:11px}.inv,.note,.foot,tr{break-inside:avoid}}
 </style></head><body>
 <div class="bar"><button type="button" onclick="window.print()">Print or save as PDF</button></div>
 <main class="inv">
-  <header class="top"><div class="logo">Linkloom<small>Creator marketplace · escrow-backed deals</small></div>
-    <div class="doc"><h1>${x(doc)}</h1><p>No. <b>${x(r.invoice)}</b></p><p>Date <b>${x(when)}</b></p><p>Payment ID ${x(r.id.toUpperCase())}</p></div></header>
-  <section class="cols">
-    <div><p class="k">Billed to</p><p><b>${x(b.legal || me.brand)}</b><br>${x(b.address || "")}<br>GSTIN ${x(b.gstin || "not added")}<br>${x(b.email || me.email)}<br>Attn. ${x(me.name)}, ${x(me.role || "")}</p></div>
-    <div><p class="k">Creator</p><p><b>${x(cr.name || "")}</b><br>${x(cr.handle || "")}<br>${x([cr.city, cr.state].filter(Boolean).join(", "))}</p></div>
-    <div><p class="k">Deal</p><p><b>${x(c.title || "")}</b><br>${x([plat, c.format].filter(Boolean).join(" · "))}<br>${c.source === "job" ? "Hired from a brief" : "Direct hire"} · ${x((c.id || "").toUpperCase())}</p></div>
-    <div><p class="k">Payment</p><p><b>${x(KINDL[r.kind] || "")}</b><br>${x(r.method || "")}<br>Status: ${x({ held: "Held in escrow", released: "Released", refunded: "Refunded" }[r.status] || r.status)}</p></div>
-  </section>
-  <table><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody>
-    <tr><td>${x(line)}<small>Agreed price</small></td><td>${x(L.inr(r.amount, { dec: true }))}</td></tr>
-    <tr><td>Platform fee<small>Linkloom runs on a subscription</small></td><td>No platform fee</td></tr>
-    <tr><td>Taxes</td><td>As per confirmed rules</td></tr>
-    <tr class="tot"><td>${x(totalL)}</td><td>${x(L.inr(r.amount, { dec: true }))}</td></tr>
-  </tbody></table>
-  <p class="note">${x(note)}</p>
-  <footer class="foot"><span>${x(plan ? plan.name + " · renews " + L.fmtDate(plan.renews, { year: true }) : "")}. No per-deal fee.</span><span>Computer-generated document. Sample data.</span></footer>
+  <header class="top">
+    <div class="top-row">
+      <div><div class="logo"><i aria-hidden="true"></i>linkloom</div><p class="tag">Creator marketplace · escrow-backed deals</p></div>
+      <div class="doc"><h1>${x(doc)}</h1>
+        <div class="chips"><span class="chip num"><span>No.</span>${x(r.invoice)}</span><span class="chip date num"><span>Date</span>${x(when)}</span></div></div>
+    </div>
+    <div class="amt"><div><p class="k">${x(totalL)}</p><b class="num">${x(L.inr(r.amount, { dec: true }))}</b></div><span class="pill ${stCls}">${x(stTxt)}</span></div>
+  </header>
+  <div class="body">
+    <section class="cols">
+      <div class="box"><p class="k">Billed to</p><p><b>${x(b.legal || me.brand)}</b>${b.address ? "<br>" + x(b.address) : ""}<br>GSTIN ${x(b.gstin || "not added")}<br>${x(b.email || me.email)}${me.name ? `<br>Attn. ${x(me.name)}${me.role ? ", " + x(me.role) : ""}` : ""}</p></div>
+      <div class="box"><p class="k">Creator</p><p><b>${x(cr.name || "")}</b>${cr.handle ? "<br>" + x(cr.handle) : ""}${cr.city || cr.state ? "<br>" + x([cr.city, cr.state].filter(Boolean).join(", ")) : ""}</p></div>
+      <div class="box"><p class="k">Deal</p><p><b>${x(c.title || "")}</b><br>${x([plat, c.format].filter(Boolean).join(" · "))}<br>${c.source === "job" ? "Hired from a brief" : "Direct hire"} · ${x((c.id || "").toUpperCase())}</p></div>
+      <div class="box"><p class="k">Payment</p><p><b>${x(KINDL[r.kind] || "")}</b>${r.method ? "<br>" + x(r.method) : ""}<br>Payment ID <span class="num">${x(String(r.id || "").toUpperCase())}</span></p></div>
+    </section>
+    <table><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody>
+      <tr><td>${x(line)}<small>Agreed price</small></td><td>${x(L.inr(r.amount, { dec: true }))}</td></tr>
+      <tr><td>Platform fee<small>Linkloom runs on a subscription</small></td><td>No platform fee</td></tr>
+      <tr><td>Taxes</td><td>As per confirmed rules</td></tr>
+      <tr class="tot"><td>${x(totalL)}</td><td><span>${x(L.inr(r.amount, { dec: true }))}</span></td></tr>
+    </tbody></table>
+    <p class="note">${x(note)}</p>
+    <footer class="foot"><span>${plan ? x(plan.name + " · renews " + L.fmtDate(plan.renews, { year: true })) + ". " : ""}No per-deal fee.</span><span>Computer-generated document${live ? "" : ". Sample data"}. support@linkloom.in</span></footer>
+  </div>
 </main></body></html>`;
   };
   D.downloadInvoice = r => {
