@@ -41,13 +41,14 @@
       return mp.canEdit ? { k: "edit", label: "Edit pitch", sub: "1 edit left" } : { k: "locked", label: "Pitched", sub: "Edit used" };
     if (future(p.pitchBlockedUntil) || (!p.canPitch && mp && mp.status === "declined"))
       return { k: "cooldown", label: p.pitchBlockedUntil ? `Pitch again on ${fmt(p.pitchBlockedUntil)}` : "Pitch again later" };
-    if (!p.canPitch) return { k: "locked", label: "Pitched" };
+    /* the server says no, with no pitch of theirs and no cooldown: say so (with its reason when it gives one) */
+    if (!p.canPitch) return { k: "blocked", label: "Can't pitch right now" };
     return { k: "new", label: `Pitch ${p.name}` };
   }
 
   function actionBtn(p, cls = "") {
     const st = state(p);
-    if (st.k === "locked" || st.k === "cooldown")
+    if (st.k === "locked" || st.k === "cooldown" || st.k === "blocked")
       return `<button class="lq lq-s bp-pitchbtn is-done ${cls}" type="button" data-pitchview aria-disabled="true">${st.k === "locked" ? ic("check", "ic") : ic("clock", "ic")}<span>${esc(st.label)}</span>${st.sub ? `<small>${esc(st.sub)}</small>` : ""}</button>`;
     return `<button class="lq lq-p bp-pitchbtn ${cls}" type="button" data-pitch>${ic(st.k === "edit" ? "plus" : "send", "ic")}<span>${esc(st.label)}</span>${st.sub ? `<small>${esc(st.sub)}</small>` : ""}</button>`;
   }
@@ -95,7 +96,7 @@
           ${meta.length ? `<p class="bp-meta">${meta.map(m => `<span>${esc(m)}</span>`).join('<span aria-hidden="true">·</span>')}</p>` : ""}
           ${p.website ? `<a class="lq lq-s lq-sm bp-web" href="${esc(hrefOf(p.website))}" target="_blank" rel="noopener noreferrer">${ic("link", "ic")}${esc(shortUrl(p.website))}</a>` : ""}
         </div>
-        <div class="bp-act">${actionBtn(p)}<p class="t-small muted bp-act-n">${state(p).k === "new" ? "One pitch per brand. You can edit it once." : ""}</p></div>
+        <div class="bp-act">${actionBtn(p)}<p class="t-small muted bp-act-n">${state(p).k === "new" ? "One pitch per brand. You can edit it once." : state(p).k === "blocked" ? esc(p.blockedReason || "Pitching isn't open for your account yet.") : ""}</p></div>
       </section>
       ${p.about ? `<section class="card bp-sec" aria-labelledby="bpAboutH"><h2 class="t-h2" id="bpAboutH">About ${esc(p.name)}</h2><p class="bp-msg">${esc(p.about)}</p></section>` : ""}
       ${pitchCard(p)}
@@ -290,6 +291,7 @@
         if (!c || !c.p) return;
         if (e.target.closest("[data-pitch]")) openPitch(c.p, paint);
         else if (e.target.closest("[data-pitchview]")) {
+          if (state(c.p).k === "blocked") return L.toast(c.p.blockedReason || "Pitching isn't open for your account yet.", "info");
           const m = el.querySelector("#bpMine");
           if (m) m.scrollIntoView({ behavior: L.RM ? "auto" : "smooth", block: "start" });
         }

@@ -956,6 +956,8 @@ export interface BrandProfile {
   myPitch: BrandPitch | null;
   canPitch: boolean;
   pitchBlockedUntil: string;
+  /** why the server won't take a pitch, when it says (canPitch false with no pitch and no cooldown) */
+  blockedReason: string;
   /** false while the backend has no pitching yet (the profile has no canPitch field) */
   pitchingOn: boolean;
 }
@@ -999,6 +1001,7 @@ export function mapBrandProfile(b: Obj): BrandProfile {
     myPitch,
     canPitch: b.canPitch !== undefined ? !!b.canPitch : !myPitch,
     pitchBlockedUntil: b.pitchBlockedUntil ? String(b.pitchBlockedUntil) : "",
+    blockedReason: String(b.pitchBlockedReason || b.cannotPitchReason || b.canPitchReason || ""),
     pitchingOn: "canPitch" in b || "myPitch" in b,
   };
 }
