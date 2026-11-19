@@ -740,7 +740,7 @@ function deliveryFile(d: Obj, i: number): { file: string; uploadId: string; url:
   const str = (...v: unknown[]) => String(v.find(x => typeof x === "string" && x) || "");
   const uploadId =
     str(d.fileUploadId, d.file_upload_id, d.uploadId, d.upload_id, typeof d.file === "string" ? d.file : "", typeof d.fileUpload === "string" ? d.fileUpload : "") ||
-    (f ? String(f.id ?? "") : "");
+    (f ? str(f.uploadId, f.upload_id, f.fileUploadId, f.id) : "");
   let url = str(d.contentUrl, d.content_url, d.url, d.fileUrl, d.downloadUrl, f && f.url, f && f.downloadUrl);
   let deepId = "";
   if (!uploadId && !url) {

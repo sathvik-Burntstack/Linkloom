@@ -51,7 +51,8 @@ export async function uploadFile(kind: UploadKind, file: Blob): Promise<Uploaded
   if (bad) throw new ApiError(400, bad, "FILE_INVALID");
   const t = await api<Ticket>("/v1/uploads/", {
     method: "POST",
-    body: { kind, contentType: file.type, size: file.size },
+    /* the original name (a File has one; a cropped Blob doesn't): the backend keeps it and returns it as fileName */
+    body: { kind, contentType: file.type, size: file.size, ...((file as File).name ? { fileName: (file as File).name } : {}) },
   });
   let put: Response;
   try {
