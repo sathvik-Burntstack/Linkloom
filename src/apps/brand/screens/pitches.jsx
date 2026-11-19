@@ -1,8 +1,7 @@
 /* Pitches (#pitches, #pitches-<briefId>): what creators pitched this brand, from the brand profile creators can open.
    One pitch per creator (edited at most once). The brand can only view the creator, message them, or decline;
    a decline lets that creator pitch again after 15 days (the backend enforces every rule).
-   React screen (see src/shared/react/view.jsx). L.pitchCards keeps the HTML-string card for the brief page
-   (screens/job.js) until that page moves to React too. */
+   React screen (see src/shared/react/view.jsx). PitchCard is also used on the brief page (screens/job.jsx). */
 import { useEffect, useState } from "react";
 import { Html, Icon, Lq, useStore } from "@/shared/react/view";
 
@@ -149,44 +148,6 @@ export function PitchCard({ p, compact, onChange }) {
     </article>
   );
 }
-
-/* ---------- the HTML card, for the brief page until it is React ---------- */
-function card(p, compact) {
-  const c = creatorOf(p);
-  const about = p.job
-    ? `<a class="pt-about" href="#job-${esc(p.job)}">${ic("brief", "ic")}<span>About <b>${esc(aboutTitle(p))}</b></span></a>`
-    : `<span class="pt-about is-general">${ic("chat", "ic")}<span>General pitch</span></span>`;
-  const tags = [
-    !p.read && p.status !== "declined" ? '<span class="pill pill-violet">New</span>' : "",
-    p.edited ? '<span class="pill">Edited</span>' : "",
-    p.status === "declined" ? '<span class="pill pill-err">Declined</span>' : "",
-  ].join("");
-  const link = u =>
-    `<a class="pt-link" href="${esc(hrefOf(u))}" target="_blank" rel="noopener noreferrer">${ic("link", "ic")}<span>${esc(shortUrl(u))}</span></a>`;
-  return `<article class="card pt-card${p.status === "declined" ? " is-declined" : ""}" data-pitch="${esc(p.id)}">
-      <div class="pt-top"><a class="pt-who" href="#creator-${esc(c.id)}">${K().crChip(c)}</a><div class="pt-tags">${tags}</div></div>
-      <div class="pt-meta">${about}<span class="t-small muted">${esc(whenTxt(p))}</span></div>
-      <p class="pt-msg${compact ? " is-clamp" : ""}">${esc(p.message)}</p>
-      ${p.links.length ? `<div class="pt-links">${p.links.map(link).join("")}</div>` : ""}
-      <div class="row wrap pt-acts">
-        <a class="lq lq-s lq-sm" href="#creator-${esc(c.id)}">${ic("user", "ic")}View creator</a>
-        <button class="lq lq-s lq-sm" type="button" data-pmsg="${esc(p.id)}">${ic("chat", "ic")}Message</button>
-        ${p.status === "declined" ? "" : `<button class="lq lq-s lq-sm pt-decline" type="button" data-pdecl="${esc(p.id)}">Decline</button>`}
-      </div>
-    </article>`;
-}
-/** Message and Decline for an element holding HTML cards. */
-function wireCards(root, repaint) {
-  root.addEventListener("click", e => {
-    const m = e.target.closest("[data-pmsg]"),
-      d = e.target.closest("[data-pdecl]");
-    const p = (m || d) && S().pitches.find(x => x.id === (m || d).dataset[m ? "pmsg" : "pdecl"]);
-    if (!p) return;
-    if (m) message(p, on => (m.disabled = on));
-    else decline(p, repaint);
-  });
-}
-L.pitchCards = { card, wireCards, markSeen };
 
 /* ---------- the screen ---------- */
 function PitchesScreen({ param: briefId }) {
