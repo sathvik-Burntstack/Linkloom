@@ -2,7 +2,7 @@
    Header (photo, name, bio, Edit profile), audience numbers with source and last-updated date, platform rows,
    audience geography, track record, selected work, reviews, and a "Private to you" panel.
    "See what brands see" switches to the brand-safe view: no contact details, no date of birth, no KYC or payout data.
-   #profile-brand opens straight in that view. Edit profile opens a sheet (profile-edit.js, built on setup.js's widgets).
+   #profile-brand opens straight in that view. Edit profile opens a sheet (profile-edit.jsx, built on the setup kit).
    Layout: header, then the dark Audience band (the one dark block on this screen: the three headline numbers), then
    section panels --space-section apart: Platforms and audience · Work · Reviews · Private to you.
    C7: no languages → no "Creates in" for brands; the owner gets an "Add languages" link to the edit sheet.
