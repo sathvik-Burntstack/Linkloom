@@ -33,6 +33,7 @@ import "./screens/kyc/kyc";
 import "./screens/profile/profile";
 import "./screens/home/home";
 import "./screens/jobs/jobs";
+import "./screens/jobs/jobs-list";
 import "./screens/job/job";
 import "./screens/brand/brand";
 import "./screens/bid/bid";
