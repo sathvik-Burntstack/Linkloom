@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { CITIES_BY_STATE, OTHER_CITY } from "@/shared/india-cities";
 /* profile screens (Builder A)
    #setup   first-run brand profile, two short steps: brand (logo, name, website, industry, contact) and billing (legal name, GSTIN, address, accounts email).
             Save lands on #home.
@@ -243,6 +244,18 @@
     `<div class="field" data-f="${id}"><label for="${p}-${id}">${label}</label>${input}${help ? `<p class="help" id="${p}-${id}-h">${help}</p>` : ""}<p class="err" id="${p}-${id}-e" aria-live="polite"></p></div>`;
   const sel = (id, list, val, ph = "Choose") =>
     `<select class="select" id="${id}"><option value="">${ph}</option>${list.map(x => `<option ${val === x ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>`;
+  /* place: the state comes first, then that state's cities (or "Other city", typed in) */
+  const cityOpts = (state, city) => {
+    if (!state) return `<option value="">Choose a state first</option>`;
+    const list = CITIES_BY_STATE[state] || [];
+    const other = !!city && !list.includes(city);
+    return (
+      `<option value="">Choose a city</option>` +
+      list.map(c => `<option ${c === city ? "selected" : ""}>${esc(c)}</option>`).join("") +
+      `<option value="${OTHER_CITY}" ${other ? "selected" : ""}>Other city</option>`
+    );
+  };
+  const cityOther = (state, city) => !!city && !!state && !(CITIES_BY_STATE[state] || []).includes(city);
   const errAt = (root, id, msg) => {
     const f = root.querySelector(`[data-f="${id}"]`);
     if (!f) return;
@@ -986,8 +999,14 @@
             <div class="field" data-f="about"><div class="row between"><label class="lab" for="pe-about">About <span class="profile-opt">optional</span></label><span class="profile-count num" data-cnt></span></div>
               <textarea class="textarea" id="pe-about" rows="3" placeholder="What you make and who it's for, in a line or two.">${esc(me.about || "")}</textarea><p class="err" aria-live="polite"></p></div>
             <div class="profile-two">
-              ${fld("pe", "city", "City", `<input class="input" id="pe-city" autocomplete="address-level2" value="${esc(me.city || "")}">`)}
               ${fld("pe", "state", "State or UT", sel("pe-state", STATES, me.state))}
+              ${fld(
+                "pe",
+                "city",
+                "City",
+                `<select class="select" id="pe-city" ${me.state ? "" : "disabled"}>${cityOpts(me.state, me.city || "")}</select>
+                <input class="input profile-cityx" id="pe-cityx" autocomplete="address-level2" placeholder="Type your city" aria-label="Your city" value="${cityOther(me.state, me.city) ? esc(me.city) : ""}" ${cityOther(me.state, me.city) ? "" : "hidden"}>`,
+              )}
             </div>
           </fieldset>
           <fieldset class="profile-fs"><legend class="t-h3">Contact person</legend>
@@ -1020,6 +1039,20 @@
           q("#pe-brand").addEventListener("input", () => pk.refresh());
           counter(q("#pe-about"), q("[data-cnt]"));
           wireClear(b);
+          const stSel = q("#pe-state"),
+            ciSel = q("#pe-city"),
+            ciX = q("#pe-cityx");
+          const cityVal = () => (ciSel.value === OTHER_CITY ? ciX.value : ciSel.value);
+          stSel.addEventListener("change", () => {
+            ciSel.innerHTML = cityOpts(stSel.value, "");
+            ciSel.disabled = !stSel.value;
+            ciX.hidden = true;
+            ciX.value = "";
+          });
+          ciSel.addEventListener("change", () => {
+            ciX.hidden = ciSel.value !== OTHER_CITY;
+            if (!ciX.hidden) ciX.focus();
+          });
           const g = q("#pe-gstin");
           g.addEventListener("input", () => {
             g.value = g.value.toUpperCase().replace(/\s/g, "");
@@ -1039,8 +1072,8 @@
               ["brand", V.brand(v("brand"))],
               ["website", V.website(v("website"))],
               ["industry", V.industry(v("industry"))],
-              ["city", V.city(v("city"))],
               ["state", v("state") ? "" : "Choose your state or union territory."],
+              ["city", !v("state") ? "" : ciSel.value === "" ? "Choose your city." : V.city(cityVal())],
               ["name", V.person(v("name"))],
               ["legal", V.legal(v("legal"))],
               ["gstin", V.gstin(v("gstin"))],
@@ -1071,7 +1104,7 @@
                 .replace(/\/$/, "");
               m.industry = v("industry");
               m.about = v("about").trim();
-              m.city = v("city").trim();
+              m.city = cityVal().trim();
               m.state = v("state");
               m.name = v("name").trim().replace(/\s+/g, " ");
               m.role = v("role").trim();

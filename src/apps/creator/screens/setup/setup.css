@@ -634,13 +634,38 @@
   }
 }
 
-/* niches and languages: the chosen ones as chips, then a button that opens the picker */
-.setup-pickf {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* niches and languages: label on the left, the button that opens the picker on the right of the same row,
+   the chosen ones as chips on their own wrapping row underneath */
+.field.setup-pickf {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 12px;
+}
+/* the label stays the same colour: focus comes back to the button after the picker closes */
+.field.setup-pickf > .lab,
+.field.setup-pickf:focus-within > .lab {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  color: var(--tx2, var(--ll-slate));
+}
+[data-catpick],
+[data-langpick] {
+  display: contents;
+}
+.setup-pickbtn.lq-sm {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  min-height: 36px;
+  padding: 0 14px;
+  white-space: nowrap;
 }
 .setup-picked {
+  grid-column: 1 / -1;
+  grid-row: 2;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -648,13 +673,21 @@
   padding: 0;
   list-style: none;
 }
+.setup-picked li {
+  display: flex;
+}
+.setup-picked .chip {
+  min-height: 36px;
+  gap: 8px;
+  padding: 0 12px 0 16px;
+}
 .setup-picked .chip svg {
   width: 14px;
   height: 14px;
-  margin-left: 6px;
+  opacity: 0.8;
 }
-.setup-pickbtn {
-  align-self: flex-start;
+.field.setup-pickf > .err {
+  grid-column: 1 / -1;
 }
 .setup-cityx {
   margin-top: 8px;

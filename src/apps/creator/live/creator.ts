@@ -408,7 +408,7 @@ const NOTIF_GO: Record<string, (d: Obj) => string> = {
   new_message: d => (d.conversationId ? "#chat-" + d.conversationId : "#messages"),
   bid_selected: () => "#bids",
   bid_rejected: () => "#bids",
-  offer_received: () => "#active",
+  offer_received: () => "#bids", // open direct offers are listed at the top of My bids
   order_created: d => (d.orderId ? "#work-" + d.orderId : "#active"),
   revision_requested: d => (d.orderId ? "#work-" + d.orderId : "#active"),
   order_approved: () => "#earnings",

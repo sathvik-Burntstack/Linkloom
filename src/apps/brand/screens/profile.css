@@ -737,3 +737,11 @@
 .profile-pe .field {
   scroll-margin: 24px 0 136px;
 } /* a focused error never hides under the sticky save bar */
+
+/* "Other city": the typed-in box under the city list */
+.profile-cityx {
+  margin-top: 8px;
+}
+.profile-cityx[hidden] {
+  display: none;
+}

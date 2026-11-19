@@ -8,7 +8,10 @@ import { amount, day, nameOf } from "../../../shared/live";
 
 type Obj = Record<string, unknown>;
 
-const OPEN = /^(pending|open|sent|new)$/i;
+/* The backend's offer status names aren't documented (pending? invited? sent?), so an offer counts as open unless
+   its status says it is finished. A whitelist hid every offer whose status it didn't know. */
+const CLOSED = /^(accepted|rejected|declined|withdrawn|cancell?ed|expired|completed|closed)$/i;
+const isOpen = (o: Obj) => !CLOSED.test(String(o.status || "").trim());
 
 function card(o: Obj): string {
   const { esc, inr, fmtDate, initials, icon } = LLD;
@@ -41,14 +44,17 @@ function card(o: Obj): string {
 
 async function paintOffers(): Promise<void> {
   const host = document.querySelector<HTMLElement>("#view .bids-head");
-  if (!host || host.parentElement?.querySelector("[data-offers]")) return;
+  if (!host) return;
   let offers: Obj[];
   try {
-    offers = (await creatorApi.offers()).filter(o => OPEN.test(String(o.status || "pending")));
-  } catch {
+    offers = (await creatorApi.offers()).filter(isOpen);
+  } catch (x) {
+    console.warn("[offers] could not load direct offers", x);
     return;
   }
-  if (!offers.length || !host.isConnected) return;
+  if (!host.isConnected) return;
+  host.parentElement?.querySelector("[data-offers]")?.remove(); // repaint with the fresh list
+  if (!offers.length) return;
   const sec = document.createElement("section");
   sec.dataset.offers = "";
   sec.setAttribute("aria-labelledby", "offersH");
@@ -95,6 +101,8 @@ export function wireCreatorOffers(): void {
     if (location.hash.replace(/^#/, "") === "bids" && store.s.session.signedIn) void paintOffers();
   };
   addEventListener("hashchange", run);
+  /* an offer sent while My bids is open shows up when the creator comes back to the tab */
+  document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && run());
   store.on(why => why === "signed-in" && run());
   setTimeout(run, 0);
 }
