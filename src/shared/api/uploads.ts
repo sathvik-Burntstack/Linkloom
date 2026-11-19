@@ -1,8 +1,15 @@
 /* File uploads: ask for a one-time URL, PUT the file there, then mark it complete.
-   kind: avatar | gallery | brand_logo | deliverable | chat_attachment | kyc_document */
+   kind: avatar | gallery | brand_logo | deliverable | chat_attachment | kyc_document | support_attachment */
 import { api, ApiError } from "./client";
 
-export type UploadKind = "avatar" | "gallery" | "brand_logo" | "deliverable" | "chat_attachment" | "kyc_document";
+export type UploadKind =
+  | "avatar"
+  | "gallery"
+  | "brand_logo"
+  | "deliverable"
+  | "chat_attachment"
+  | "kyc_document"
+  | "support_attachment";
 
 export interface UploadedFile {
   id: string;
@@ -28,6 +35,7 @@ const LIMITS: Record<UploadKind, { types: RegExp; max: number }> = {
   deliverable: { types: /^(image\/(jpeg|png|webp)|application\/pdf|video\/(mp4|quicktime))$/, max: 50 << 20 },
   chat_attachment: { types: /^(image\/(jpeg|png|webp)|application\/pdf)$/, max: 10 << 20 },
   kyc_document: { types: /^(image\/(jpeg|png|webp)|application\/pdf)$/, max: 10 << 20 },
+  support_attachment: { types: /^(image\/(jpeg|png|webp)|application\/pdf)$/, max: 10 << 20 },
 };
 
 /** A wording problem with the file, or null when it can be sent. */

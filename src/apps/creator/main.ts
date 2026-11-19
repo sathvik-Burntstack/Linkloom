@@ -16,6 +16,7 @@ import "./screens/bids/bids.css";
 import "./screens/active/active.css";
 import "./screens/messages/messages.css";
 import "./screens/earnings/earnings.css";
+import "../../shared/support/support.css";
 import "./styles/chrome.css";
 
 import "../../shared/vendor-gsap";
@@ -39,6 +40,7 @@ import "./screens/bids/bids";
 import "./screens/active/active";
 import "./screens/messages/messages";
 import "./screens/earnings/earnings";
+import "./screens/support";
 
 const ready = initSession();
 if (ready === true) LLD.boot();

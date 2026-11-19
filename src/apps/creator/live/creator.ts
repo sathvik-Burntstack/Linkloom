@@ -432,6 +432,8 @@ const NOTIF_GO: Record<string, (d: Obj) => string> = {
   revision_requested: d => (d.orderId ? "#work-" + d.orderId : "#active"),
   order_approved: () => "#earnings",
   pitch_declined: d => (d.brandId ? "#brand-" + d.brandId : "#jobs"),
+  support_reply: d => (d.ticketId ? "#support-" + d.ticketId : "#support"),
+  support_resolved: d => (d.ticketId ? "#support-" + d.ticketId : "#support"),
 };
 
 /** Bid replies by notification type, so the bell says what happened in plain words.

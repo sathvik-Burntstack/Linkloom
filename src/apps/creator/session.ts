@@ -47,7 +47,7 @@ function avatarMenu(): void {
     items: [
       { label: "Profile", icon: LLD.icon("user"), run: () => LLD.go("#profile") },
       { label: "Settings", icon: LLD.icon("filter"), run: toSettings },
-      { label: "Help", icon: LLD.icon("info"), run: () => (location.href = "mailto:support@linkloom.in?subject=Help%20with%20Linkloom") },
+      { label: "Help", icon: LLD.icon("info"), run: () => LLD.go("#support") },
       { kind: "sep", label: "" },
       {
         label: "Sign out",

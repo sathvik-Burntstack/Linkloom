@@ -17,6 +17,7 @@ import "./screens/campaigns.css";
 import "./screens/messages.css";
 import "./screens/payments.css";
 import "./screens/reports.css";
+import "../../shared/support/support.css";
 import "./chrome.css";
 import "../../shared/vendor-gsap";
 import "./seed";
@@ -38,6 +39,7 @@ import "./screens/campaigns";
 import "./screens/messages";
 import "./screens/payments";
 import "./screens/reports";
+import "./screens/support";
 import { initBrandSession } from "./session";
 
 const w = window as any;

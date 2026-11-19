@@ -594,6 +594,7 @@
                 ? `<a class="cw-chat" href="#chat-${esc(t.id)}">${K().cav(k)}<span class="cw-chat-t"><b>Chat with ${esc(f)}</b><span class="muted">${last ? esc((last.from === "brand" ? "You: " : "") + (last.text || (last.file ? last.file.name : ""))) : "Say hello"}</span></span>${t.unread ? `<span class="cw-chat-n" aria-label="${t.unread} unread">${t.unread}</span>` : ic("chevron")}</a>`
                 : `<div class="cw-chat is-locked"><span class="cw-lockic" aria-hidden="true">${ic("lock")}</span><span class="cw-chat-t"><b>Chat opens after payment</b><span class="muted">${isEnd(c) ? "This deal closed before any payment." : c.stage === "invited" ? `Once ${esc(f)} accepts and you pay into escrow, you can message and share files here.` : `Pay into escrow and you can message ${esc(f)} and share files here.`}</span></span></div>`
             }
+            ${String(c.id).startsWith("offer-") ? "" : `<a class="lq lq-s cw-help" href="#support-new-${esc(c.id)}">${ic("info", "ic")}Get help with this deal</a>`}
             <section class="ll-panel cw-sec" aria-labelledby="cwDatesH">
               <div class="ll-panel-head"><div><h2 class="ll-panel-h" id="cwDatesH">Dates</h2></div></div>
               <dl>

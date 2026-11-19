@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { reportAbuse, supportError } from "@/shared/support/api";
 /* Messages (#messages inbox) and one chat (#chat-<id>). Owned by Builder D.
    Mirrors the creator app's Messages screen: two panes on desktop, one stacked pane on phones.
    A chat exists only for a campaign the brand has paid into escrow (funded and later stages). Invited and accepted campaigns
@@ -824,12 +825,23 @@
         </form>`,
         onMount(b, close) {
           L.$("[data-cancel]", b).addEventListener("click", () => close());
-          L.$("form", b).addEventListener("submit", e => {
+          L.$("form", b).addEventListener("submit", async e => {
             e.preventDefault();
             const reason = (L.$("input[name=rr]:checked", b) || {}).value;
+            const note = L.$("#rrNote", b).value.trim();
+            /* the report goes to Linkloom's Moderation queue (super admin), about the creator's profile */
             if (L.live) {
-              const body = `Chat with: ${cr.name} (conversation ${t.id})\nReason: ${reason}\n\n${L.$("#rrNote", b).value.trim()}`;
-              window.open(`mailto:support@linkloom.in?subject=${encodeURIComponent("Report a chat: " + cr.name)}&body=${encodeURIComponent(body)}`, "_blank");
+              const go = L.$("[type=submit]", b);
+              go.disabled = true;
+              try {
+                await reportAbuse({ targetType: "profile", targetId: cr.id, reason, details: `Chat ${t.id}. ${note}`.trim() });
+              } catch (x) {
+                if (!(x && x.code === "ALREADY_REPORTED")) {
+                  go.disabled = false;
+                  L.toast(supportError(x, L.live.errorText), "alert");
+                  return;
+                }
+              }
             }
             L.store.set(() => {
               t.reported = { at: iso(), reason, note: L.$("#rrNote", b).value.trim() };

@@ -522,6 +522,7 @@
                 : ""
             }
             ${a.brandId ? `<a class="lq lq-s work-brandlink" href="#brand-${esc(a.brandId)}">${ic("user", "ic")}View ${esc(a.brand)}'s profile</a>` : ""}
+            <a class="lq lq-s work-brandlink" href="#support-new-${esc(a.id)}">${ic("info", "ic")}Get help with this deal</a>
 
             <section class="ll-panel work-sec" aria-labelledby="workLogH">
               <div class="ll-panel-head"><h2 class="ll-panel-h" id="workLogH">Log</h2></div>

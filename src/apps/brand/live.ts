@@ -459,6 +459,10 @@ function mapNotification(n: Obj): S {
     ? "#kyc"
     : type.startsWith("pitch")
       ? "#pitches"
+      : type.startsWith("support")
+        ? d.ticketId
+          ? "#support-" + d.ticketId
+          : "#support"
     : d.conversationId
       ? "#chat-" + d.conversationId
       : d.orderId

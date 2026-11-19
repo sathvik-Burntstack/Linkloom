@@ -3,6 +3,7 @@
    Owner: Builder B. Uses LLD.jobkit from jobs.js. */
 import { fitChip } from "../../ui/brief-card";
 import { skeletonHtml } from "@/shared/ux";
+import { reportAbuse, supportError } from "@/shared/support/api";
 
 (() => {
   const L = window.LLD,
@@ -211,7 +212,7 @@ import { skeletonHtml } from "@/shared/ux";
           onMount(b, close) {
             const f = b.querySelector("form");
             b.querySelector("[data-cancel]").addEventListener("click", () => close());
-            f.addEventListener("submit", e => {
+            f.addEventListener("submit", async e => {
               e.preventDefault();
               const r = f.querySelector("input[name=reason]:checked");
               if (!r) {
@@ -219,19 +220,24 @@ import { skeletonHtml } from "@/shared/ux";
                 f.querySelector("input[name=reason]").focus();
                 return;
               }
-              L.store.set(st => {
-                st.reports.push({
-                  job: j.id,
-                  reason: r.value,
-                  text: b.querySelector("#jobRepTx").value.trim(),
-                  at: new Date().toISOString(),
-                });
-              }, "job-report");
-              /* No report endpoint on the server yet: the report goes to the trust team by email. */
+              const details = b.querySelector("#jobRepTx").value.trim();
+              /* the report goes to Linkloom's Moderation queue (super admin) */
               if (L.live) {
-                const body = `Brief: ${j.title} (${j.id})\nBrand: ${j.brand}\nReason: ${r.value}\n\n${b.querySelector("#jobRepTx").value.trim()}`;
-                window.open(`mailto:support@linkloom.in?subject=${encodeURIComponent("Report a brief: " + j.title)}&body=${encodeURIComponent(body)}`, "_blank");
+                const go = f.querySelector("[type=submit]");
+                go.disabled = true;
+                try {
+                  await reportAbuse({ targetType: "campaign", targetId: j.id, reason: r.value, details });
+                } catch (x) {
+                  if (!(x && x.code === "ALREADY_REPORTED")) {
+                    go.disabled = false;
+                    b.querySelector("#jobRepErr").textContent = supportError(x, L.live.errorText);
+                    return;
+                  }
+                }
               }
+              L.store.set(st => {
+                st.reports.push({ job: j.id, reason: r.value, text: details, at: new Date().toISOString() });
+              }, "job-report");
               close();
               btn.setAttribute("aria-disabled", "true");
               btn.querySelector("span").textContent = "Reported";
