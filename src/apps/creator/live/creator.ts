@@ -42,6 +42,7 @@ import {
   todayIst,
   toneOf,
   usageText,
+  isSuspended,
 } from "../../../shared/live";
 import { KYC_AFTER_ACCEPT, kycOwedFor } from "../flags"; // not core/kyc-gate: that imports the store (cycle)
 
@@ -219,6 +220,10 @@ export function mapJob(c: ApiCampaign, me?: Me): Job {
     usage: usageText(c.usageRights),
   };
   if (c.status && !/open|active|live/i.test(String(c.status))) j.status = "hired";
+  /* not approved yet (or turned down): creators must not see it; "hired" keeps it out of discovery */
+  const mod = String((c as Obj).moderationStatus || ((c as Obj).moderation as Obj | undefined)?.status || "").toLowerCase();
+  if (mod && !/^(live|approved|published|ok|passed)$/.test(mod)) j.status = "hired";
+  if (isSuspended(c)) j.status = "hired"; // the brand's account is suspended: keep the brief out of discovery
   if (me) scoreJob(j, me);
   return j;
 }
@@ -865,12 +870,14 @@ async function refreshThreads(): Promise<void> {
 
 /** Bids, orders and notifications: the slices other people change. */
 export async function refreshSoft(): Promise<void> {
-  const [myBids, orders, notifs] = await Promise.all([
+  const [camps, myBids, orders, notifs] = await Promise.all([
+    apiAll<ApiCampaign>("/v1/campaigns/").catch(() => null),
     apiAll<Obj>("/v1/creators/me/bids/").catch(() => null),
     apiAll<Obj>("/v1/creators/me/orders/").catch(() => null),
     apiAll<Obj>("/v1/notifications/", {}, 100).catch(() => null),
   ]);
   store.set(s => {
+    if (camps) s.jobs = camps.map(c => mapJob(c, s.me)); // briefs posted (or approved) since the page loaded
     if (myBids)
       s.bids = myBids
         .map(r =>

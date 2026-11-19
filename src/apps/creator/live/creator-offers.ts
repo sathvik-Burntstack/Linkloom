@@ -3,7 +3,7 @@
    that are still open are shown at the top of My Bids, in the same card language as the bid slips. */
 import { LLD, store } from "@/apps/creator/core";
 import { ApiError } from "@/shared/api/client";
-import { creatorApi } from "./creator";
+import { creatorApi, refreshSoft } from "./creator";
 import { amount, day, nameOf } from "../../../shared/live";
 
 type Obj = Record<string, unknown>;
@@ -102,7 +102,16 @@ export function wireCreatorOffers(): void {
   };
   addEventListener("hashchange", run);
   /* an offer sent while My bids is open shows up when the creator comes back to the tab */
-  document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && run());
+  let lastSoft = Date.now();
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible" || !store.s.session.signedIn) return;
+    run();
+    /* new briefs, bid replies and deals since the page loaded; at most once every 30 s */
+    if (Date.now() - lastSoft > 30_000) {
+      lastSoft = Date.now();
+      void refreshSoft().catch(() => undefined);
+    }
+  });
   store.on(why => why === "signed-in" && run());
   setTimeout(run, 0);
 }

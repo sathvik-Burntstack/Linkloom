@@ -144,6 +144,24 @@ export function splitLocation(loc: unknown): [string, string] {
   return [parts[0] || "", parts.slice(1).join(", ")];
 }
 
+/** True when the backend marks an account (or the account behind a creator / brand / campaign row) as suspended,
+    banned, blocked or inactive. The field name isn't documented yet, so the usual spellings are all checked, on the
+    row itself and on a nested user / brand / owner. Suspended accounts must not appear in discovery lists. */
+export function isSuspended(o: unknown): boolean {
+  const one = (x: unknown): boolean => {
+    if (!x || typeof x !== "object") return false;
+    const r = x as Record<string, unknown>;
+    if (r.isSuspended === true || r.suspended === true || r.isBanned === true || r.banned === true) return true;
+    if (r.isActive === false || r.is_active === false || r.active === false) return true;
+    if (r.suspendedAt || r.suspended_at) return true;
+    const st = String(r.accountStatus || r.account_status || r.userStatus || "").toLowerCase();
+    return /suspend|ban|block|deactiv|inactive|disabled/.test(st);
+  };
+  if (one(o)) return true;
+  const r = (o || {}) as Record<string, unknown>;
+  return one(r.user) || one(r.brand) || one(r.owner) || one(r.creator);
+}
+
 /** A party name out of whatever object the backend nests ({ name }, { displayName }, { brandName }). */
 export function nameOf(o: unknown, fallback = ""): string {
   if (!o) return fallback;

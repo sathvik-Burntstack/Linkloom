@@ -773,7 +773,15 @@ import { USAGE_OPTIONS } from "@/shared/live";
                 delete u[key];
                 K.ui("jobs").justSaved = nid;
                 K.ui("jobs").tab = "all";
-                L.toast(wasDraft ? "Brief published. Creators can bid now." : "Changes saved", "check");
+                const pub = L.store.s.jobs.find(y => y.id === nid);
+                L.toast(
+                  pub && pub.review === "pending"
+                    ? "Brief sent for review. Creators see it once it's approved."
+                    : wasDraft
+                      ? "Brief published. Creators can bid now."
+                      : "Changes saved",
+                  "check",
+                );
                 L.go("#jobs");
               });
             },

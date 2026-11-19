@@ -121,6 +121,8 @@
   const JST = {
     open: { label: "Open", pill: "pill-info", ic: "eye" },
     draft: { label: "Draft", pill: "pill-line", ic: "edit" },
+    review: { label: "In review", pill: "pill-warn", ic: "clock" },
+    rejected: { label: "Not approved", pill: "pill-err", ic: "alert" },
     hired: { label: "Hired", pill: "pill-ok", ic: "check" },
     closed: { label: "Closed", pill: "pill-paper", ic: "close" },
   };
@@ -353,7 +355,11 @@
     const dl = daysTo(j.deadline),
       draft = j.status === "draft";
     let note = "";
-    if (j.status === "open")
+    if (j.status === "open" && j.review === "pending")
+      note = "In review. Our team checks every brief before creators see it; it shows up for creators once it's approved.";
+    else if (j.status === "open" && j.review === "rejected")
+      note = `Not approved, so creators can't see it.${j.reviewReason ? ` Reason: ${j.reviewReason}.` : ""} Edit the brief and save it to send it for review again.`;
+    else if (j.status === "open")
       note = j.bids
         ? `${j.bids} bid${j.bids === 1 ? "" : "s"} so far${nNew ? `, ${nNew} new` : ""}${nShort ? `, ${nShort} shortlisted` : ""}. Bids stay open until you hire or close the brief.`
         : "Published. Creators who match will start bidding soon.";
@@ -384,7 +390,9 @@
         );
     }
     const st =
-      j.status === "open" && nNew
+      j.status === "open" && j.review
+        ? pill(JST, j.review === "rejected" ? "rejected" : "review")
+        : j.status === "open" && nNew
         ? `${pill(JST, "open")}<span class="pill pill-butter jl-new">${nNew} new</span>`
         : pill(JST, j.status);
     return `<article class="jl-slip is-${j.status}" data-id="${esc(j.id)}" aria-labelledby="jt-${esc(j.id)}">

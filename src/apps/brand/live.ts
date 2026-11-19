@@ -29,6 +29,7 @@ import {
   toneOf,
   usageRightsFor,
   usageText,
+  isSuspended,
 } from "@/shared/live";
 
 type Obj = Record<string, unknown>;
@@ -158,9 +159,20 @@ const JOB_STATUS: Record<string, string> = {
   draft: "draft",
 };
 
+/** The backend checks every brief before creators see it (moderationStatus "live" once approved).
+    Returns "" when approved or unknown, "pending" while waiting, "rejected" when it was turned down. */
+export function reviewOf(c: Obj): { review: string; reviewReason: string } {
+  const m = (c.moderation || {}) as Obj;
+  const st = String(c.moderationStatus || m.status || "").toLowerCase();
+  const reason = String(m.reason || c.moderationReason || "");
+  if (!st || /^(live|approved|published|ok|passed)$/.test(st)) return { review: "", reviewReason: "" };
+  return { review: /reject|declin|block|remov|fail|denied/.test(st) ? "rejected" : "pending", reviewReason: reason };
+}
+
 function mapJob(c: Obj, bidCount: number): S {
   const [city] = splitLocation(c.location);
   return {
+    ...reviewOf(c),
     id: String(c.id),
     title: String(c.title || ""),
     status: JOB_STATUS[String(c.status || "open").toLowerCase()] || "open",
@@ -596,7 +608,7 @@ export async function loadBrandGuest(): Promise<void> {
   const creators = await apiAll<Obj>("/v1/creators/", { auth: false }).catch(() => [] as Obj[]);
   set(s => {
     s.creators = [];
-    addCreators(s, creators);
+    addCreators(s, creators.filter(c => !isSuspended(c)));
   }, "live-loaded");
 }
 
@@ -637,7 +649,7 @@ export async function loadBrand(): Promise<ApiUser> {
     s.me = mapMe(bme, user);
     s.kyc = kyc ? { ...kyc } : { status: user.kycStatus || "not_started", steps: {} };
     s.creators = [];
-    addCreators(s, creators);
+    addCreators(s, creators.filter(c => !isSuspended(c)));
     const bidRows: S[] = [];
     mine.forEach((c, i) => {
       for (const b of bidsBy[i]) {
