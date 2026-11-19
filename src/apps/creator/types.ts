@@ -157,6 +157,8 @@ export interface Job {
   id: string;
   status?: JobStatus;
   brand: string;
+  /** The brand's id, for its profile page (#brand-<id>). Empty in sample data. */
+  brandId?: string;
   /** Brand initials. */
   bi: string;
   tone: BrandTone;

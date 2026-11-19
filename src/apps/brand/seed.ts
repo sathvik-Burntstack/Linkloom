@@ -889,6 +889,38 @@ window.LLD_DATA = {
     note: "Views come from live links the creators shared. Updated daily.",
   },
 
+  /* creators' pitches to this brand: one each, edited at most once */
+  pitchesOn: true,
+  pitches: [
+    {
+      id: "pt1",
+      creator: "cr3",
+      job: "j1",
+      jobTitle: "Barrier Repair Serum launch",
+      message:
+        "I've been using barrier serums for my sensitive skin for two years. I'd do a 30-second before-and-after Reel over 14 days, filmed in daylight, with an honest texture close-up.",
+      links: ["instagram.com/reel/riya-barrier", "instagram.com/reel/riya-routine"],
+      status: "sent",
+      edited: false,
+      at: "2026-11-05T10:20:00+05:30",
+      editedAt: "",
+      read: false,
+    },
+    {
+      id: "pt2",
+      creator: "cr2",
+      job: null,
+      jobTitle: "",
+      message:
+        "Most of my audience is men starting skincare. A simple three-step routine series with your cleanser and moisturiser would land well. Happy to share audience numbers.",
+      links: ["instagram.com/kabirskin"],
+      status: "edited",
+      edited: true,
+      at: "2026-11-03T18:05:00+05:30",
+      editedAt: "2026-11-04T09:40:00+05:30",
+      read: true,
+    },
+  ],
   notifications: [
     {
       id: "n1",

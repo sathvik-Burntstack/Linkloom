@@ -419,7 +419,28 @@ function addressText(v: unknown): string {
   return parts.join(", ");
 }
 
+/** A creator's pitch to this brand (one per creator; edited at most once). */
+export function mapPitch(p: Obj): S {
+  const camp = (p.campaign && typeof p.campaign === "object" ? p.campaign : null) as Obj | null;
+  const status = String(p.status || "sent").toLowerCase();
+  return {
+    id: String(p.id),
+    creator: idOf(p.creator),
+    job: camp ? String(camp.id) : String(p.campaignId || "") || null,
+    jobTitle: camp ? String(camp.title || "") : "",
+    message: String(p.message || ""),
+    links: (Array.isArray(p.links) ? (p.links as unknown[]) : []).map(String).filter(Boolean),
+    status: /declin/.test(status) ? "declined" : /edit/.test(status) || Number(p.editCount) > 0 ? "edited" : "sent",
+    edited: Number(p.editCount) > 0 || /edit/.test(status),
+    at: isoOr(p.createdAt, nowIso()),
+    editedAt: p.editedAt ? isoOr(p.editedAt, nowIso()) : "",
+    read: !!p.readAt,
+  };
+}
+
 const NOTIF_KIND: Record<string, string> = {
+  pitch_received: "bid",
+  pitch_edited: "bid",
   bid_received: "bid",
   new_bid: "bid",
   new_message: "message",
@@ -436,6 +457,8 @@ function mapNotification(n: Obj): S {
   const type = String(n.type || "");
   const go = type.startsWith("kyc")
     ? "#kyc"
+    : type.startsWith("pitch")
+      ? "#pitches"
     : d.conversationId
       ? "#chat-" + d.conversationId
       : d.orderId
@@ -624,11 +647,13 @@ export async function loadBrand(): Promise<ApiUser> {
     settle(apiAll<Obj>("/v1/conversations/"), [] as Obj[], "messages", errors),
     settle(apiAll<Obj>("/v1/notifications/", {}, 100), [] as Obj[], "notifications", errors),
     settle(apiAll<Obj>("/v1/lists/"), [] as Obj[], "lists", errors),
+    /* pitches: null until the backend has the endpoint (then the Pitches screen says it opens soon) */
+    apiAll<Obj>("/v1/brands/me/pitches/").catch(() => null as Obj[] | null),
   ]);
   const user = await me;
   userId = user.id;
   if (user.role !== "brand") return user;
-  const [bme, kyc, creators, camps, offers, orders, convs, notifs, lists] = await wave;
+  const [bme, kyc, creators, camps, offers, orders, convs, notifs, lists, pitchRows] = await wave;
   brandId = String(bme.id || "");
   /* only this brand's own briefs: the list endpoint may also return other brands' open briefs */
   const mine = camps.filter(c => !c.brand || !brandId || idOf(c.brand) === brandId);
@@ -677,6 +702,13 @@ export async function loadBrand(): Promise<ApiUser> {
     s.campaigns = campaignRows;
     s.threads = convs.map(mapThread);
     linkThreads(s);
+    s.pitchesOn = !!pitchRows;
+    s.pitches = (pitchRows || [])
+      .filter(p => !isSuspended(p.creator as Obj))
+      .map(p => {
+        if (p.creator && typeof p.creator === "object") addCreators(s, [p.creator as Obj]);
+        return mapPitch(p);
+      });
     s.payments = payments(s.campaigns);
     s.notifications = notifs.map(mapNotification);
     s.favorites = favList.ids;
@@ -1003,6 +1035,16 @@ export const brandApi = {
   },
   async markRead(id: string): Promise<void> {
     await api(`/v1/conversations/${id}/read/`, { method: "POST" });
+  },
+  async readPitch(id: string): Promise<void> {
+    await api(`/v1/pitches/${id}/read/`, { method: "POST" });
+  },
+  async declinePitch(id: string): Promise<void> {
+    await api(`/v1/pitches/${id}/decline/`, { method: "POST" });
+    set(s => {
+      const p = (s.pitches || []).find((x: S) => x.id === id);
+      if (p) p.status = "declined";
+    }, "pitch-declined");
   },
   async openChatWith(creatorId: string): Promise<string> {
     const r = await api<Obj>("/v1/conversations/", { method: "POST", body: { creatorId } });

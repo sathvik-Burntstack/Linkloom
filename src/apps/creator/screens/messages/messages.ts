@@ -193,11 +193,12 @@
       <header class="chat-h">
         <a class="ibtn chat-back" href="#messages" aria-label="All chats">${ic("back")}</a>
         <span class="avatar v" aria-hidden="true">${esc(t.bi || C.bi(t.brand))}</span>
-        <div class="chat-h-t"><h2 class="chat-name">${esc(t.brand)}</h2><p class="help">${a.loose ? "Linkloom chat" : `Bid accepted${a.accepted ? " " + esc(L.fmtDate(a.accepted)) : ""}`}</p></div>
+        <div class="chat-h-t"><h2 class="chat-name">${t.brandId ? `<a class="chat-name-a" href="#brand-${esc(t.brandId)}">${esc(t.brand)}</a>` : esc(t.brand)}</h2><p class="help">${a.loose ? "Linkloom chat" : `Bid accepted${a.accepted ? " " + esc(L.fmtDate(a.accepted)) : ""}`}</p></div>
         <div class="chat-more">
           <button class="chat-opt" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="chatMenu">Options${ic("down")}</button>
           <ul class="chat-menu" id="chatMenu" role="menu" aria-label="Chat options" hidden>
             ${a.loose ? "" : `<li role="none"><a role="menuitem" tabindex="-1" href="#work-${esc(a.id)}">${ic("rail")}Open the deal</a></li>`}
+            ${t.brandId ? `<li role="none"><a role="menuitem" tabindex="-1" href="#brand-${esc(t.brandId)}">${ic("user")}View brand profile</a></li>` : ""}
             <li role="none"><button role="menuitem" tabindex="-1" type="button" data-report>${ic("flag")}Report this chat</button></li>
             <li role="none"><button role="menuitem" tabindex="-1" type="button" data-block>${ic("close")}<span data-block-l>${t.blocked ? "Unblock" : "Block"} ${esc(t.brand)}</span></button></li>
           </ul>

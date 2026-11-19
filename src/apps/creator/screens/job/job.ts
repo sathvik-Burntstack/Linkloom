@@ -109,7 +109,7 @@ import { skeletonHtml } from "@/shared/ux";
         <div class="job-layout">
           <article class="job-main" aria-labelledby="jobH">
             <header class="job-h">
-              <div class="job-src">${K.brandChip(j)}<span class="jobs-plat">${K.glyph(j.platform)}<span>${esc(K.platName(j.platform))} ${esc(j.format)}${j.category ? ` · ${esc(j.category)}` : ""}</span></span></div>
+              <div class="job-src">${j.brandId ? `<a class="job-brandlink" href="#brand-${esc(j.brandId)}" title="View ${esc(j.brand)}'s profile">${K.brandChip(j)}</a><a class="lq lq-s lq-sm job-brandbtn" href="#brand-${esc(j.brandId)}">View brand</a>` : K.brandChip(j)}<span class="jobs-plat">${K.glyph(j.platform)}<span>${esc(K.platName(j.platform))} ${esc(j.format)}${j.category ? ` · ${esc(j.category)}` : ""}</span></span></div>
               <h1 class="t-h1" id="jobH">${esc(j.title)}</h1>
               <p class="muted t-small">Posted ${esc(L.ago(j.posted))} · <span class="sample">Sample brief</span></p>
               <div class="job-tools" role="group" aria-label="Brief actions">

@@ -470,7 +470,11 @@
       el.innerHTML = `<div class="view-in jl">
         <header class="jl-head">
           <div class="jl-head-t"><h1 class="t-h1">Briefs</h1><p class="muted" id="jlSum">${esc(summary())} <span class="sample">Sample data</span></p></div>
-          <a class="lq lq-p" href="#post" data-post${S().jobs.length ? "" : " hidden"}>${ic("plus")}Post a brief</a>
+          <div class="row wrap jl-head-a">${(() => {
+            const ps = (S().pitches || []).filter(p => p.status !== "declined"),
+              nNew = ps.filter(p => !p.read).length;
+            return ps.length ? `<a class="lq lq-s" href="#pitches">${ic("send")}Pitches${nNew ? ` <span class="jl-cn">${nNew} new</span>` : ""}</a>` : "";
+          })()}<a class="lq lq-p" href="#post" data-post${S().jobs.length ? "" : " hidden"}>${ic("plus")}Post a brief</a></div>
         </header>
         <div class="chips jl-filter" role="group" aria-label="Show briefs"${S().jobs.length ? "" : " hidden"}>${tabs()}</div>
         <p class="sr-only" id="jlLive" aria-live="polite"></p>

@@ -199,6 +199,11 @@
       b.textContent = unread;
       b.hidden = !unread;
     });
+    const np = (s.pitches || []).filter(p => !p.read && p.status !== "declined").length;
+    $$('[data-badge="pitches"]').forEach(b => {
+      b.textContent = np;
+      b.hidden = !np;
+    });
     const nb = s.notifications.filter(n => !n.read).length;
     $$('[data-badge="bell"]').forEach(b => {
       b.textContent = nb;

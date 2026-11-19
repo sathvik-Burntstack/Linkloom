@@ -199,6 +199,7 @@ export function mapJob(c: ApiCampaign, me?: Me): Job {
   const j: Job = {
     id: c.id,
     brand,
+    brandId: idOf(c.brand),
     bi: initialsOf(brand),
     tone: toneOf(brand),
     title: c.title || "Untitled brief",
@@ -415,6 +416,7 @@ function mapThread(c: Obj, active: ActiveJob[]): Thread {
     });
   (t as Thread & { loaded: boolean; image: string }).loaded = false;
   (t as Thread & { image: string }).image = String(party.image || "");
+  (t as Thread & { brandId: string }).brandId = brandId;
   if (a) a.thread = t.id;
   return t;
 }
@@ -429,6 +431,7 @@ const NOTIF_GO: Record<string, (d: Obj) => string> = {
   order_created: d => (d.orderId ? "#work-" + d.orderId : "#active"),
   revision_requested: d => (d.orderId ? "#work-" + d.orderId : "#active"),
   order_approved: () => "#earnings",
+  pitch_declined: d => (d.brandId ? "#brand-" + d.brandId : "#jobs"),
 };
 
 /** Bid replies by notification type, so the bell says what happened in plain words.
@@ -927,7 +930,109 @@ export function errorText(e: unknown): string {
 
 export const isKycRequired = (e: unknown): boolean => e instanceof ApiError && e.code === "KYC_REQUIRED";
 
+/** A brand's public profile as creators see it, with this creator's pitch to it (one per brand, edited at most once). */
+export interface BrandPitch {
+  id: string;
+  campaignId: string | null;
+  campaignTitle: string;
+  message: string;
+  links: string[];
+  status: "sent" | "edited" | "declined";
+  canEdit: boolean;
+  createdAt: string;
+  editedAt: string;
+}
+export interface BrandProfile {
+  id: string;
+  name: string;
+  logoUrl: string;
+  industry: string;
+  website: string;
+  location: string;
+  about: string;
+  openBriefs: { id: string; title: string; platform: string; closesAt: string }[];
+  myPitch: BrandPitch | null;
+  canPitch: boolean;
+  pitchBlockedUntil: string;
+  /** false while the backend has no pitching yet (the profile has no canPitch field) */
+  pitchingOn: boolean;
+}
+
+function mapBrandPitch(p: Obj | null | undefined): BrandPitch | null {
+  if (!p || typeof p !== "object" || !p.id) return null;
+  const camp = (p.campaign && typeof p.campaign === "object" ? p.campaign : null) as Obj | null;
+  const st = String(p.status || "sent").toLowerCase();
+  const edits = Number(p.editCount) || 0;
+  const status: BrandPitch["status"] = /declin/.test(st) ? "declined" : edits > 0 || /edit/.test(st) ? "edited" : "sent";
+  return {
+    id: String(p.id),
+    campaignId: camp ? String(camp.id) : p.campaignId ? String(p.campaignId) : null,
+    campaignTitle: camp ? String(camp.title || "") : "",
+    message: String(p.message || ""),
+    links: (Array.isArray(p.links) ? (p.links as unknown[]) : []).map(String).filter(Boolean),
+    status,
+    canEdit: p.canEdit !== undefined ? !!p.canEdit : edits === 0 && status !== "declined",
+    createdAt: isoOr(p.createdAt, nowIso()),
+    editedAt: p.editedAt ? isoOr(p.editedAt, nowIso()) : "",
+  };
+}
+
+export function mapBrandProfile(b: Obj): BrandProfile {
+  const briefs = Array.isArray(b.openBriefs) ? (b.openBriefs as Obj[]) : Array.isArray(b.campaigns) ? (b.campaigns as Obj[]) : [];
+  const myPitch = mapBrandPitch(b.myPitch as Obj);
+  return {
+    id: String(b.id),
+    name: String(b.name || b.brandName || "Brand"),
+    logoUrl: String(b.logoUrl || b.logo || ""),
+    industry: String(b.industry || ""),
+    website: String(b.website || ""),
+    location: String(b.location || [b.city, b.state].filter(Boolean).join(", ") || ""),
+    about: String(b.about || b.bio || b.description || ""),
+    openBriefs: briefs.map(c => ({
+      id: String(c.id),
+      title: String(c.title || "Brief"),
+      platform: String(platformOf(c.platform)),
+      closesAt: day(c.closesAt) || "",
+    })),
+    myPitch,
+    canPitch: b.canPitch !== undefined ? !!b.canPitch : !myPitch,
+    pitchBlockedUntil: b.pitchBlockedUntil ? String(b.pitchBlockedUntil) : "",
+    pitchingOn: "canPitch" in b || "myPitch" in b,
+  };
+}
+
+/** Pitching isn't on the server yet: the screen says it opens soon instead of an error. */
+export const PITCHING_OFF = "PITCHING_OFF";
+const pitchCall = async <T>(f: () => Promise<T>): Promise<T> => {
+  try {
+    return await f();
+  } catch (e) {
+    if (e instanceof ApiError && (e.status === 404 || e.status === 405 || e.status === 501) && !/BRIEF|NOT_THIS/.test(e.code || ""))
+      throw new ApiError(e.status, "Pitching opens soon.", PITCHING_OFF);
+    throw e;
+  }
+};
+
 export const creatorApi = {
+  PITCHING_OFF,
+  async brandProfile(id: string): Promise<BrandProfile> {
+    return mapBrandProfile(await api<Obj>(`/v1/brands/${id}/`));
+  },
+  async sendPitch(brandId: string, p: { campaignId: string | null; message: string; links: string[] }): Promise<BrandPitch> {
+    const r = await pitchCall(() =>
+      api<Obj>(`/v1/brands/${brandId}/pitches/`, {
+        method: "POST",
+        body: { ...(p.campaignId ? { campaignId: p.campaignId } : {}), message: p.message, links: p.links },
+      }),
+    );
+    return mapBrandPitch(r)!;
+  },
+  async editPitch(id: string, p: { campaignId: string | null; message: string; links: string[] }): Promise<BrandPitch> {
+    const r = await pitchCall(() =>
+      api<Obj>(`/v1/pitches/${id}/`, { method: "PATCH", body: { campaignId: p.campaignId, message: p.message, links: p.links } }),
+    );
+    return mapBrandPitch(r)!;
+  },
   errorText,
   async placeBid(
     jobId: string,

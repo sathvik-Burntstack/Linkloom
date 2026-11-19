@@ -221,6 +221,7 @@
                 <div class="row between wrap"><h2 class="t-h2" id="jdBidsH">Bids received</h2>${canHire() && bids().length ? `<p class="help">Shortlist the ones you like, compare up to ${MAXCMP}, then confirm one.</p>` : ""}</div>
                 <div id="jdBidsBox">${bidsBlock()}</div>
               </section>
+              ${pitchBlock()}
             </article>
             <aside class="jd-side" aria-label="Budget and bids">${side()}</aside>
           </div>
@@ -229,6 +230,23 @@
         </div>`;
         L.liquid(el);
         tray();
+        const ps = el.querySelector("#jdPitches");
+        if (ps && L.pitchCards)
+          L.pitchCards.wireCards(ps, () => {
+            ps.outerHTML = pitchBlock();
+            const n = el.querySelector("#jdPitches");
+            n && L.liquid(n);
+          });
+      }
+      /* creators' pitches that name this brief (from the brand profile); the full list lives in #pitches */
+      function pitchBlock() {
+        const list = (S().pitches || []).filter(p => p.job === j.id && p.status !== "declined");
+        if (!list.length || !L.pitchCards) return "";
+        return `<section class="jd-sec jd-pitches" id="jdPitches" aria-labelledby="jdPitchH">
+          <div class="jd-pitches-h"><h2 class="t-h2" id="jdPitchH">Pitches about this brief <span class="jl-cn">${list.length}</span></h2>
+          <a class="lq lq-s lq-sm" href="#pitches-${esc(j.id)}">See ${list.length > 2 ? "all " + list.length : list.length === 1 ? "it" : "both"} in Pitches</a></div>
+          ${list.slice(0, 2).map(p => L.pitchCards.card(p, true)).join("")}
+        </section>`;
       }
 
       const live = m => {

@@ -1,0 +1,30 @@
+/* Pitches (#pitches) and the "Pitches about this brief" block on a brief */
+.pt-list { display: grid; gap: 14px; margin-top: 16px; }
+.pt-card { display: grid; gap: 12px; padding: 20px; border-radius: 22px; }
+.pt-card.is-declined { opacity: 0.72; }
+.pt-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.pt-who { color: inherit; text-decoration: none; }
+.pt-who:hover .bk-cr-t b { text-decoration: underline; }
+.pt-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.pt-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.pt-about { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line, #dcdcdc); color: inherit; text-decoration: none; font-size: 14px; }
+.pt-about .ic { width: 16px; height: 16px; }
+a.pt-about:hover { border-color: currentColor; }
+.pt-about.is-general { border-style: dashed; }
+.pt-msg { margin: 0; font-size: 16px; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+.pt-msg.is-clamp { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.pt-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.pt-link { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 6px 12px; border-radius: 999px; background: var(--surface-2, #f1f1f1); color: inherit; font-size: 14px; text-decoration: none; }
+.pt-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pt-link .ic { width: 15px; height: 15px; flex: none; }
+.pt-link:hover span { text-decoration: underline; }
+.pt-acts { gap: 8px; padding-top: 4px; }
+.pt-decline { margin-left: auto; }
+.jd-pitches { display: grid; gap: 12px; }
+.jd-pitches-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+@media (max-width: 560px) {
+  .pt-card { padding: 16px; }
+  .pt-decline { margin-left: 0; }
+  .pt-acts .lq { flex: 1 1 auto; justify-content: center; }
+}
+.jl-head-a { gap: 10px; }

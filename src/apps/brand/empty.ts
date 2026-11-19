@@ -31,6 +31,8 @@
   payMethods: [],
   report: { months: [], note: "Views come from live links the creators shared." },
   notifications: [],
+  pitches: [],
+  pitchesOn: false,
   ui: {},
 };
 export {};
