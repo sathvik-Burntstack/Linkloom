@@ -31,7 +31,8 @@ import "./screens/home";
 import "./screens/creators";
 import "./screens/creator";
 import "./screens/cart";
-import "./screens/jobs";
+import "./screens/jobs"; // the brand kit (LLD.bk)
+import "./screens/jobs-list";
 import "./screens/post";
 import "./screens/job";
 import "./screens/pitches";
