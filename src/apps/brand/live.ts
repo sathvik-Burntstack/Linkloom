@@ -699,12 +699,34 @@ function deliveryFile(d: Obj, i: number): { file: string; uploadId: string; url:
   const uploadId =
     str(d.fileUploadId, d.file_upload_id, d.uploadId, d.upload_id, typeof d.file === "string" ? d.file : "", typeof d.fileUpload === "string" ? d.fileUpload : "") ||
     (f ? String(f.id ?? "") : "");
-  const url = str(d.contentUrl, d.content_url, d.url, d.fileUrl, d.downloadUrl, f && f.url, f && f.downloadUrl);
+  let url = str(d.contentUrl, d.content_url, d.url, d.fileUrl, d.downloadUrl, f && f.url, f && f.downloadUrl);
+  let deepId = "";
+  if (!uploadId && !url) {
+    /* unknown shape: look through the record (one level of nesting) for a file id or a link under a file-like key */
+    const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const FILEY = /file|upload|media|attach|asset|video|image|content|document|storage|path|link|url/i;
+    const scan = (o: Obj, depth: number) => {
+      for (const [k, v] of Object.entries(o)) {
+        if (/^(id|order|orderId|creator|brand|createdAt|updatedAt)$/i.test(k)) continue;
+        if (typeof v === "string" && FILEY.test(k)) {
+          if (!url && /^https?:\/\//.test(v)) url = v;
+          else if (!deepId && UUID.test(v)) deepId = v;
+        } else if (v && typeof v === "object" && !Array.isArray(v) && depth < 1 && FILEY.test(k)) {
+          const n = v as Obj;
+          if (!deepId && typeof n.id === "string" && UUID.test(n.id)) deepId = n.id;
+          scan(n, depth + 1);
+        }
+      }
+    };
+    scan(d, 0);
+    if (!url && !deepId) console.warn("Linkloom: delivery has no file field. Fields sent:", Object.keys(d).join(", "), d);
+  }
   const contentType = str(d.contentType, d.content_type, d.mimeType, f && f.contentType, f && f.content_type);
   const name = str(d.fileName, d.file_name, f && f.fileName, f && f.name, f && f.originalName);
+  const upId = uploadId || deepId;
   return {
-    file: name || (url && !uploadId ? url.replace(/^https?:\/\//, "").split("?")[0] : `delivery-v${i + 1}`),
-    uploadId,
+    file: name || (url && !upId ? url.replace(/^https?:\/\//, "").split("?")[0] : `delivery-v${i + 1}`),
+    uploadId: upId,
     url,
     contentType,
   };
