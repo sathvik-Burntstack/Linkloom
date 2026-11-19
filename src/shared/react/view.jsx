@@ -34,13 +34,43 @@ export function Lq({ as = "button", className = "", children, ...rest }) {
   );
 }
 
-/** An app icon (the apps' L.icon returns SVG markup as a string). */
-export function Icon({ n, className }) {
-  const L = window.LLD;
-  return createElement("span", {
-    className: `react-ic${className ? " " + className : ""}`,
-    "aria-hidden": "true",
-    style: { display: "contents" },
-    dangerouslySetInnerHTML: { __html: L.icon(n, className) },
+/* SVG attribute names React wants in camelCase */
+const SVG_ATTR = {
+  class: "className",
+  "stroke-width": "strokeWidth",
+  "stroke-linecap": "strokeLinecap",
+  "stroke-linejoin": "strokeLinejoin",
+};
+
+/** An app icon: the same <svg> element the apps' L.icon(n, cls) markup makes, as a React element. */
+export function Icon({ n, className = "" }) {
+  const html = window.LLD.icon(n, className);
+  const m = /^<svg([^>]*)>([\s\S]*)<\/svg>$/.exec(html.trim());
+  if (!m) return null;
+  const props = {};
+  for (const [, k, v] of m[1].matchAll(/([\w:-]+)="([^"]*)"/g)) props[SVG_ATTR[k] || k] = v;
+  if (!props.className) delete props.className;
+  return createElement("svg", { ...props, dangerouslySetInnerHTML: { __html: m[2] } });
+}
+
+/**
+ * A sheet (the apps' L.openSheet) whose body is React. `render(close)` returns the body element.
+ * The React root is unmounted once the sheet leaves the page, however it was closed (button, Esc, scrim).
+ */
+export function openReactSheet({ title, wide, render }) {
+  window.LLD.openSheet({
+    title,
+    wide,
+    body: "",
+    onMount(b, close) {
+      const root = createRoot(b);
+      flushSync(() => root.render(render(close)));
+      const mo = new MutationObserver(() => {
+        if (b.isConnected) return;
+        mo.disconnect();
+        setTimeout(() => root.unmount());
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    },
   });
 }
