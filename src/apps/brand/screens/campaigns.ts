@@ -410,7 +410,7 @@
       : "";
     const file = (x, cur) =>
       x
-        ? `<div class="cw-dv${cur ? " is-cur" : ""}"><span class="cw-v">v${x.v}</span><span class="cw-dv-n"><b>${esc(x.file)}</b><span class="muted">${esc(L.fmtDate(x.at) + ", " + K().time(x.at))}</span></span><button class="lq lq-s lq-sm" type="button" data-openfile="${esc(x.file)}">${ic("download", "ic")}Open</button></div>`
+        ? `<div class="cw-dv${cur ? " is-cur" : ""}"><span class="cw-v">v${x.v}</span><span class="cw-dv-n"><b>${esc(x.file)}</b><span class="muted">${esc(L.fmtDate(x.at) + ", " + K().time(x.at))}</span></span><button class="lq lq-s lq-sm" type="button" data-openfile="${x.v}">${ic("download", "ic")}Open</button></div>`
         : "";
     const revMeter = () => {
       const inc = c.revisionsIncluded || 1,
@@ -693,9 +693,8 @@
       L.$$("[data-openfile]", el).forEach(b =>
         b.addEventListener("click", () => {
           if (!L.live) return L.toast("Sample file. In the live app it opens the video here.", "file");
-          const dv = (c.deliveries || []).find(x => x.file === b.dataset.openfile);
-          if (!dv) return;
-          L.live.openDelivery(dv).catch(e => L.toast(L.live.errorText(e), "alert"));
+          const dv = (c.deliveries || []).find(x => String(x.v) === b.dataset.openfile);
+          if (dv) previewDelivery(dv);
         }),
       );
       const vn = q("#cwVnote");
@@ -1013,6 +1012,57 @@
      LLD.payEscrow(campaignId): the pay sheet. Other screens call it (for example the cart or home).
      ==================================================================================== */
   const MIC = { upi: "send", nb: "home", card: "wallet" };
+/* A delivery opens in a sheet: images, videos and PDFs show in place; anything else gets Download and New tab. */
+const kindOf = (dv, url) => {
+  const t = String(dv.contentType || "").toLowerCase();
+  const name = (String(dv.file || "") + " " + String(url || "").split("?")[0]).toLowerCase();
+  if (/^image\//.test(t) || /\.(jpe?g|png|webp|gif)/.test(name)) return "image";
+  if (/^video\//.test(t) || /\.(mp4|mov|webm|m4v)/.test(name)) return "video";
+  if (/pdf/.test(t) || /\.pdf/.test(name)) return "pdf";
+  return "";
+};
+function previewDelivery(dv) {
+  const L = window.LLD,
+    esc = L.esc;
+  L.openSheet({
+    title: `Delivery v${dv.v}`,
+    body: `<div class="dvp">${dv.file === `delivery-v${dv.v}` ? "" : `<p class="t-small muted dvp-name">${esc(dv.file)}</p>`}<div class="dvp-box" aria-live="polite"><p class="muted">Loading the file…</p></div><div class="row wrap dvp-acts"></div></div>`,
+    onMount(b) {
+      const box = b.querySelector(".dvp-box"),
+        acts = b.querySelector(".dvp-acts");
+      const none = msg => {
+        box.innerHTML = `<p class="muted">${esc(msg)}</p>`;
+      };
+      L.live
+        .deliveryLink(dv)
+        .then(({ url, uploaded }) => {
+          const u = esc(url);
+          /* other sites ignore the download attribute; Supabase storage links take ?download= to send it as a file */
+          const dl = /supabase\.co\/storage\//.test(url) ? url + (url.includes("?") ? "&" : "?") + "download=" + encodeURIComponent(dv.file) : url;
+          acts.innerHTML =
+            (uploaded ? `<a class="lq lq-p" href="${esc(dl)}" download="${esc(dv.file)}" rel="noopener">${L.icon("download", "ic")}Download</a>` : "") +
+            `<a class="lq ${uploaded ? "lq-s" : "lq-p"}" href="${u}" target="_blank" rel="noopener">Open in new tab</a>`;
+          L.liquid && L.liquid(acts);
+          if (!uploaded) return none("This delivery is a link. Open it in a new tab to see it.");
+          const k = kindOf(dv, url);
+          const fail = () => none("Preview isn't available for this file type. Download it to watch it.");
+          const video = () => {
+            box.innerHTML = `<video class="dvp-media" src="${u}" controls playsinline preload="metadata"></video>`;
+            box.querySelector("video").addEventListener("error", fail);
+          };
+          if (k === "pdf") box.innerHTML = `<iframe class="dvp-media dvp-pdf" src="${u}" title="${esc(dv.file)}"></iframe>`;
+          else if (k === "video") video();
+          else {
+            /* images first; an unknown type that isn't an image is tried as a video */
+            box.innerHTML = `<img class="dvp-media" src="${u}" alt="${esc(dv.file)}">`;
+            box.querySelector("img").addEventListener("error", k === "image" ? fail : video);
+          }
+        })
+        .catch(e => none(L.live.errorText(e)));
+    },
+  });
+}
+
   /* live escrow: Razorpay Checkout opens over the page; the backend verifies the payment and funds the deal */
   function livePay(c) {
     const k = K().cr(c.creator),

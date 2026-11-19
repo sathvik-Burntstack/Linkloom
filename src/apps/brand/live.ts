@@ -12,7 +12,7 @@
 import { api, apiAll, ApiError, type ApiUser } from "@/shared/api/client";
 import { fetchMe } from "@/shared/api/auth";
 import { onLive, startLive, type LiveEvent } from "@/shared/api/realtime";
-import { openPrivateFile, uploadFile } from "@/shared/api/uploads";
+import { downloadUrl, openPrivateFile, uploadFile } from "@/shared/api/uploads";
 import { payForOrder, PAYMENTS_OFF, type PayResult } from "@/shared/payments/razorpay";
 import {
   amount,
@@ -263,14 +263,9 @@ function mapOrder(o: Obj, deliveries: Obj[]): S {
     .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))
     .map((d, i) => ({
       v: i + 1,
-      file: String(
-        d.fileName ||
-          (d.contentUrl ? String(d.contentUrl).replace(/^https?:\/\//, "") : `delivery-v${i + 1}`),
-      ),
+      ...deliveryFile(d, i),
       at: isoOr(d.createdAt, created),
       note: String(d.note || ""),
-      uploadId: idOf(d.file || d.fileUpload) || String(d.fileUploadId || ""),
-      url: String(d.contentUrl || ""),
     }));
   const revs = Array.isArray(o.revisions) ? (o.revisions as Obj[]) : [];
   const log: [string, string][] = [[created, "accepted"]];
@@ -697,6 +692,24 @@ export async function loadBrand(): Promise<ApiUser> {
   return user;
 }
 
+/** A delivery's file, read leniently: the upload may come as an id, a nested object or a ready link. */
+function deliveryFile(d: Obj, i: number): { file: string; uploadId: string; url: string; contentType: string } {
+  const f = [d.file, d.fileUpload, d.upload, d.attachment].find(x => x && typeof x === "object") as Obj | undefined;
+  const str = (...v: unknown[]) => String(v.find(x => typeof x === "string" && x) || "");
+  const uploadId =
+    str(d.fileUploadId, d.file_upload_id, d.uploadId, d.upload_id, typeof d.file === "string" ? d.file : "", typeof d.fileUpload === "string" ? d.fileUpload : "") ||
+    (f ? String(f.id ?? "") : "");
+  const url = str(d.contentUrl, d.content_url, d.url, d.fileUrl, d.downloadUrl, f && f.url, f && f.downloadUrl);
+  const contentType = str(d.contentType, d.content_type, d.mimeType, f && f.contentType, f && f.content_type);
+  const name = str(d.fileName, d.file_name, f && f.fileName, f && f.name, f && f.originalName);
+  return {
+    file: name || (url && !uploadId ? url.replace(/^https?:\/\//, "").split("?")[0] : `delivery-v${i + 1}`),
+    uploadId,
+    url,
+    contentType,
+  };
+}
+
 /** There is one conversation per brand and creator: every campaign with that creator uses it, and the thread
     shows the newest one. */
 function linkThreads(s: S): void {
@@ -939,6 +952,13 @@ export const brandApi = {
   async openDelivery(d: { uploadId?: string; url?: string }): Promise<void> {
     if (d.uploadId) return openPrivateFile(d.uploadId);
     if (d.url) window.open(d.url, "_blank", "noopener");
+    else throw new ApiError(404, "This file isn't available yet. Ask the creator to send it again.", "FILE_MISSING");
+  },
+  /** A link to show or save a delivery: a fresh 5-minute link for uploaded files, the creator's link otherwise. */
+  async deliveryLink(d: { uploadId?: string; url?: string }): Promise<{ url: string; uploaded: boolean }> {
+    if (d.uploadId) return { url: (await downloadUrl(d.uploadId)).url, uploaded: true };
+    if (d.url) return { url: d.url, uploaded: false };
+    throw new ApiError(404, "This file isn't available yet. Ask the creator to send it again.", "FILE_MISSING");
   },
 
   /* messages */

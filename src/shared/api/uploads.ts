@@ -60,8 +60,14 @@ export async function uploadFile(kind: UploadKind, file: Blob): Promise<Uploaded
 }
 
 /** A 5-minute link for a private file. */
-export const downloadUrl = (uploadId: string): Promise<{ url: string; expiresIn: number }> =>
-  api(`/v1/uploads/${uploadId}/download-url/`);
+export async function downloadUrl(uploadId: string): Promise<{ url: string; expiresIn: number }> {
+  const r = await api<Record<string, unknown>>(`/v1/uploads/${uploadId}/download-url/`);
+  const url = [r.url, r.downloadUrl, r.download_url, r.signedUrl, r.signed_url].find(x => typeof x === "string" && x) as
+    | string
+    | undefined;
+  if (!url) throw new ApiError(0, "The file link couldn't be made. Please try again.", "FILE_LINK_MISSING");
+  return { url, expiresIn: Number(r.expiresIn ?? r.expires_in) || 300 };
+}
 
 /** Opens a private file in a new tab. The tab is opened first so pop-up blockers allow it. */
 export async function openPrivateFile(uploadId: string): Promise<void> {
