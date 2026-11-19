@@ -127,6 +127,8 @@ export function authMessage(e: unknown): string {
       return "We couldn't email the code just now. Check the address, then try again in a minute.";
     case "GOOGLE_TOKEN_INVALID":
       return "Google sign-in didn't go through. Please try again.";
+    case "ACCOUNT_SUSPENDED":
+      return "Your account is suspended, so you can't sign in or use Linkloom right now. If you think this is a mistake, write to support@linkloom.in.";
     case "GOOGLE_EMAIL_UNVERIFIED":
       return "Your Google account's email isn't verified yet. Verify it with Google, or sign in with your email.";
     default:

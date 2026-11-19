@@ -312,6 +312,11 @@ async function send<T>(
   }
   if (!res.ok || env?.success === false) {
     const err = env?.error;
+    /* A suspended account is refused on every signed-in call: end the session and say why on the sign-in page. */
+    if (res.status === 403 && err?.code === "ACCOUNT_SUSPENDED" && token) {
+      clearAuth();
+      if (!/signin\.html$/.test(location.pathname)) location.replace("signin.html?suspended=1");
+    }
     const msg =
       res.status >= 500
         ? SERVER_DOWN

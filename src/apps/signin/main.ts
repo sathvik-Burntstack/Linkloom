@@ -646,6 +646,10 @@ const flash = $("#flash");
 if (q.get("out")) {
   flash.hidden = false;
   flash.textContent = "You are signed out. Sign in again whenever you are ready.";
+} else if (q.get("suspended")) {
+  flash.hidden = false;
+  flash.textContent =
+    "Your account is suspended, so you can't sign in or use Linkloom right now. If you think this is a mistake, write to support@linkloom.in.";
 } else if (q.get("expired")) {
   flash.hidden = false;
   flash.textContent =
