@@ -98,6 +98,9 @@ export function fromHtml(html) {
   if (!html) return null;
   const t = document.createElement("template");
   t.innerHTML = html;
+  /* buttons in it get their .t/.t2 label spans now (what the router's liquid() did after drawing), so nothing
+     rewrites them once React owns them */
+  if (window.LLD && window.LLD.liquid) window.LLD.liquid(t.content);
   const out = [...t.content.childNodes].map((ch, i) => toReact(ch, i));
   return out.length === 1 ? out[0] : out;
 }
