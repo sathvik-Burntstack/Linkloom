@@ -13,6 +13,7 @@ import { api, apiAll, ApiError, type ApiUser } from "@/shared/api/client";
 import { fetchMe } from "@/shared/api/auth";
 import { onLive, startLive, type LiveEvent } from "@/shared/api/realtime";
 import { openPrivateFile, uploadFile } from "@/shared/api/uploads";
+import { payForOrder, PAYMENTS_OFF, type PayResult } from "@/shared/payments/razorpay";
 import {
   amount,
   day,
@@ -239,6 +240,8 @@ function stageOf(status: string): string {
   const s = status.toLowerCase();
   if (/refund|cancel/.test(s)) return "refunded";
   if (/approved|completed|released|paid_out/.test(s)) return "released";
+  /* waiting for the brand's payment: checked before "paid" so "unpaid" / "awaiting_payment" never read as funded */
+  if (/unpaid|await|pending_pay|payment_pending|to_pay|created/.test(s)) return "accepted";
   if (/revision/.test(s)) return "revision";
   if (/submitted|delivered|in_review/.test(s)) return "submitted";
   if (/progress|started|disput/.test(s)) return "in_progress";
@@ -827,6 +830,19 @@ export const brandApi = {
   errorText,
   isKycRequired,
   refresh,
+  PAYMENTS_OFF,
+
+  /* escrow: Razorpay Checkout for an accepted deal (order). The secret key stays on the backend. */
+  async payEscrow(orderId: string, description: string): Promise<PayResult> {
+    const me = W.LLD_DATA.me || {};
+    const r = await payForOrder({
+      orderId,
+      description,
+      prefill: { name: String(me.name || me.brand || ""), email: String(me.email || "") },
+    });
+    if (r.status === "paid") await refresh().catch(() => undefined);
+    return r;
+  },
 
   /* creators */
   async creatorDetail(id: string): Promise<void> {

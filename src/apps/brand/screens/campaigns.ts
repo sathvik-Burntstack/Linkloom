@@ -1013,20 +1013,76 @@
      LLD.payEscrow(campaignId): the pay sheet. Other screens call it (for example the cart or home).
      ==================================================================================== */
   const MIC = { upi: "send", nb: "home", card: "wallet" };
+  /* live escrow: Razorpay Checkout opens over the page; the backend verifies the payment and funds the deal */
+  function livePay(c) {
+    const k = K().cr(c.creator),
+      f = K().first(k);
+    const offSheet = (b, close) => {
+      b.innerHTML = `<div class="stack pe"><p class="t-h2">Online payment isn't switched on yet</p>
+        <p class="muted">Our team will contact you at ${esc(S().me.email || "your registered email")} to collect ${esc(L.inr(c.price))} for this hire. The deal moves to In escrow as soon as it lands.</p>
+        <div class="row wrap"><a class="lq lq-p" href="mailto:support@linkloom.in?subject=${encodeURIComponent("Escrow payment: " + c.title)}">Email support</a><button class="lq lq-s" type="button" data-no>Close</button></div></div>`;
+      L.liquid && L.liquid(b);
+      b.querySelector("[data-no]").addEventListener("click", () => close());
+    };
+    L.openSheet({
+      title: "Pay into escrow",
+      body: `<div class="pe">
+        <div class="pe-slip">
+          <div class="pe-who">${K().crChip(k)}</div>
+          <p class="t-small muted">${esc(c.title)}</p>
+          <p class="pe-lab">Agreed price</p>
+          <p class="t-money pe-amt">${L.inr(c.price)}</p>
+          <p class="pe-line">Pay by UPI, card or net banking in the secure Razorpay window.</p>
+        </div>
+        <ul class="jl-conseq pe-rules"><li>Linkloom holds the money. ${esc(f)} sees it is paid and starts.</li><li>It is released only when you approve the delivery.</li><li>Refunded in full if ${esc(f)} cannot deliver.</li></ul>
+        <p class="err" id="peErr" role="alert"></p>
+        <div class="row wrap pe-acts"><button class="lq lq-p" type="button" data-paynow>${ic("lock")}Pay ${L.inr(c.price)}</button><button class="lq lq-s" type="button" data-no>Not now</button></div>
+        <p class="ll-trust">${ic("lock")}Held safely until you approve. Payments by Razorpay.</p>
+      </div>`,
+      onMount(b, close) {
+        const btn = b.querySelector("[data-paynow]"),
+          err = b.querySelector("#peErr");
+        b.querySelector("[data-no]").addEventListener("click", () => close());
+        btn.addEventListener("click", async () => {
+          if (!navigator.onLine) {
+            err.textContent = "You are offline. Nothing was charged. Try again when you are back online.";
+            return;
+          }
+          err.textContent = "";
+          btn.disabled = true;
+          btn.setAttribute("aria-busy", "true");
+          try {
+            const r = await L.live.payEscrow(c.id, `${c.title} · ${k ? k.name : "creator"}`);
+            if (r.status === "paid") {
+              close(true);
+              L.toast(`Paid ${L.inr(c.price)} into escrow. Chat with ${f} is open.`, "check");
+              L.go("#campaign-" + c.id);
+              return;
+            }
+            if (r.status === "failed") err.textContent = `${r.message} Nothing was charged. Try again or use another method.`;
+          } catch (e) {
+            if (e && e.code === L.live.PAYMENTS_OFF) return offSheet(b, close);
+            if (L.live.isKycRequired(e)) {
+              close();
+              return L.kycGate("#campaign-" + c.id);
+            }
+            err.textContent = L.live.errorText(e);
+          } finally {
+            btn.disabled = false;
+            btn.removeAttribute("aria-busy");
+          }
+        });
+      },
+    });
+  }
   L.payEscrow = function (cid) {
     if (L.live) {
       const c = S().campaigns.find(x => x.id === cid);
-      L.openSheet({
-        title: "Pay into escrow",
-        body: `<div class="stack pe"><p class="t-h2">Escrow payments open soon</p>
-          <p class="muted">Online payment into escrow is being switched on. Our team will contact you at ${esc(S().me.email || "your registered email")} to collect ${c ? esc(L.inr(c.price)) : "the agreed price"} for this hire, and the deal moves to In escrow as soon as it lands.</p>
-          <div class="row wrap"><a class="lq lq-p" href="mailto:support@linkloom.in?subject=${encodeURIComponent("Escrow payment" + (c ? ": " + c.title : ""))}">Email support</a><button class="lq lq-s" type="button" data-no>Close</button></div>
-          <p class="ll-trust">${ic("lock")}Held safely until you approve.</p></div>`,
-        onMount(b, close) {
-          b.querySelector("[data-no]").addEventListener("click", () => close());
-        },
-      });
-      return;
+      if (c && c.stage === "accepted" && !String(c.id).startsWith("offer-")) {
+        livePay(c);
+        return;
+      }
+      /* not accepted yet, already paid, or gone: the same sheets as below */
     }
     const c = S().campaigns.find(x => x.id === cid);
     if (!c) {
