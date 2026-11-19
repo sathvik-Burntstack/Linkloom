@@ -1,0 +1,195 @@
+/* Helpers both dashboards use to turn backend rows into the shapes the screens were designed around. */
+import { paise } from "@/shared/api/client";
+
+/** A stable chip colour for a name, so the same brand always gets the same colour. */
+export function toneOf(key) {
+  let h = 0;
+  for (const ch of key || "") h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return ["c", "b", "y"][h % 3];
+}
+
+export function initialsOf(name) {
+  const w = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!w.length) return "?";
+  return (w.length === 1 ? w[0].slice(0, 2) : w[0][0] + w[w.length - 1][0]).toUpperCase();
+}
+
+/** "2026-11-22" from a date or timestamp; "" when missing. */
+export const day = v => (typeof v === "string" && v ? v.slice(0, 10) : "");
+
+export const isoOr = (v, fallback) => (typeof v === "string" && v ? v : fallback);
+
+export const nowIso = () => new Date().toISOString();
+
+export const todayIst = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+
+/** Whole calendar days from today (IST) to an ISO day. */
+export function daysUntil(iso) {
+  const a = Date.parse(iso.slice(0, 10) + "T12:00:00+05:30"),
+    b = Date.parse(todayIst() + "T12:00:00+05:30");
+  return Math.round((a - b) / 864e5);
+}
+
+export const addDaysIso = (iso, n) => {
+  const d = new Date(iso.slice(0, 10) + "T12:00:00+05:30");
+  d.setDate(d.getDate() + n);
+  return d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+};
+
+export const amount = m => paise(m);
+
+/** Backend platforms are free text; the screens know two. */
+export const platformOf = p =>
+  String(p || "")
+    .toLowerCase()
+    .includes("you")
+    ? "youtube"
+    : "instagram";
+
+/** "1 Reel + 2 Stories" → "Reel". */
+export function formatOf(deliverables, platform) {
+  const d = String(deliverables || "").toLowerCase();
+  if (d.includes("short")) return "Short";
+  if (d.includes("carousel")) return "Carousel";
+  if (d.includes("reel")) return "Reel";
+  if (d.includes("video") || d.includes("vlog")) return "Video";
+  if (d.includes("stor")) return "Story";
+  return platformOf(platform) === "youtube" ? "Video" : "Reel";
+}
+
+/** Usage rights are an object since 2026-11-12 ({ duration, channels, exclusivity, exclusivityCategory, territory });
+    older rows and the sample data are text. Either way the screens get one line. */
+export function usageText(v) {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  const r = v;
+  const DUR = {
+    perpetual: "Perpetual",
+    "12m": "12 months",
+    "6m": "6 months",
+    "3m": "3 months",
+  };
+  const CH = { organic_social: "organic social", paid_ads: "paid ads" };
+  const parts = [];
+  const d = String(r.duration || "");
+  if (d) parts.push(DUR[d] || d);
+  const ch = Array.isArray(r.channels) ? r.channels.map(c => CH[c] || String(c).replace(/_/g, " ")) : [];
+  if (ch.length) parts.push(ch.join(" + "));
+  if (r.exclusivity) parts.push("exclusive" + (r.exclusivityCategory ? ` in ${r.exclusivityCategory}` : ""));
+  const t = String(r.territory || "");
+  if (t) parts.push(t.length <= 3 ? t.toUpperCase() : t[0].toUpperCase() + t.slice(1));
+  return parts.join(" · ");
+}
+
+const ur = (duration, channels) => ({
+  duration,
+  channels,
+  exclusivity: false,
+  territory: "India",
+});
+/** The choices a brand picks from when posting a brief. The API takes usage rights as an object (a plain sentence
+    is refused with "Invalid input."), so each choice is one object; its label is exactly what usageText shows for
+    it, so a brief opened for editing finds its own choice again. The first is the default. */
+export const USAGE_OPTIONS = [
+  ur("3m", ["organic_social"]),
+  ur("6m", ["organic_social"]),
+  ur("12m", ["organic_social"]),
+  ur("3m", ["organic_social", "paid_ads"]),
+  ur("12m", ["organic_social", "paid_ads"]),
+  ur("perpetual", ["organic_social", "paid_ads"]),
+].map(value => ({ label: usageText(value), value }));
+
+/** Usage rights to send to the API: an object as-is, a known choice's label as its object, anything else (older
+    text, "As agreed in chat") as the default choice. */
+export function usageRightsFor(v) {
+  if (v && typeof v === "object") return v;
+  const hit = USAGE_OPTIONS.find(o => o.label === String(v || "").trim());
+  return (hit || USAGE_OPTIONS[0]).value;
+}
+
+/** "1 Reel + 2 Stories" or a list → ["1 Reel", "2 Stories"]. */
+export function listOf(v) {
+  if (Array.isArray(v))
+    return v.map(x => (typeof x === "string" ? x : String(x?.title ?? ""))).filter(Boolean);
+  return String(v || "")
+    .split(/\s*(?:\+|\n|;|•)\s*/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+/** "Mumbai, Maharashtra" → ["Mumbai", "Maharashtra"]. */
+export function splitLocation(loc) {
+  const parts = String(loc || "")
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean);
+  return [parts[0] || "", parts.slice(1).join(", ")];
+}
+
+/** True when the backend marks an account (or the account behind a creator / brand / campaign row) as suspended,
+    banned, blocked or inactive. The field name isn't documented yet, so the usual spellings are all checked, on the
+    row itself and on a nested user / brand / owner. Suspended accounts must not appear in discovery lists. */
+export function isSuspended(o) {
+  const one = x => {
+    if (!x || typeof x !== "object") return false;
+    const r = x;
+    if (r.isSuspended === true || r.suspended === true || r.isBanned === true || r.banned === true)
+      return true;
+    if (r.isActive === false || r.is_active === false || r.active === false) return true;
+    if (r.suspendedAt || r.suspended_at) return true;
+    const st = String(r.accountStatus || r.account_status || r.userStatus || "").toLowerCase();
+    return /suspend|ban|block|deactiv|inactive|disabled/.test(st);
+  };
+  if (one(o)) return true;
+  const r = o || {};
+  return one(r.user) || one(r.brand) || one(r.owner) || one(r.creator);
+}
+
+/** A party name out of whatever object the backend nests ({ name }, { displayName }, { brandName }). */
+export function nameOf(o, fallback = "") {
+  if (!o) return fallback;
+  if (typeof o === "string") return o;
+  const r = o;
+  return String(r.name || r.displayName || r.brandName || r.fullName || r.title || fallback);
+}
+
+export function idOf(o) {
+  if (!o) return "";
+  if (typeof o === "string") return o;
+  return String(o.id ?? "");
+}
+
+/** Per-account extras the backend has no field for yet, kept on this device. */
+export function extras(scope, userId) {
+  const key = `ll-extra-${scope}-${userId}`;
+  return {
+    get() {
+      try {
+        return JSON.parse(localStorage.getItem(key) || "{}");
+      } catch {
+        return {};
+      }
+    },
+    set(v) {
+      try {
+        localStorage.setItem(key, JSON.stringify({ ...this.get(), ...v }));
+      } catch {
+        /* storage blocked: the extra is kept for this visit only */
+      }
+    },
+  };
+}
+
+/** Runs loaders side by side; a failing one returns its fallback and is reported, the rest still load. */
+export async function settle(p, fallback, label, errors) {
+  try {
+    return await p;
+  } catch (e) {
+    const code = e?.status;
+    if (code !== 404 && code !== 403) errors.push(label);
+    return fallback;
+  }
+}

@@ -1,0 +1,107 @@
+/* Sign-in, sign-up completion and sign-out. Both dashboards and signin.html use these. */
+import { api, ApiError, clearAuth, readAuth, saveAuth, setStoredUser } from "./client";
+
+/** An email address → what /otp/request/ and /login/ want. Sign-in, sign-up and one-time codes are email-only:
+    there is no mobile-number sign-in anywhere in the app (2026-11-13). */
+export function emailDestination(input) {
+  const v = input.trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? { channel: "email", destination: v.toLowerCase() } : null;
+}
+
+export const requestOtp = (channel, destination) =>
+  api("/v1/auth/otp/request/", { method: "POST", body: { channel, destination }, auth: false });
+
+export async function verifyOtp(challengeId, code, remember = true) {
+  const t = await api("/v1/auth/otp/verify/", {
+    method: "POST",
+    body: { challengeId, code },
+    auth: false,
+  });
+  saveAuth(t, remember);
+  return t.user;
+}
+
+export async function googleSignIn(idToken, role, remember = true) {
+  const t = await api("/v1/auth/google/", { method: "POST", body: { idToken, role }, auth: false });
+  saveAuth(t, remember);
+  return t.user;
+}
+
+/* ---------- passwords ----------
+   Sign-up checks the email once with a one-time code and sets the password in /signup/complete/.
+   After that the account signs in with its email and password (Collab Backend API Reference v1, section 2.1). */
+export const PASSWORD_LOGIN = "/v1/auth/login/";
+
+/** POST { identifier, password }: the identifier is the account's email. Returns tokens + user. */
+export async function passwordSignIn(d, password, remember = true) {
+  const t = await api(PASSWORD_LOGIN, {
+    method: "POST",
+    body: { identifier: d.destination, password },
+    auth: false,
+  });
+  saveAuth(t, remember);
+  return t.user ?? fetchMe();
+}
+
+/** Sets a new password for the signed-in account. Within 10 minutes of signing in with a code or Google the old
+    password is not needed, which is how "Forgot password?" and code-only accounts get one. */
+export async function changePassword(password) {
+  await api("/v1/auth/password/change/", { method: "POST", body: { password, confirmPassword: password } });
+}
+
+export async function fetchMe() {
+  const u = await api("/v1/auth/me/");
+  const user = u.user ?? u;
+  setStoredUser(user);
+  return user;
+}
+
+export async function completeSignup(d) {
+  const body = { role: d.role, fullName: d.fullName.trim() };
+  if (d.role === "brand" && d.brandName) body.brandName = d.brandName.trim();
+  if (d.role === "creator" && d.displayName) body.displayName = d.displayName.trim();
+  if (d.password) {
+    body.password = d.password;
+    body.confirmPassword = d.password;
+  }
+  const r = await api("/v1/auth/signup/complete/", {
+    method: "POST",
+    body,
+  });
+  if (r.access) saveAuth(r);
+  const user = r.user ?? r;
+  if (user && user.id) setStoredUser(user);
+  return user?.id ? user : fetchMe();
+}
+
+export async function signOut() {
+  const t = readAuth();
+  try {
+    if (t?.refresh) await api("/v1/auth/logout/", { method: "POST", body: { refresh: t.refresh } });
+  } catch {
+    /* the tokens go anyway */
+  }
+  clearAuth();
+}
+
+/** Human wording for the auth error codes the backend documents. */
+export function authMessage(e) {
+  if (!(e instanceof ApiError)) return "Something went wrong. Please try again.";
+  switch (e.code) {
+    case "AUTH_INVALID":
+    case "INVALID_CREDENTIALS":
+      return 'That email and password don\'t match. Try again, or use "Forgot password?" to get a code by email.';
+    case "OTP_INVALID":
+      return "That code is wrong or has expired. Check it, or ask for a new one.";
+    case "OTP_DELIVERY_FAILED":
+      return "We couldn't email the code just now. Check the address, then try again in a minute.";
+    case "GOOGLE_TOKEN_INVALID":
+      return "Google sign-in didn't go through. Please try again.";
+    case "ACCOUNT_SUSPENDED":
+      return "Your account is suspended, so you can't sign in or use Linkloom right now. If you think this is a mistake, write to support@linkloom.in.";
+    case "GOOGLE_EMAIL_UNVERIFIED":
+      return "Your Google account's email isn't verified yet. Verify it with Google, or sign in with your email.";
+    default:
+      return e.message;
+  }
+}
