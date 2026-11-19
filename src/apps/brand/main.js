@@ -22,6 +22,7 @@ import "./chrome.css";
 import "../../shared/vendor-gsap";
 import "./seed";
 import "./core";
+import "./shell"; // the dashboard frame, drawn as soon as the core exists
 import "./select";
 import "../../shared/motion";
 import "../../shared/datepicker"; // themed calendar on every date field

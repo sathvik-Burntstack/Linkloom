@@ -193,63 +193,9 @@ import { mountView } from "@/shared/react/view";
     });
   });
 
-  /* ---------- chrome: badges, avatar, KYC banner ---------- */
+  /* ---------- chrome: the frame is React (shell.jsx); this redraws it ---------- */
   function renderChrome() {
-    const s = LLD_DATA;
-    const unread = s.threads.reduce((n, t) => n + t.unread, 0);
-    $$('[data-badge="messages"]').forEach(b => {
-      b.textContent = unread;
-      b.hidden = !unread;
-    });
-    const np = (s.pitches || []).filter(p => !p.read && p.status !== "declined").length;
-    $$('[data-badge="pitches"]').forEach(b => {
-      b.textContent = np;
-      b.hidden = !np;
-    });
-    const nb = s.notifications.filter(n => !n.read).length;
-    $$('[data-badge="bell"]').forEach(b => {
-      b.textContent = nb;
-      b.hidden = !nb;
-    });
-    $$('[data-badge="cart"]').forEach(b => {
-      b.textContent = s.cart.length;
-      b.hidden = !s.cart.length;
-    });
-    $$("[data-me-initials]").forEach(e => {
-      const lg = s.me.logo;
-      e.textContent = lg ? "" : (s.me.brand.trim()[0] || "?").toUpperCase();
-      e.style.background = lg ? `center/cover url("${lg}")` : "";
-    });
-    $$("[data-me-name]").forEach(e => (e.textContent = s.me.brand));
-    $$("[data-me-handle]").forEach(e => (e.textContent = [s.me.name, s.me.city].filter(Boolean).join(" · ")));
-    const ib = $("#inbox");
-    if (ib) ib.setAttribute("aria-label", unread ? `Messages, ${unread} unread` : "Messages");
-    const held = heldInEscrow();
-    const live = s.campaigns.filter(c =>
-      ["funded", "in_progress", "submitted", "revision", "approved"].includes(c.stage),
-    ).length;
-    /* no ₹0 for a new brand: the amount only once something is held */
-    $$("[data-side-label]").forEach(e => (e.textContent = held > 0 ? "Held in escrow" : "Escrow"));
-    $$("[data-side-held]").forEach(e => {
-      e.textContent = held > 0 ? inr(held) : "";
-      e.hidden = !(held > 0);
-    });
-    $$("[data-side-next]").forEach(e => {
-      e.textContent = held > 0 ? "" : "You pay in only when you hire. Released when you approve.";
-      e.hidden = held > 0;
-    });
-    $$("[data-side-live]").forEach(e => {
-      e.innerHTML = icon("lock") + " " + live + (live === 1 ? " deal running" : " deals running");
-      e.hidden = !live;
-    }); /* escrow pills always carry the lock */
-    /* subscription plan, shown quietly; never a price */
-    const p = s.plan;
-    $$("[data-side-plan]").forEach(e => {
-      e.textContent = p
-        ? p.name + (p.status === "active" && p.renews ? " · renews " + fmtDate(p.renews) : "")
-        : "";
-      e.hidden = !p;
-    });
+    window.LLD && window.LLD.renderShell && window.LLD.renderShell();
   }
   /* money the brand has paid in that is still held: escrow rows not yet released or refunded */
   const heldInEscrow = () =>
