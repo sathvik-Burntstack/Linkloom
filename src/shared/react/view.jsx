@@ -6,7 +6,7 @@
 
    The first render is synchronous (flushSync): the router decorates buttons, runs the enter motion and moves focus
    right after rendering, so the screen's DOM has to exist by then. */
-import { createElement } from "react";
+import { createElement, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
 
@@ -33,6 +33,26 @@ export function Lq({ as = "button", className = "", children, ...rest }) {
     createElement("span", { className: "t2", "aria-hidden": "true" }, children),
   );
 }
+
+/**
+ * Redraws a React screen when the app's store changes. `match` (a RegExp or a function of the change name) limits
+ * it to the changes the screen cares about, like the old screens' L.store.on(why => ...) listeners.
+ */
+export function useStore(match) {
+  const [, tick] = useState(0);
+  useEffect(
+    () =>
+      window.LLD.store.on(why => {
+        if (!match || (typeof match === "function" ? match(why) : match.test(String(why)))) tick(n => n + 1);
+      }),
+    [], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  return window.LLD.store.s;
+}
+
+/** An HTML string from the apps' older helpers (chips, avatars), shown as-is until those helpers move to React. */
+export const Html = ({ as = "span", html, ...rest }) =>
+  createElement(as, { ...rest, dangerouslySetInnerHTML: { __html: html } });
 
 /* SVG attribute names React wants in camelCase */
 const SVG_ATTR = {
