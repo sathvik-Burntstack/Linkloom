@@ -29,6 +29,7 @@ import "./screens/auth";
 import "./screens/profile";
 import "./screens/home";
 import "./screens/creators";
+import "./screens/creators-list";
 import "./screens/creator";
 import "./screens/cart";
 import "./screens/jobs"; // the brand kit (LLD.bk)
