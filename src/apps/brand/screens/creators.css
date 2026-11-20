@@ -347,12 +347,15 @@
 }
 .creators-seg {
   display: flex;
+  flex-wrap: wrap;
   width: 100%;
+  border-radius: 26px;
 }
-.creators-seg button {
-  flex: 1 1 auto;
-  min-width: max-content;
-  padding-inline: 12px;
+.creators-seg > button {
+  flex: 1 0 auto;
+  min-width: 44px;
+  gap: 3px;
+  padding-inline: 4px;
   font-size: 13px;
 }
 .creators-loc {
@@ -698,9 +701,8 @@
   }
 }
 @media (pointer: coarse) {
-  .creators-seg button {
+  .creators-seg > button {
     min-height: 44px;
-    padding-inline: 16px; /* "All" was 41px wide */
   }
   .creators-achip {
     min-height: 44px;
