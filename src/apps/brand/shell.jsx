@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
+import { AccountAvatar } from "../../shared/react/account-menu";
 
 const L = window.LLD;
 let redraw = null,
@@ -148,15 +149,9 @@ function Shell() {
             <button className="ibtn bell" type="button" id="bell" aria-label="Notifications" data-ic="bell">
               <Badge k="bell" n={nb} cls="bell-n" />
             </button>
-            <a
-              className="avatar"
-              href="#profile"
-              aria-label="Brand profile"
-              data-me-initials=""
-              style={avatarStyle}
-            >
+            <AccountAvatar href="#profile" label="Brand profile" style={avatarStyle}>
               {initials}
-            </a>
+            </AccountAvatar>
           </div>
         </header>
         <main className="view light" id="view" tabIndex={-1}></main>

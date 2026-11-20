@@ -11,7 +11,8 @@ import { signOut } from "../../shared/api/auth";
 import { stopLive } from "../../shared/api/realtime";
 import { brandApi, loadBrand, loadBrandGuest } from "./live";
 import { registerBrandKyc } from "./kyc";
-import { mountAvatarMenu, showSkeleton, wireBusyButtons } from "../../shared/ux";
+import { showSkeleton, wireBusyButtons } from "../../shared/ux";
+import { setAccountMenu } from "../../shared/react/account-menu";
 import { promptSignInSheet, showLoadFailed } from "../../shared/react/session-ui";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the brand runtime is still untyped
@@ -29,8 +30,6 @@ function loading(text = "Loading your dashboard") {
 
 /** F5: the avatar opens Profile, Settings, Help and Sign out, so signing out is two clicks from anywhere. */
 function avatarMenu() {
-  const a = document.querySelector(".top .avatar");
-  if (!a) return;
   const L = w.LLD;
   const toSettings = () => {
     L.go("#profile");
@@ -39,20 +38,19 @@ function avatarMenu() {
       80,
     );
   };
-  mountAvatarMenu({
-    avatar: a,
+  setAccountMenu({
     who: () => ({
       name: w.LLD_DATA.me.brand || "",
       sub: w.LLD_DATA.session.email || w.LLD_DATA.me.name || "",
     }),
     items: [
-      { label: "Profile", icon: L.icon("user"), run: () => L.go("#profile") },
-      { label: "Settings", icon: L.icon("filter"), run: toSettings },
-      { label: "Help", icon: L.icon("info"), run: () => L.go("#support") },
+      { label: "Profile", icon: "user", run: () => L.go("#profile") },
+      { label: "Settings", icon: "filter", run: toSettings },
+      { label: "Help", icon: "info", run: () => L.go("#support") },
       { kind: "sep", label: "" },
       {
         label: "Sign out",
-        icon: L.icon("logout"),
+        icon: "logout",
         run: () =>
           L.store.set(s => {
             s.session.signedIn = false;

@@ -13,7 +13,8 @@ import { LLD, setRouteGuard, store } from "./core";
 import { setGuestRoutes } from "./core/router";
 import { creatorApi, loadCreator, loadGuest } from "./live/creator";
 import { wireCreatorOffers } from "./live/creator-offers";
-import { mountAvatarMenu, showSkeleton, wireBusyButtons } from "../../shared/ux";
+import { showSkeleton, wireBusyButtons } from "../../shared/ux";
+import { setAccountMenu } from "../../shared/react/account-menu";
 import { promptSignInSheet, showLoadFailed } from "../../shared/react/session-ui";
 
 const OPEN_DURING_SETUP = new Set(["setup", "login"]);
@@ -28,8 +29,6 @@ function loading(on, text = "Loading your dashboard") {
 
 /** F5: the avatar opens Profile, Settings, Help and Sign out, so signing out is two clicks from anywhere. */
 function avatarMenu() {
-  const a = document.querySelector(".top .avatar");
-  if (!a) return;
   const toSettings = () => {
     LLD.go("#profile");
     setTimeout(
@@ -37,17 +36,16 @@ function avatarMenu() {
       80,
     );
   };
-  mountAvatarMenu({
-    avatar: a,
+  setAccountMenu({
     who: () => ({ name: store.s.me.name, sub: store.s.session.email || store.s.me.handle || "" }),
     items: [
-      { label: "Profile", icon: LLD.icon("user"), run: () => LLD.go("#profile") },
-      { label: "Settings", icon: LLD.icon("filter"), run: toSettings },
-      { label: "Help", icon: LLD.icon("info"), run: () => LLD.go("#support") },
+      { label: "Profile", icon: "user", run: () => LLD.go("#profile") },
+      { label: "Settings", icon: "filter", run: toSettings },
+      { label: "Help", icon: "info", run: () => LLD.go("#support") },
       { kind: "sep", label: "" },
       {
         label: "Sign out",
-        icon: LLD.icon("logout"),
+        icon: "logout",
         run: () =>
           store.set(s => {
             s.session.signedIn = false;
