@@ -3,13 +3,13 @@
    Also owns the notifications sheet opened by the #bell button in the top bar. Owner: Builder B.
    React screen (see src/shared/react/view.jsx). The brief grid is an island: React owns its box and the jobs kit's
    card markup and swipe/save/hide wiring run inside it, as on #jobs, until the brief card moves to React. */
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { BEST_FIT_MIN, briefCard } from "../../ui/brief-card";
+import { BEST_FIT_MIN, BriefCard, StatusPill } from "../../ui/brief-card";
 import { KYC_AFTER_ACCEPT, kycOwed, kycWaitText, openKyc } from "../../core/kyc-gate";
 import { storedUser } from "@/shared/api/client";
 import { firstTime } from "@/shared/ux";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
 
 const L = window.LLD,
   esc = L.esc;
@@ -303,82 +303,118 @@ function bestMoment(s) {
   return (cheerNow = c);
 }
 
-/* ---------- "Briefs for you": the jobs kit's cards and wiring, in a box React leaves to it ---------- */
+/* ---------- "Briefs for you": the brief cards, wired by the jobs kit (save, hide, swipe, keys) ----------
+   Each paint draws fresh cards (keyed by the paint count) and keeps them until the next one, since the wiring,
+   swipe and save stitch change the card nodes directly. */
 function BriefGrid({ lead }) {
+  const K = L.jobkit;
   const box = useRef(null);
-  const note = useRef(null);
+  const [paintN, setPaintN] = useState(0);
+  const [note, setNote] = useState(null);
+  const wired = useRef(null);
+  const paint = () => flushSync(() => setPaintN(n => n + 1));
+  const cards = useMemo(() => {
+    const all = K.openJobs()
+      .filter(j => !K.isHidden(j.id) && !K.openBid(j.id))
+      .sort((a, b) => b.match - a.match);
+    // the big card is only for a real best fit (C5); otherwise four equal cards
+    const feat = all.length && all[0].match >= BEST_FIT_MIN ? all[0] : null;
+    const rest = all.slice(feat ? 1 : 0, feat ? 3 : 4);
+    const anyOpen = K.openJobs().length > 0;
+    if (!feat && !rest.length)
+      return (
+        <div className="empty home-empty" key={paintN}>
+          <img src="assets/step-04-orbit.svg" width="160" height="117" alt="" />
+          <p className="t-h2">No new matches right now.</p>
+          <p className="muted">
+            {anyOpen
+              ? "You have bid on or hidden every brief that fits. New ones arrive most days."
+              : "New briefs arrive most days. The ones that fit you will show up here."}
+          </p>
+          {anyOpen ? (
+            <Lq as="a" className={lead ? "lq-p" : "lq-s"} href="#jobs">
+              See all briefs
+            </Lq>
+          ) : null}
+        </div>
+      );
+    return (
+      <Fragment key={paintN}>
+        {feat ? (
+          <div className="home-feat">
+            <BriefCard j={feat} variant="feature" ctx="home" primary={lead} />
+          </div>
+        ) : null}
+        <div className="home-more">
+          {rest.map((j, i) => (
+            <BriefCard key={j.id} j={j} ctx="home" primary={lead && !feat && i === 0} />
+          ))}
+        </div>
+      </Fragment>
+    );
+  }, [paintN]); // eslint-disable-line react-hooks/exhaustive-deps
+  function hidden(id) {
+    const j = K.job(id);
+    K.flip(
+      () => paint(),
+      () => L.$$(".jobs-card", box.current),
+    );
+    setNote({ id, title: j.title });
+  }
+  useLayoutEffect(() => {
+    const grid = box.current;
+    if (wired.current) {
+      wired.current.cleanup();
+      grid.classList.add("is-settled"); // match rings fill once per visit, not on every repaint
+    }
+    wired.current = K.wire(grid, { onHide: id => hidden(id) });
+  }, [paintN]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const K = L.jobkit,
-      grid = box.current,
-      el = grid.closest(".home") || grid;
-    let wired = null;
-    const picks = () =>
-      K.openJobs()
-        .filter(j => !K.isHidden(j.id) && !K.openBid(j.id))
-        .sort((a, b) => b.match - a.match);
-    function paint() {
-      const all = picks();
-      // the big card is only for a real best fit (C5); otherwise four equal cards
-      const feat = all.length && all[0].match >= BEST_FIT_MIN ? all[0] : null;
-      const rest = all.slice(feat ? 1 : 0, feat ? 3 : 4);
-      if (wired) {
-        wired.cleanup();
-        grid.classList.add("is-settled");
-      } // match rings fill once per visit, not on every repaint
-      const anyOpen = K.openJobs().length > 0;
-      grid.innerHTML =
-        feat || rest.length
-          ? `${feat ? `<div class="home-feat">${briefCard(feat, { variant: "feature", ctx: "home", primary: lead })}</div>` : ""}
-          <div class="home-more">${rest.map((j, i) => briefCard(j, { ctx: "home", primary: lead && !feat && i === 0 })).join("")}</div>`
-          : `<div class="empty home-empty"><img src="assets/step-04-orbit.svg" width="160" height="117" alt=""><p class="t-h2">No new matches right now.</p><p class="muted">${anyOpen ? "You have bid on or hidden every brief that fits. New ones arrive most days." : "New briefs arrive most days. The ones that fit you will show up here."}</p>${anyOpen ? `<a class="lq ${lead ? "lq-p" : "lq-s"}" href="#jobs">See all briefs</a>` : ""}</div>`;
-      L.liquid(grid);
-      wired = K.wire(grid, { onHide: id => hidden(id) });
-    }
-    function hidden(id) {
-      const j = K.job(id);
-      K.flip(
-        () => paint(),
-        () => L.$$(".jobs-card", grid),
-      );
-      note.current.innerHTML = `Hidden “${esc(j.title)}”. <button class="btn-q" type="button" data-unhide="${esc(id)}">Undo</button>`;
-    }
-    const onUnhide = e => {
-      const t = e.target.closest("[data-unhide]");
-      if (!t) return;
-      K.setHidden(t.dataset.unhide, false);
-      K.flip(
-        () => paint(),
-        () => L.$$(".jobs-card", grid),
-      );
-      note.current.textContent = "Back in your matches.";
-    };
-    const onKey = e => {
-      const c = e.target.closest(".jobs-card");
-      if (!c || e.altKey || e.ctrlKey || e.metaKey || e.target.matches("input,textarea")) return;
-      if (e.key === "s" || e.key === "S") {
-        e.preventDefault();
-        K.toggleSave(c.dataset.id, grid);
-      }
-      if (e.key === "h" || e.key === "H") {
-        e.preventDefault();
-        K.setHidden(c.dataset.id, true);
-        hidden(c.dataset.id);
-      }
-    };
-    note.current.addEventListener("click", onUnhide);
-    grid.addEventListener("keydown", onKey);
-    paint();
-    K.mo("stagger", L.$$(".jobs-card", grid));
-    return () => {
-      wired && wired.cleanup();
-      note.current && note.current.removeEventListener("click", onUnhide);
-      grid.removeEventListener("keydown", onKey);
-    };
+    K.mo("stagger", L.$$(".jobs-card", box.current));
+    return () => wired.current && wired.current.cleanup();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const onKey = e => {
+    const c = e.target.closest(".jobs-card");
+    if (!c || e.altKey || e.ctrlKey || e.metaKey || e.target.matches("input,textarea")) return;
+    if (e.key === "s" || e.key === "S") {
+      e.preventDefault();
+      K.toggleSave(c.dataset.id, box.current);
+    }
+    if (e.key === "h" || e.key === "H") {
+      e.preventDefault();
+      K.setHidden(c.dataset.id, true);
+      hidden(c.dataset.id);
+    }
+  };
   return (
     <>
-      <div className="home-match-grid" id="homeGrid" ref={box}></div>
-      <p className="home-hidden" aria-live="polite" ref={note}></p>
+      <div className="home-match-grid" id="homeGrid" ref={box} onKeyDown={onKey}>
+        {cards}
+      </div>
+      <p className="home-hidden" aria-live="polite">
+        {note === "back" ? (
+          "Back in your matches."
+        ) : note ? (
+          <>
+            Hidden “{note.title}”.{" "}
+            <button
+              className="btn-q"
+              type="button"
+              data-unhide={note.id}
+              onClick={() => {
+                K.setHidden(note.id, false);
+                K.flip(
+                  () => paint(),
+                  () => L.$$(".jobs-card", box.current),
+                );
+                setNote("back");
+              }}
+            >
+              Undo
+            </button>
+          </>
+        ) : null}
+      </p>
     </>
   );
 }
@@ -537,7 +573,7 @@ function HomeScreen() {
               Shortlisted
             </span>
           ) : (
-            fromHtml(K.pill(b.status, BID_WORD[b.status] || ""))
+            <StatusPill status={b.status} label={BID_WORD[b.status] || ""} />
           )}
         </a>
       </li>

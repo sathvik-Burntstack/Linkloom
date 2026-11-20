@@ -1,10 +1,7 @@
 /* The brief kit (LLD.jobkit) used by Find briefs (jobs-list.jsx), Home, Job detail, Bid and My Bids.
-   Owner: Builder B. The card markup is ui/brief-card.js (shared with Home); classes are .jobs-*. */
-import { briefCard } from "../../ui/brief-card";
-
+   Owner: Builder B. The card is ui/brief-card.jsx (shared with Home); classes are .jobs-*. */
 (() => {
-  const L = window.LLD,
-    esc = L.esc;
+  const L = window.LLD;
   const S = () => window.LLD_DATA;
   const UI_DEFAULT = {
     q: "",
@@ -75,7 +72,6 @@ import { briefCard } from "../../ui/brief-card";
   const isSaved = id => S().saved.includes(id);
   const isHidden = id => S().hiddenJobs.includes(id);
   const platName = p => (p === "youtube" ? "YouTube" : "Instagram");
-  const glyph = p => L.icon(p === "youtube" ? "yt" : "ig");
   const where = j => (j.remote ? "Any city · remote" : j.city);
   const todayISO = () => L.today().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
   const daysTxt = n => (n < 0 ? "passed" : n === 0 ? "today" : n === 1 ? "1 day left" : n + " days left");
@@ -86,7 +82,6 @@ import { briefCard } from "../../ui/brief-card";
       (new Date(String(iso).slice(0, 10) + "T12:00:00+05:30") - new Date(todayISO() + "T12:00:00+05:30")) /
         864e5,
     );
-  const brandInitials = j => j.bi || L.initials(j.brand || "");
 
   const STATUS = {
     submitted: { label: "Submitted", pill: "pill-line", ic: "send" },
@@ -95,11 +90,6 @@ import { briefCard } from "../../ui/brief-card";
     rejected: { label: "Rejected", pill: "pill-err", ic: "alert" },
     withdrawn: { label: "Withdrawn", pill: "pill-paper", ic: "back" },
     completed: { label: "Completed", pill: "pill-butter", ic: "check" },
-  };
-  /* status pill with its icon; error pills always carry the alert icon */
-  const pill = (status, label) => {
-    const m = STATUS[status] || STATUS.submitted;
-    return `<span class="pill ${m.pill}">${L.icon(m.ic)}${esc(label || m.label)}</span>`;
   };
   const openJobs = () => S().jobs.filter(j => j.status !== "hired"); // hired jobs live in Active jobs, not in discovery
 
@@ -170,15 +160,7 @@ import { briefCard } from "../../ui/brief-card";
     ].filter(Boolean);
   }
 
-  /* match % chip with a 12px ring that fills to the score once (CSS, see .jobs-ring) */
-  const pct = m =>
-    `<span class="jobs-pct" style="--m:${Number(m) || 0}"><svg class="jobs-ring" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" pathLength="100"/><circle class="jobs-ring-v" cx="8" cy="8" r="6" pathLength="100" style="stroke-dashoffset:${100 - (Number(m) || 0)}"/></svg><b>${Number(m) || 0}%</b> match</span>`;
-
-  /* ---------- the brief card: one component for Home and #jobs, see ui/brief-card.ts ---------- */
-  function brandChip(j) {
-    return `<span class="jobs-brand"><span class="jobs-bi" aria-hidden="true">${esc(brandInitials(j))}</span><span class="jobs-bn">${esc(j.brand)}</span></span>`;
-  }
-  const card = (j, o = {}) => briefCard(j, o);
+  /* the brief card, match chip, status pill, brand chip and glyph are React components in ui/brief-card.jsx */
 
   /* ---------- save / hide ---------- */
   function setSaved(id, on) {
@@ -308,8 +290,6 @@ import { briefCard } from "../../ui/brief-card";
     ensure,
     job,
     openJobs,
-    pill,
-    pct,
     stitch,
     settle,
     bidsFor,
@@ -317,7 +297,6 @@ import { briefCard } from "../../ui/brief-card";
     isSaved,
     isHidden,
     platName,
-    glyph,
     where,
     todayISO,
     daysTxt,
@@ -326,8 +305,6 @@ import { briefCard } from "../../ui/brief-card";
     STATUS,
     factors,
     minFollowers,
-    brandChip,
-    card,
     wire,
     toggleSave,
     setHidden,

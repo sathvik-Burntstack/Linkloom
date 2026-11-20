@@ -1,9 +1,10 @@
 /* Find briefs (#jobs). Owner: Builder B. React screen (see src/shared/react/view.jsx).
    The filters, count and notes are React; the brief cards are the shared HTML card (ui/brief-card.js, also on Home),
    kept as an island that is wired once (save, hide, swipe) and then shown, hidden and re-ordered in place. */
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Icon, Lq } from "@/shared/react/view";
+import { BriefCard } from "../../ui/brief-card";
 
 const L = window.LLD;
 const BUDGETS = [0, 500000, 1000000, 2000000, 4000000];
@@ -69,6 +70,10 @@ function JobsScreen() {
   const ids = vis.map(j => j.id);
   const n = activeCount(ui);
 
+  /* every open brief's card, drawn once: filters only show, hide and reorder them, and the wiring, swipe and save
+     stitch change them directly */
+  const cardEls = useMemo(() => pool.map(j => <BriefCard key={j.id} j={j} ctx="list" />), []); // eslint-disable-line react-hooks/exhaustive-deps
+
   /* show, hide and order the card nodes to match the filters */
   const placeCards = () => {
     const { list: v } = filtered(ui),
@@ -99,8 +104,6 @@ function JobsScreen() {
 
   useLayoutEffect(() => {
     const list = listEl.current;
-    list.innerHTML = pool.map(j => K.card(j, { ctx: "list" })).join("");
-    L.liquid(list);
     cards.current = new Map(L.$$(".jobs-card", list).map(c => [c.dataset.id, c]));
     const wired = K.wire(list, {
       onHide: id => apply(true, { undo: id }),
@@ -354,7 +357,9 @@ function JobsScreen() {
                 hide(c.dataset.id);
               }
             }}
-          />
+          >
+            {cardEls}
+          </div>
           <div className="empty jobs-empty" hidden={ids.length > 0}>
             <img src="assets/step-01-envelope.svg" width="160" height="117" alt="" />
             <p className="t-h2">No briefs match that.</p>

@@ -4,11 +4,12 @@
    TODO(backend): accept bids from unverified creators; block payout until the ID check is approved.
    React screen (see src/shared/react/view.jsx). The price and views boxes stay uncontrolled: they regroup the digits
    as you type (Indian grouping) and keep the caret where it was, counted from the right. */
+import { BrandChip, Glyph, StatusPill } from "../../ui/brief-card";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { BID_BEFORE_KYC } from "../../flags";
 import { openKyc } from "../../core/kyc-gate";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
 
 const L = window.LLD;
 const SS_KEY = "ll.bidDrafts";
@@ -180,7 +181,7 @@ function Review({ j, d, price, pd, views, why, maxDate, save, close }) {
     <div className="bid-rv" ref={box}>
       <div className="bid-rv-slip">
         <div className="job-src">
-          {fromHtml(K.brandChip(j))}
+          <BrandChip j={j} />
           <span className="t-small muted">{j.title}</span>
         </div>
         <p className="bid-rv-lab">Your price</p>
@@ -525,9 +526,9 @@ function BidForm({ j }) {
       </a>
       <header className="bid-h">
         <div className="job-src">
-          {fromHtml(K.brandChip(j))}
+          <BrandChip j={j} />
           <span className="jobs-plat">
-            {fromHtml(K.glyph(j.platform))}
+            <Glyph p={j.platform} />
             <span>
               {K.platName(j.platform)} {j.format}
             </span>
@@ -978,7 +979,7 @@ function BidScreen({ param: id }) {
           <img src="assets/step-02-plane.svg" width="72" height="72" alt="" className="bid-plane" />
           <p className="t-h2">You already bid on this brief.</p>
           <p className="row wrap bid-already">
-            {fromHtml(K.pill(existing.status))}
+            <StatusPill status={existing.status} />
             <span className="num">{L.inr(existing.price)}</span>
             <span className="muted">sent {L.fmtDate(existing.sent)}</span>
           </p>

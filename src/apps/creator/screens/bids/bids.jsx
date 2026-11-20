@@ -5,11 +5,12 @@
    completed (feedback). Owner: Builder B. Open direct offers show under the header (live/creator-offers.jsx).
    React screen (see src/shared/react/view.jsx).
    TODO(backend): record brand view/shortlist/decline on bids and send a notification the same day. */
+import { Glyph, StatusPill } from "../../ui/brief-card";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { KYC_AFTER_ACCEPT, kycOwed, openKyc } from "../../core/kyc-gate";
 import { DirectOffers } from "../../live/creator-offers";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
 
 const L = window.LLD;
 /* the exact statuses the Filter menu offers; "shortlisted" is a viewed bid the brand shortlisted */
@@ -454,23 +455,23 @@ function BidsScreen() {
                 Shortlisted
               </span>
             ) : (
-              fromHtml(
-                K.pill(
-                  b.status,
+              <StatusPill
+                status={b.status}
+                label={
                   b.status === "withdrawn"
                     ? by === "you"
                       ? "Withdrawn by you"
                       : "Cancelled"
-                    : LABEL[b.status] || "",
-                ),
-              )
+                    : LABEL[b.status] || ""
+                }
+              />
             )}
           </div>
           <h3 className="bids-t" id={`bt-${b.id}`}>
             {m.title}
           </h3>
           <p className="bids-sub">
-            {fromHtml(K.glyph(m.platform))}
+            <Glyph p={m.platform} />
             <span>
               {K.platName(m.platform)} {m.format}
               {b.postDate ? ` · post date ${L.fmtDate(b.postDate)}` : ""}

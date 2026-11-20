@@ -1,7 +1,7 @@
 /* Brief detail (#job-<id>): the brief in three blocks (What, Who, Match), save/share/report, sticky Bid through LLD.kycGate.
    Owner: Builder B. Uses LLD.jobkit from jobs.js. React screen (see src/shared/react/view.jsx). */
 import { Fragment, useEffect, useRef, useState } from "react";
-import { fitChip } from "../../ui/brief-card";
+import { BrandChip, FitChip, Glyph, StatusPill } from "../../ui/brief-card";
 import { skeletonHtml } from "@/shared/ux";
 import { reportAbuse, supportError } from "@/shared/support/api";
 import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
@@ -248,7 +248,9 @@ function JobScreen({ param: id }) {
           <h2 className="job-blk-h" id="jobFitH">
             Why it is a match
           </h2>
-          <span className="job-fit-pct">{fromHtml(fitChip(j.match))}</span>
+          <span className="job-fit-pct">
+            <FitChip match={j.match} />
+          </span>
         </div>
         <ul className="job-fit">
           {fac.map((f, i) => (
@@ -301,17 +303,17 @@ function JobScreen({ param: id }) {
                     href={`#brand-${j.brandId}`}
                     title={`View ${j.brand}'s profile`}
                   >
-                    {fromHtml(K.brandChip(j))}
+                    <BrandChip j={j} />
                   </a>
                   <Lq as="a" className="lq-s lq-sm job-brandbtn" href={`#brand-${j.brandId}`}>
                     View brand
                   </Lq>
                 </>
               ) : (
-                fromHtml(K.brandChip(j))
+                <BrandChip j={j} />
               )}
               <span className="jobs-plat">
-                {fromHtml(K.glyph(j.platform))}
+                <Glyph p={j.platform} />
                 <span>
                   {K.platName(j.platform)} {j.format}
                   {j.category ? ` · ${j.category}` : ""}
@@ -397,7 +399,7 @@ function JobScreen({ param: id }) {
             {bid ? (
               <div className="job-mine">
                 <p className="row wrap">
-                  {fromHtml(K.pill(bid.status))}
+                  <StatusPill status={bid.status} />
                   <span className="t-small">
                     You bid <b className="num">{L.inr(bid.price)}</b> on {L.fmtDate(bid.sent)}
                   </span>
