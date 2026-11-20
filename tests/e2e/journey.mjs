@@ -142,7 +142,9 @@ await test("shared sign-in: validates, then opens the chosen dashboard, which su
     await p.waitForURL(new RegExp(page + "#home$"), { timeout: 10000 });
     await expectHash(p, "#home");
     if (!(await dashboardShown(p))) throw new Error(role + " dashboard not shown");
-    if (!(await p.locator(".nav-site").count())) throw new Error("no link back to the site");
+    if (await p.locator(".side").getByRole("link", { name: /linkloom\.in/i }).count()) {
+      throw new Error(role + " sidebar still links to linkloom.in");
+    }
     await p.reload();
     await expectHash(p, "#home");
     if (!(await dashboardShown(p))) throw new Error(role + " dashboard closed on reload");

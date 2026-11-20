@@ -9,7 +9,6 @@
 import { clearAuth, isSignedIn, setSessionLostHandler } from "../../shared/api/client";
 import { signOut } from "../../shared/api/auth";
 import { stopLive } from "../../shared/api/realtime";
-import { addSiteLink } from "../signin/handoff";
 import { brandApi, loadBrand, loadBrandGuest } from "./live";
 import { registerBrandKyc } from "./kyc";
 import { mountAvatarMenu, showSkeleton, wireBusyButtons } from "../../shared/ux";
@@ -85,7 +84,7 @@ function guardClicks() {
       const s = w.LLD_DATA.session;
       if (!s.guest || s.signedIn) return;
       const t = e.target;
-      if (t.closest(".sheet, [role=dialog], .nav-site, [data-guest-ok]")) return;
+      if (t.closest(".sheet, [role=dialog], [data-guest-ok]")) return;
       const nav = t.closest("a[href^='#']");
       if (nav) {
         const h = (nav.getAttribute("href") || "").replace(/^#/, "");
@@ -167,7 +166,6 @@ export function initBrandSession() {
   wireBusyButtons();
   avatarMenu();
   guardClicks();
-  addSiteLink();
 
   w.LLD.setRouteGuard(name => {
     const s = w.LLD_DATA.session;

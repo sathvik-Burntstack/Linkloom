@@ -1028,12 +1028,6 @@ img {
   line-height: 20px;
   color: var(--ll-mist);
 }
-/* tall screens (1080/1440 high): the note stays with the linkloom.in link at the foot of the box,
-   instead of floating halfway down an empty column */
-.nav-box > .nav-note:not(:last-child) {
-  margin-top: auto;
-  margin-bottom: -16px;
-}
 .side .slipbox {
   display: flex;
   flex-direction: column;

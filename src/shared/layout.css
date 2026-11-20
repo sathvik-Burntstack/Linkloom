@@ -439,6 +439,7 @@
 /* sidebar menu: still scrolls on short screens, but without a visible scrollbar (brand and creator) */
 .nav-box { scrollbar-width: none; -ms-overflow-style: none; }
 .nav-box::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.nav-box > .nav-note { margin-top: auto; }
 /* short windows: a tighter menu so every item (Help & support is last) fits without scrolling */
 @media (max-height: 860px) {
   .side .nav-box { padding-block: 18px; gap: 14px; }
@@ -447,7 +448,7 @@
 }
 @media (max-height: 720px) {
   .side .nav a { min-height: 30px; font-size: 16px; line-height: 22px; }
-  .side .nav-box > .nav-note, .side .nav-box > .nav-site { display: none; }
+  .side .nav-box > .nav-note { display: none; }
   .side .slipbox { padding-block: 14px; }
 }
 

@@ -13,7 +13,6 @@ import { createPortal, flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "../../shared/vendor-gsap";
-import {} from "./handoff";
 import { attachGoogle, preloadGoogle } from "../../shared/api/google";
 import {
   authMessage,

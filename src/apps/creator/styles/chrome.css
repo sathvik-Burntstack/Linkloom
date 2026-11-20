@@ -18,20 +18,6 @@
   font-weight: 700;
 }
 
-/* The way back to the marketing site, under the sidebar's nav. */
-.nav-site {
-  display: inline-flex;
-  margin-top: 8px;
-  font-size: 13px;
-  line-height: 18px;
-  color: var(--ll-mist);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.nav-site:hover {
-  color: var(--ll-white);
-}
-
 /* ---------- picker sheet (picker.ts): search, grouped chips, Done ---------- */
 .pick {
   display: flex;

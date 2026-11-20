@@ -13,7 +13,6 @@ import { LLD, setRouteGuard, store } from "./core";
 import { setGuestRoutes } from "./core/router";
 import { creatorApi, loadCreator, loadGuest } from "./live/creator";
 import { wireCreatorOffers } from "./live/creator-offers";
-import { addSiteLink } from "../signin/handoff";
 import { mountAvatarMenu, showSkeleton, wireBusyButtons } from "../../shared/ux";
 import { promptSignInSheet, showLoadFailed } from "../../shared/react/session-ui";
 
@@ -74,7 +73,7 @@ function guardClicks() {
     e => {
       if (!store.s.session.guest || store.s.session.signedIn) return;
       const t = e.target;
-      if (t.closest(".sheet, [role=dialog], .nav-site, [data-guest-ok]")) return;
+      if (t.closest(".sheet, [role=dialog], [data-guest-ok]")) return;
       const nav = t.closest("a[data-nav], a[href^='#']");
       if (nav) {
         const name = (nav.getAttribute("href") || "").replace(/^#/, "").split("-")[0];
@@ -193,7 +192,6 @@ export function initSession() {
   avatarMenu();
   wireCreatorOffers();
   guardClicks();
-  addSiteLink();
 
   setRouteGuard(name => {
     const { signedIn, firstLogin } = store.s.session;

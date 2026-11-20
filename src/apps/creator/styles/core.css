@@ -971,14 +971,6 @@ img {
   min-height: 0;
   overflow: auto;
 }
-/* the platforms line and the way back to the site sit together at the foot of the box; with space-between the line
-   floated in the middle of a tall (1080/1440) sidebar */
-.nav-box > .nav-note {
-  margin-top: auto;
-}
-.nav-box > .nav-note + .nav-site {
-  margin-top: -12px;
-}
 .nav {
   display: flex;
   flex-direction: column;
