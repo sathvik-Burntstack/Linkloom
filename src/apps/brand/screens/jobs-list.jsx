@@ -2,7 +2,8 @@
    filters, close and delete. Uses the brand kit (LLD.bk) from jobs.js. React screen (see src/shared/react/view.jsx). */
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { fromHtml, Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq } from "@/shared/react/view";
+import { Glyph, StatusPill } from "./kit";
 
 const L = window.LLD;
 const S = () => window.LLD_DATA;
@@ -140,11 +141,16 @@ function Slip({ j, onClose, onDel }) {
       </>
     );
   const st =
-    j.status === "open" && j.review
-      ? k_.pill(k_.JST, j.review === "rejected" ? "rejected" : "review")
-      : j.status === "open" && nNew
-        ? `${k_.pill(k_.JST, "open")}<span class="pill pill-butter jl-new">${nNew} new</span>`
-        : k_.pill(k_.JST, j.status);
+    j.status === "open" && j.review ? (
+      <StatusPill map={k_.JST} k={j.review === "rejected" ? "rejected" : "review"} />
+    ) : j.status === "open" && nNew ? (
+      <>
+        <StatusPill map={k_.JST} k="open" />
+        <span className="pill pill-butter jl-new">{nNew} new</span>
+      </>
+    ) : (
+      <StatusPill map={k_.JST} k={j.status} />
+    );
   return (
     <article className={`jl-slip is-${j.status}`} data-id={j.id} aria-labelledby={`jt-${j.id}`}>
       <div className="jl-stub">
@@ -155,10 +161,10 @@ function Slip({ j, onClose, onDel }) {
       <div className="jl-body">
         <div className="jl-top">
           <span className="bk-plat">
-            {fromHtml(k_.glyph(j.platform))}
+            <Glyph p={j.platform} />
             <span>{k_.platLine(j)}</span>
           </span>
-          <span className="row jl-pills">{fromHtml(st)}</span>
+          <span className="row jl-pills">{st}</span>
         </div>
         <h3 className="jl-t" id={`jt-${j.id}`}>
           <a href={`#${draft ? "post" : "job"}-${j.id}`}>{j.title}</a>

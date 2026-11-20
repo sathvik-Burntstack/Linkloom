@@ -9,11 +9,10 @@
    validator (violet #8981ee / coral #eb6273 on white: all checks pass). Every chart has a text summary and a table view.
    React screen (see src/shared/react/view.jsx); each chart is a small component that draws its SVG at the box width. */
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { fromHtml, Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq } from "@/shared/react/view";
 
 const L = window.LLD,
   esc = L.esc,
-  ic = L.icon,
   M = () => L.motion;
 const TODAY = L.today().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 /* the calendar quarter today falls in: first day, last day, and its three months */
@@ -334,8 +333,15 @@ function tips(fig) {
   fig.addEventListener("focusout", hide);
 }
 
-const stars = r =>
-  `<span class="rp-stars" aria-hidden="true">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= Math.round(r) ? "on" : ""}">${ic("star")}</i>`).join("")}</span>`;
+const Stars = ({ r }) => (
+  <span className="rp-stars" aria-hidden="true">
+    {[1, 2, 3, 4, 5].map(i => (
+      <i key={i} className={i <= Math.round(r) ? "on" : ""}>
+        <Icon n="star" />
+      </i>
+    ))}
+  </span>
+);
 const plat = p => (p === "youtube" ? "YouTube" : "Instagram");
 
 /* B11: with no hired or live deal (and no payment) there is nothing to report yet, so one next step instead of charts of zeros */
@@ -882,7 +888,7 @@ function ReportsScreen() {
                       {r.rating != null ? (
                         <>
                           <span className="rp-rate">
-                            {fromHtml(stars(r.rating))}
+                            <Stars r={r.rating} />
                             <b className="num">{r.rating.toFixed(1)}</b>
                             <span className="sr-only">
                               {" "}

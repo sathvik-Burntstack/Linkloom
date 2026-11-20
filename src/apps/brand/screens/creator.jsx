@@ -4,7 +4,8 @@
    Uses the creator kit (LLD.ck) from creators.js. Classes are .creator-*; styles in creator.css.
    React screen (see src/shared/react/view.jsx). */
 import { useEffect, useRef, useState } from "react";
-import { fromHtml, Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq } from "@/shared/react/view";
+import { AvailPill, CkGlyph } from "./kit";
 
 const L = window.LLD,
   S = () => window.LLD_DATA;
@@ -173,7 +174,7 @@ function CreatorScreen({ param: id }) {
                 return url ? (
                   <li key={i}>
                     <a className="creator-ext" href={url} target="_blank" rel="noopener">
-                      {fromHtml(K.glyph(p.p))}
+                      <CkGlyph p={p.p} />
                       <span>View on {P[p.p].name}</span>
                       <span className="sr-only">, opens in a new tab</span>
                     </a>
@@ -181,7 +182,7 @@ function CreatorScreen({ param: id }) {
                   </li>
                 ) : (
                   <li key={i}>
-                    {fromHtml(K.glyph(p.p))}
+                    <CkGlyph p={p.p} />
                     <span>{p.handle || P[p.p].name}</span>
                     {p.handle ? <span className="sr-only"> on {P[p.p].name}</span> : null}
                   </li>
@@ -201,7 +202,7 @@ function CreatorScreen({ param: id }) {
             </p>
           </div>
           <div className="creator-act">
-            {fromHtml(K.availPill(c))}
+            <AvailPill c={c} />
             <div className="creator-btns">
               <Lq
                 className="lq-s creator-fav"
@@ -284,10 +285,12 @@ function CreatorScreen({ param: id }) {
                         rel="noopener"
                         aria-label={`View on ${P[p.p].name}, opens in a new tab`}
                       >
-                        {fromHtml(K.glyph(p.p))}
+                        <CkGlyph p={p.p} />
                       </a>
                     ) : (
-                      <span className="creator-plat-ic">{fromHtml(K.glyph(p.p))}</span>
+                      <span className="creator-plat-ic">
+                        <CkGlyph p={p.p} />
+                      </span>
                     )}
                     <div className="creator-plat-id">
                       <p className="t-h3">{P[p.p].name}</p>
@@ -426,7 +429,9 @@ function CreatorScreen({ param: id }) {
               <h2 className="t-h3" id="creator-avail">
                 Availability
               </h2>
-              <p className="creator-avail">{fromHtml(K.availPill(c))}</p>
+              <p className="creator-avail">
+                <AvailPill c={c} />
+              </p>
               <p className="muted">
                 {K.availDays(c) <= 0
                   ? `Open to new briefs now. Give at least 3 days for a first draft.`

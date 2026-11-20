@@ -15,6 +15,7 @@ import { creatorApi, loadCreator, loadGuest } from "./live/creator";
 import { wireCreatorOffers } from "./live/creator-offers";
 import { addSiteLink } from "../signin/handoff";
 import { mountAvatarMenu, showSkeleton, wireBusyButtons } from "../../shared/ux";
+import { promptSignInSheet, showLoadFailed } from "../../shared/react/session-ui";
 
 const OPEN_DURING_SETUP = new Set(["setup", "login"]);
 const GUEST_ROUTES = new Set(["home", "jobs", "login"]);
@@ -58,28 +59,13 @@ function avatarMenu() {
 }
 
 function failed(retry) {
-  const v = view();
-  if (!v) return;
-  v.innerHTML = `<div class="empty" role="alert"><p class="t-h2">We couldn't load your dashboard</p><p class="muted">Check your connection and try again.</p><button class="lq lq-p" type="button" data-retry>Try again</button></div>`;
-  v.querySelector("[data-retry]")?.addEventListener("click", retry, { once: true });
+  showLoadFailed(view(), retry);
 }
 
 /* ---------- guest mode: look, don't touch ---------- */
 
 function promptSignIn(why = "Sign in to continue") {
-  LLD.openSheet({
-    title: why,
-    body: `<div class="stack">
-      <p class="muted">Create a free creator account or sign in to bid on briefs, message brands and get paid from escrow.</p>
-      <div class="row wrap">
-        <a class="lq lq-p" href="signin.html?role=creator">Sign in</a>
-        <a class="lq lq-s" href="signin.html?role=creator&join=1">Create a creator account</a>
-      </div>
-    </div>`,
-    onMount(b, close) {
-      b.querySelector("[data-close-sheet]")?.addEventListener("click", () => close());
-    },
-  });
+  promptSignInSheet(why, "creator");
 }
 
 function guardClicks() {

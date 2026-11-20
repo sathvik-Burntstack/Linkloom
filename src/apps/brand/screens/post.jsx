@@ -11,7 +11,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { USAGE_OPTIONS } from "@/shared/live";
-import { fromHtml, Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq } from "@/shared/react/view";
+import { Glyph } from "./kit";
 
 const L = window.LLD,
   esc = L.esc;
@@ -674,7 +675,7 @@ function PostForm({ id, j }) {
                           changed();
                         }}
                       >
-                        {fromHtml(K.glyph(p))}
+                        <Glyph p={p} />
                         {K.plat(p)}
                       </button>
                     ))}
@@ -1105,7 +1106,7 @@ function PostForm({ id, j }) {
           <div className="pj-receipt ink-card">
             <p className="pj-rc-h">How creators see it</p>
             <p className="pj-pv-plat" data-p="plat">
-              {fromHtml(K.glyph(d.platform))}
+              <Glyph p={d.platform} />
               <span>
                 {K.plat(d.platform)} {d.format}
                 {d.category ? ` · ${d.category}` : ""}

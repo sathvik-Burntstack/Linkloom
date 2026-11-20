@@ -13,6 +13,7 @@ import { addSiteLink } from "../signin/handoff";
 import { brandApi, loadBrand, loadBrandGuest } from "./live";
 import { registerBrandKyc } from "./kyc";
 import { mountAvatarMenu, showSkeleton, wireBusyButtons } from "../../shared/ux";
+import { promptSignInSheet, showLoadFailed } from "../../shared/react/session-ui";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the brand runtime is still untyped
 const w = window;
@@ -63,10 +64,7 @@ function avatarMenu() {
 }
 
 function failed(retry) {
-  const v = view();
-  if (!v) return;
-  v.innerHTML = `<div class="empty" role="alert"><p class="t-h2">We couldn't load your dashboard</p><p class="muted">Check your connection and try again.</p><button class="lq lq-p" type="button" data-retry>Try again</button></div>`;
-  v.querySelector("[data-retry]")?.addEventListener("click", retry, { once: true });
+  showLoadFailed(view(), retry);
 }
 
 function hideDemoBits() {
@@ -77,17 +75,7 @@ function hideDemoBits() {
 }
 
 function promptSignIn(why = "Sign in to continue") {
-  w.LLD.openSheet({
-    title: why,
-    body: `<div class="stack">
-      <p class="muted">Create a free brand account or sign in to post briefs, save creators, message them and hire with escrow.</p>
-      <div class="row wrap">
-        <a class="lq lq-p" href="signin.html?role=brand">Sign in</a>
-        <a class="lq lq-s" href="signin.html?role=brand&join=1">Create a brand account</a>
-      </div>
-    </div>`,
-    onMount() {},
-  });
+  promptSignInSheet(why, "brand");
 }
 
 function guardClicks() {

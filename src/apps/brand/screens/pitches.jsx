@@ -3,7 +3,8 @@
    a decline lets that creator pitch again after 15 days (the backend enforces every rule).
    React screen (see src/shared/react/view.jsx). PitchCard is also used on the brief page (screens/job.jsx). */
 import { useEffect, useState } from "react";
-import { Html, Icon, Lq, useStore } from "@/shared/react/view";
+import { Icon, Lq, useStore } from "@/shared/react/view";
+import { CrChip, CrMini } from "./kit";
 
 const L = window.LLD,
   esc = L.esc,
@@ -52,7 +53,7 @@ function decline(p, done) {
     yes: "Decline pitch",
     no: "Keep it",
     danger: true,
-    mini: `<div class="jl-mini">${K().crChip(c)}<p class="t-small muted">${esc(p.job ? "About " + (p.jobTitle || "a brief") : "General pitch")}</p></div>`,
+    mini: <CrMini c={c} line={p.job ? "About " + (p.jobTitle || "a brief") : "General pitch"} />,
     bullets: [
       `${f} is told you passed on it.`,
       `${f} can pitch you again after 15 days.`,
@@ -96,7 +97,9 @@ export function PitchCard({ p, compact, onChange }) {
   return (
     <article className={`card pt-card${p.status === "declined" ? " is-declined" : ""}`} data-pitch={p.id}>
       <div className="pt-top">
-        <Html as="a" className="pt-who" href={`#creator-${c.id}`} html={K().crChip(c)} />
+        <a className="pt-who" href={`#creator-${c.id}`}>
+          <CrChip c={c} />
+        </a>
         <div className="pt-tags">
           {!p.read && p.status !== "declined" ? <span className="pill pill-violet">New</span> : null}
           {p.edited ? <span className="pill">Edited</span> : null}

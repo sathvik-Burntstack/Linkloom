@@ -1,5 +1,5 @@
 /* Shared interaction foundations for both dashboards (implementation brief F3, F4, F5). Styles live in layout.css.
-   - skeletonHtml(): the page-shaped placeholder shown at once while a dashboard or a screen is loading (F4).
+   - showSkeleton(): the page-shaped placeholder shown at once while a dashboard or a screen is loading (F4).
    - wireBusyButtons(): any button whose click starts an API call shows a spinner in place of its label and ignores
      further clicks until the call settles, so nothing can be sent twice (F3).
    - mountAvatarMenu(): the avatar in the top bar opens Profile, Settings, Help and Sign out (F5).
@@ -7,29 +7,8 @@
    shared/ must not import from apps/, so each app passes in what is app-specific. */
 import { onRequest } from "./api/client";
 
-/* ---------- F4: skeleton ---------- */
-
-/** A placeholder shaped like a dashboard page: title, one line, a panel, two cards. */
-export function skeletonHtml(label = "Loading your dashboard", slowNote = true) {
-  return `<div class="view-in ll-skel" role="status" aria-live="polite" aria-busy="true">
-    <span class="sr-only">${label}…</span>
-    <i class="s-h" aria-hidden="true"></i>
-    <i class="s-l" aria-hidden="true"></i>
-    <i class="s-p" aria-hidden="true"></i>
-    <div class="s-row" aria-hidden="true"><i></i><i></i></div>
-    ${slowNote ? '<p class="ll-skel-note" data-slow hidden>The server is waking up. This can take up to a minute the first time.</p>' : ""}
-  </div>`;
-}
-
-/** Puts the skeleton in `el` and reveals the "waking up" note if loading takes more than 4 s. */
-export function showSkeleton(el, label) {
-  if (!el) return;
-  el.innerHTML = skeletonHtml(label);
-  setTimeout(() => {
-    const n = el.querySelector("[data-slow]");
-    if (n) n.hidden = false;
-  }, 4000);
-}
+/* ---------- F4: skeleton (a React component, react/skeleton.jsx) ---------- */
+export { showSkeleton } from "./react/skeleton";
 
 /* ---------- F3: busy buttons ---------- */
 

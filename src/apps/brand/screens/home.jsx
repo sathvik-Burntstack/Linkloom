@@ -6,7 +6,7 @@
    React screen (see src/shared/react/view.jsx); counted numbers are elements left to the motion layer. */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
 import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
 import { REVIEW_TIME } from "../kyc";
 
@@ -27,9 +27,13 @@ const first = n =>
     .trim()
     .split(/\s+/)[0] || "";
 /* small avatars carry one letter (two-letter initials like "AI" read as a label); large ones carry two */
-const avatar = (c, cls = "") => {
+const Av = ({ c, cls = "" }) => {
   const n = c ? c.name : "?";
-  return `<span class="home-av ${c && c.tone === "b" ? "is-b" : ""} ${cls}" aria-hidden="true">${esc(cls.includes("lg") ? L.initials(n) : n.trim()[0].toUpperCase())}</span>`;
+  return (
+    <span className={`home-av ${c && c.tone === "b" ? "is-b" : ""} ${cls}`} aria-hidden="true">
+      {cls.includes("lg") ? L.initials(n) : n.trim()[0].toUpperCase()}
+    </span>
+  );
 };
 const dayTxt = d =>
   d === 0
@@ -343,7 +347,6 @@ function picks(s) {
     .slice(0, 4);
 }
 
-const Av = ({ c, cls }) => fromHtml(avatar(c, cls));
 const lifted = new WeakSet();
 
 function HomeScreen() {

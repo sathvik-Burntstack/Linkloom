@@ -10,7 +10,7 @@
    React screens (see src/shared/react/view.jsx). */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { fromHtml, Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
 import {
   ACC,
   COOL,
@@ -23,7 +23,6 @@ import {
   PW_LOCK,
   PW_TRIES,
   RESET_TTL,
-  RULES,
   SAMPLES,
   SAMPLE_EMAIL,
   SAMPLE_PW,
@@ -45,6 +44,7 @@ import {
   vEmail,
   vMobile,
 } from "./auth-kit";
+import { Fld, focusFirstErr, Match, PwField, Rules, useErrs } from "./auth-ui";
 
 /* ---------- shared parts ---------- */
 const Art = ({ line, foot, children }) => (
@@ -77,123 +77,6 @@ const Note = ({ kind, ic, children, ...attrs }) => (
     <div>{children}</div>
   </div>
 );
-/** errors by field id; a message may carry a link (HTML) */
-function useErrs() {
-  const [errs, setErrs] = useState({});
-  return {
-    errs,
-    at: (id, msg) => setErrs(e => ({ ...e, [id]: msg })),
-    clr: id => setErrs(e => (id in e ? (({ [id]: _, ...x }) => x)(e) : e)),
-  };
-}
-const focusFirstErr = root => {
-  const i = root && root.querySelector(".field.is-err input");
-  i && i.focus();
-};
-function Fld({ id, label, help, E, children }) {
-  const err = E.errs[id];
-  return (
-    <div className={`field${err ? " is-err" : ""}`} data-f={id}>
-      <label htmlFor={`au-${id}`}>{label}</label>
-      {children}
-      {help ? (
-        <p className="help" id={`au-${id}-h`}>
-          {help}
-        </p>
-      ) : null}
-      <p className="err" id={`au-${id}-e`} aria-live="polite">
-        {err ? fromHtml(err) : null}
-      </p>
-    </div>
-  );
-}
-function PwField({ id, label, auto = "new-password", desc = "", E, inputRef, onInput }) {
-  const [shown, setShown] = useState(false);
-  const err = E.errs[id];
-  return (
-    <div className={`field${err ? " is-err" : ""}`} data-f={id}>
-      <label htmlFor={`au-${id}`}>{label}</label>
-      <div className="auth-pw">
-        <input
-          className="input"
-          id={`au-${id}`}
-          type={shown ? "text" : "password"}
-          autoComplete={auto}
-          spellCheck="false"
-          autoCapitalize="off"
-          maxLength={64}
-          aria-describedby={[desc, `au-${id}-e`].filter(Boolean).join(" ")}
-          aria-invalid={err ? "true" : undefined}
-          ref={inputRef}
-          onInput={onInput}
-        />
-        <button
-          type="button"
-          className={`auth-eye${shown ? " is-on" : ""}`}
-          data-eye=""
-          aria-label={shown ? "Hide password" : "Show password"}
-          aria-pressed={String(shown)}
-          onClick={() => setShown(s => !s)}
-        >
-          <Icon n="eye" />
-        </button>
-      </div>
-      <p className="err" id={`au-${id}-e`} aria-live="polite">
-        {err ? fromHtml(err) : null}
-      </p>
-    </div>
-  );
-}
-/** the password rules list, ticking each one off as it's met */
-function Rules({ id, value }) {
-  const box = useRef(null),
-    was = useRef({});
-  useEffect(() => {
-    RULES.forEach(r => {
-      const ok = r[2](value);
-      if (ok && !was.current[r[0]])
-        mo("check", box.current.querySelector(`[data-r="${r[0]}"] .auth-rule-ic`), { color: "ink" });
-      was.current[r[0]] = ok;
-    });
-  }, [value]);
-  return (
-    <ul className="auth-rules" id={id} aria-label="Your password needs" ref={box}>
-      {RULES.map(r => {
-        const ok = r[2](value);
-        return (
-          <li key={r[0]} data-r={r[0]} className={ok ? "is-ok" : undefined}>
-            <span className="auth-rule-ic" aria-hidden="true">
-              <Icon n="check" />
-            </span>
-            <span>{r[1]}</span>
-            <span className="sr-only" data-rs="">
-              {ok ? ", done" : ", not yet"}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-/** "Passwords match" under the confirm box */
-function Match({ p1, p2 }) {
-  if (!p2) return <p className="auth-avail" data-match="" aria-live="polite"></p>;
-  if (p1 === p2)
-    return (
-      <p className="auth-avail is-ok" data-match="" aria-live="polite">
-        <Icon n="check" />
-        Passwords match
-      </p>
-    );
-  if (p2.length >= p1.length)
-    return (
-      <p className="auth-avail is-no" data-match="" aria-live="polite">
-        <Icon n="close" />
-        These don't match yet
-      </p>
-    );
-  return <p className="auth-avail" data-match="" aria-live="polite"></p>;
-}
 /** a resend line with a live cooldown; `st` holds { coolEnd, sends } */
 function Resend({ st, what, onSend, as = "p", className = "auth-resend", ...rest }) {
   const [, tick] = useState(0);
@@ -259,9 +142,17 @@ const FLASH = {
   new: [
     "ok",
     "check",
-    "<b>Account created.</b> Sign in with your new password to set up your brand profile.",
+    <>
+      <b>Account created.</b> Sign in with your new password to set up your brand profile.
+    </>,
   ],
-  reset: ["ok", "check", "<b>Password updated.</b> Sign in with the new one. Other devices were signed out."],
+  reset: [
+    "ok",
+    "check",
+    <>
+      <b>Password updated.</b> Sign in with the new one. Other devices were signed out.
+    </>,
+  ],
 };
 function LoginScreen({ param }) {
   const flash = FLASH[param];
@@ -352,7 +243,13 @@ function LoginScreen({ param }) {
         flushSync(() =>
           E.at(
             "email",
-            `There's no Linkloom account for this email. Check for a typo, or <a class="btn-q" href="#signup">create one</a>.`,
+            <>
+              There's no Linkloom account for this email. Check for a typo, or{" "}
+              <a className="btn-q" href="#signup">
+                create one
+              </a>
+              .
+            </>,
           ),
         );
         email.current.focus();
@@ -441,7 +338,7 @@ function LoginScreen({ param }) {
       </div>
       {flash ? (
         <Note kind={flash[0]} ic={flash[1]} role="status">
-          <p>{fromHtml(flash[2])}</p>
+          <p>{flash[2]}</p>
         </Note>
       ) : null}
       <Note kind="err" ic="alert" data-offline="" role="status" hidden={!offline}>
@@ -730,14 +627,31 @@ function OtpBoxes({ api, onFull }) {
 }
 
 function openDoc(kind) {
-  L.openSheet({
+  openReactSheet({
     title: kind === "terms" ? "Terms, in short" : "Privacy, in short",
-    body: `<div class="auth-doc">${
-      kind === "terms"
-        ? `<ul><li>Brands pay the agreed price into escrow after a creator accepts. Linkloom holds it.</li><li>Money is released to the creator only when you approve the work.</li><li>If a creator rejects after payment or does not deliver, the escrow is refunded to you.</li><li>Linkloom is a subscription. There is no per-deal platform fee. Taxes as per confirmed rules.</li></ul>`
-        : `<ul><li>Your email and mobile are used for sign-in, verification and payment alerts.</li><li>Creators see your brand name, logo, website and industry. Never your mobile or billing details.</li><li>Chat with a creator opens only after you pay into escrow.</li></ul>`
-    }
-      <p class="sample">Sample summary. The full text appears here in the live product.</p></div>`,
+    render: () => (
+      <div className="auth-doc">
+        {kind === "terms" ? (
+          <ul>
+            <li>Brands pay the agreed price into escrow after a creator accepts. Linkloom holds it.</li>
+            <li>Money is released to the creator only when you approve the work.</li>
+            <li>If a creator rejects after payment or does not deliver, the escrow is refunded to you.</li>
+            <li>
+              Linkloom is a subscription. There is no per-deal platform fee. Taxes as per confirmed rules.
+            </li>
+          </ul>
+        ) : (
+          <ul>
+            <li>Your email and mobile are used for sign-in, verification and payment alerts.</li>
+            <li>
+              Creators see your brand name, logo, website and industry. Never your mobile or billing details.
+            </li>
+            <li>Chat with a creator opens only after you pay into escrow.</li>
+          </ul>
+        )}
+        <p className="sample">Sample summary. The full text appears here in the live product.</p>
+      </div>
+    ),
   });
 }
 
@@ -765,7 +679,13 @@ function StepContact({ ctx }) {
     if (emailTaken(v)) {
       E.at(
         "email",
-        `This email already has a Linkloom account. <a class="btn-q" href="#login" data-signin>Sign in instead</a> or use another email.`,
+        <>
+          This email already has a Linkloom account.{" "}
+          <a className="btn-q" href="#login" data-signin="">
+            Sign in instead
+          </a>{" "}
+          or use another email.
+        </>,
       );
       return false;
     }
@@ -784,7 +704,14 @@ function StepContact({ ctx }) {
     if (mobileTaken(d)) {
       E.at(
         "mobile",
-        'This number is linked to another account. One mobile number can hold one account. Use a different number, or <a class="btn-q" href="#login">sign in</a>.',
+        <>
+          This number is linked to another account. One mobile number can hold one account. Use a different
+          number, or{" "}
+          <a className="btn-q" href="#login">
+            sign in
+          </a>
+          .
+        </>,
       );
       return false;
     }

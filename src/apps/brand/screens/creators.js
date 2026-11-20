@@ -1,12 +1,11 @@
-/* The shared creator kit (LLD.ck): numbers, rates, availability, saved creators and the cart, and the creator card
-   (HTML, wired once) used by Find creators and Saved creators (creators-list.jsx), the creator profile and the cart.
+/* The shared creator kit (LLD.ck): numbers, rates, availability, saved creators and the cart, and the wiring of the
+   creator card (kit.jsx) used by Find creators and Saved creators (creators-list.jsx), the creator profile and the cart.
    Owner: Builder B. View state lives in LLD_DATA.ui.creators (and a sessionStorage copy, in try/catch).
    Classes are .creators-*; styles in creators.css. */
 import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./creator-rates";
 
 (() => {
   const L = window.LLD,
-    esc = L.esc,
     S = () => window.LLD_DATA;
   /* motion calls are always guarded: a missing or failing hook never breaks a screen */
   const mo = (fn, ...a) => {
@@ -104,7 +103,6 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
   /* engagement and reach the backend hasn't sent read as a dash, not as 0 */
   const erTxt = v => (v > 0 ? pct(v) : "—");
   const folTxt = n => (n > 0 ? L.compact(n) : "—");
-  const glyph = p => L.icon(PLAT[p] ? PLAT[p].ic : "link");
 
   /* availability: 'open' | 'from 15 Nov' | 'busy until 20 Nov' -> days from today until the creator can start */
   const MON = {
@@ -137,11 +135,6 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
     const a = c.availability || "open";
     return a === "open" ? "Available now" : /until/.test(a) ? cap(a) : "Free " + a;
   };
-  const availPill = c =>
-    availDays(c) <= 0
-      ? `<span class="pill pill-ok creators-av-pill"><span class="dot" aria-hidden="true"></span>${esc(availLabel(c))}</span>`
-      : `<span class="pill pill-line creators-av-pill">${L.icon("cal")}${esc(availLabel(c))}</span>`;
-
   /* Best match: how well a creator fits this brand (industry, city, quality signals) */
   function score(c) {
     const me = S().me;
@@ -185,60 +178,9 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
     }, "cart-remove");
   }
 
-  /* ---------- the creator card ---------- */
-  const avatar = (c, cls = "") =>
-    `<span class="creators-av ${cls}" aria-hidden="true">${esc(L.initials(c.name))}</span>`;
-  const verBadge = c =>
-    c.verified
-      ? `<span class="creators-ver" title="Verified by Linkloom">${L.icon("verified")}<span class="sr-only">, verified</span></span>`
-      : "";
-  const heartBtn = (c, cls = "ibtn creators-fav") => {
-    const on = isFav(c.id);
-    return `<button class="${cls}" type="button" aria-pressed="${on}" aria-label="${on ? "Saved" : "Save"}: ${esc(c.name)}" title="${on ? "Remove from saved creators" : "Save this creator"} (or swipe right)">${L.icon("bookmark")}</button>`;
-  };
+  /* ---------- the creator card (kit.jsx); its cart button label, which the wiring swaps in place ---------- */
   const cartLabel = id =>
     inCart(id) ? `${L.icon("check", "ic")}In cart` : `${L.icon("cart", "ic")}Add to cart`;
-  const ratingTxt = c =>
-    c.rating
-      ? `${L.icon("star")}<span>${c.rating.toFixed(1)}</span><span class="muted">(${c.reviews})</span>`
-      : `<span class="muted">New</span>`;
-  const priceHTML = (c, types) => {
-    if (!hasRates(c.rates)) return `<span class="creators-from">${RATE_ON_REQUEST}</span>`;
-    const r = fromRate(c, types);
-    return r
-      ? `<span class="creators-from">From</span><b class="t-money">${L.inr(r.price)}</b><span class="creators-per">per ${esc(r.fmt)}</span>`
-      : `<span class="creators-from">No rate for that format</span>`;
-  };
-  const niche = c =>
-    (c.categories || []).length ? `<p class="creators-cats">${c.categories.map(esc).join(" · ")}</p>` : "";
-
-  /* order on the card: name and badge, niches, followers, engagement and rating, then the from-price */
-  function card(c, o = {}) {
-    const tid = `cc-${o.ctx || "x"}-${c.id}`,
-      ui = S().ui.creators;
-    return `<article class="creators-card${isFav(c.id) ? " is-fav" : ""}" data-id="${esc(c.id)}" aria-labelledby="${tid}">
-      <div class="creators-top">
-        ${avatar(c)}
-        <div class="creators-id">
-          <h3 class="creators-name" id="${tid}"><a class="creators-card-link" href="#creator-${esc(c.id)}">${esc(c.name)}</a>${verBadge(c)}</h3>
-          <p class="creators-handle">${esc([c.handle, c.city].filter(Boolean).join(" · "))}</p>
-        </div>
-      </div>
-      ${niche(c)}
-      <dl class="creators-meta">
-        ${c.platforms.map(p => `<div><dt title="${PLAT[p.p].name} ${PLAT[p.p].unit.toLowerCase()}">${glyph(p.p)}<span>${p.p === "youtube" ? "Subs" : "Followers"}</span><span class="sr-only"> on ${PLAT[p.p].name}</span></dt><dd>${folTxt(p.followers)}</dd></div>`).join("")}
-        <div><dt><abbr title="Engagement rate">ER</abbr></dt><dd data-erv>${erTxt(erOf(c, o.platform !== undefined ? o.platform : ui.platform))}</dd></div>
-        <div><dt>Rating</dt><dd class="creators-rate">${ratingTxt(c)}</dd></div>
-      </dl>
-      <div class="creators-pricerow"><p class="creators-price" data-price>${priceHTML(c, o.content !== undefined ? o.content : ui.content)}</p>${availPill(c)}</div>
-      <div class="creators-acts">
-        <button class="lq ${inCart(c.id) ? "lq-s is-in" : "lq-p"} lq-sm creators-cart" type="button" data-cart>${cartLabel(c.id)}</button>
-        <span class="creators-acts-grow"></span>
-        ${heartBtn(c)}
-        ${o.hide === false ? "" : `<button class="ibtn creators-hide" type="button" aria-label="Hide: ${esc(c.name)}" title="Hide (or swipe left)">${L.icon("close")}</button>`}
-      </div>
-    </article>`;
-  }
   /* sew the bookmark shut when saved: dashes close into a line, then it fills (CSS .is-stitch) */
   function stitch(btn, on) {
     if (!btn) return;
@@ -391,12 +333,6 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
     RATE_ON_REQUEST,
     availDays,
     availLabel,
-    availPill,
-    avatar,
-    verBadge,
-    heartBtn,
-    glyph,
-    card,
     wire,
     syncCard,
     stitch,
@@ -408,9 +344,8 @@ import { rateList as listRates, lowestRate, hasRates, RATE_ON_REQUEST } from "./
     mo,
     flip,
     score,
-    /* for Find creators (creators-list.jsx): the card's live ER and price lines, and the view-state copy */
+    /* for Find creators (creators-list.jsx) and the card (kit.jsx): the ER line and the view-state copy */
     erTxt,
-    priceHTML,
     persist,
   };
 })();

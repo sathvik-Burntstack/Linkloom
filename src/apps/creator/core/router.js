@@ -4,7 +4,7 @@ import { $, $$, liquid } from "./dom";
 import { motion } from "./motion-api";
 import { closeSheet } from "./overlays";
 import { store } from "./store";
-import { mountView } from "@/shared/react/view";
+import { mountView, outletNote } from "@/shared/react/view";
 
 /** Runs when the route changes away. */
 
@@ -60,7 +60,7 @@ export function route() {
   const v = views[name] || {
     title: "Linkloom",
     render: el => {
-      el.innerHTML = '<div class="empty"><p class="t-h2">This screen is being built.</p></div>';
+      outletNote(el, "This screen is being built.");
     },
   };
   const guestOk = !!store.s.session.guest && guestRoutes.has(name) && !param;
@@ -109,7 +109,7 @@ export function route() {
     cleanup = (v.Component ? mountView(el, v.Component, { param }) : v.render(el, param)) || null;
   } catch (e) {
     console.error(e);
-    el.innerHTML = `<div class="empty"><p class="t-h2">This screen could not load.</p><p class="muted">Reload the page to try again.</p></div>`;
+    outletNote(el, "This screen could not load.", "Reload the page to try again.");
   }
   liquid(el);
   if (!focus) window.scrollTo({ top: 0, behavior: "auto" });

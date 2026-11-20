@@ -1,10 +1,12 @@
 /* Brand side · the Builder C kit (LLD.bk) used by post.js, job.js, campaigns.js and the Briefs screen (jobs-list.jsx).
    Mirrors the creator My bids board: lanes of ticket slips, each with a stub, a status pill and a progress rail.
-   Job status: open | draft | hired | closed. Tabs: all, open, drafts, closed (closed also holds hired). Money is integer paise. */
+   Job status: open | draft | hired | closed. Tabs: all, open, drafts, closed (closed also holds hired). Money is integer paise.
+   Its markup pieces (avatar, chip, pills, the brief mini) are React components in kit.jsx; its sheets are React. */
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { JobMini } from "./kit";
+
 (() => {
-  const L = window.LLD,
-    esc = L.esc,
-    ic = L.icon;
+  const L = window.LLD;
   const S = () => window.LLD_DATA;
 
   /* ---------- kit ---------- */
@@ -61,7 +63,6 @@
       timeZone: "Asia/Kolkata",
     });
   const plat = p => (p === "youtube" ? "YouTube" : "Instagram");
-  const glyph = p => ic(p === "youtube" ? "yt" : "ig");
   const where = j => (j.remote ? "Any city · remote" : j.city);
   const job = id => S().jobs.find(j => j.id === id) || null;
   const camp = id => S().campaigns.find(c => c.id === id) || null;
@@ -80,20 +81,7 @@
   const bidsFor = jid => S().bids.filter(b => b.job === jid);
   const campOfJob = jid =>
     S().campaigns.find(c => c.job === jid && !["cancelled", "declined"].includes(c.stage)) || null;
-  /* creators always read in the coral family: full coral, or the subtle coral with a coral ring */
-  const cav = (c, cls = "") =>
-    `<span class="avatar bk-cav is-${c.tone === "b" ? "b" : "c"}${cls ? " " + cls : ""}" aria-hidden="true">${esc(L.initials(c.name || "?"))}</span>`;
-  const ver = c =>
-    c.verified
-      ? `<span class="bk-ver" title="Verified creator">${ic("verified")}<span class="sr-only">, verified</span></span>`
-      : "";
-  const crChip = (c, sub) =>
-    `<span class="bk-cr">${cav(c)}<span class="bk-cr-t"><b>${esc(c.name)}${ver(c)}</b><span>${esc(sub == null ? c.handle : sub)}</span></span></span>`;
   const pf = (c, p) => (c.platforms || []).find(x => x.p === p) || (c.platforms || [])[0] || null;
-  const rating = c =>
-    c.rating
-      ? `<span class="bk-rate">${ic("star")}<b class="num">${Number(c.rating).toFixed(1)}</b><span class="muted">(${c.reviews})</span></span>`
-      : '<span class="bk-rate is-none">No reviews yet</span>';
   const nextInvoice = (prefix = "LL-INV") => {
     const y = todayISO().slice(0, 4),
       re = new RegExp("^" + prefix + "-" + y + "-(\\d+)$");
@@ -132,43 +120,63 @@
     declined: { label: "Declined", pill: "pill-paper", ic: "close" },
     hired: { label: "Hired", pill: "pill-ok", ic: "check" },
   };
-  const pill = (map, k, label) => {
-    const m = map[k] || Object.values(map)[0];
-    return `<span class="pill ${m.pill}" data-pill>${ic(m.ic)}${esc(label || m.label)}</span>`;
-  };
-
   /* "Instagram Reel · Food": only the parts that are filled in, so no dangling "·" */
   const platLine = j =>
     [[plat(j.platform), j.format].filter(Boolean).join(" "), j.category].filter(Boolean).join(" · ");
 
-  /* a confirm sheet in the creator "Withdraw this bid?" pattern: a mini slip, plain consequences, one clear choice */
+  /* a confirm sheet in the creator "Withdraw this bid?" pattern: a mini slip, plain consequences, one clear choice.
+     `mini` and `extra` are React elements; onYes(body) gets the sheet's content, and returning false keeps it open. */
   function confirm({
     title,
-    mini = "",
+    mini = null,
     bullets = [],
-    extra = "",
+    extra = null,
     yes,
     no = "Keep it",
     danger = false,
     trust = "",
     onYes,
   }) {
-    L.openSheet({
+    openReactSheet({
       title,
-      body: `<div class="stack jl-sheet">${mini}<ul class="jl-conseq">${bullets.map(b => `<li>${esc(b)}</li>`).join("")}</ul>${extra}
-        <div class="row wrap"><button class="lq ${danger ? "lq-p bk-danger" : "lq-p"}" type="button" data-yes>${trust ? ic("lock", "ic") : ""}${esc(yes)}</button><button class="lq lq-s" type="button" data-no>${esc(no)}</button></div>${trust ? `<p class="ll-trust">${ic("lock")}${esc(trust)}</p>` : ""}</div>`,
-      onMount(b, close) {
-        b.querySelector("[data-no]").addEventListener("click", () => close());
-        b.querySelector("[data-yes]").addEventListener("click", () => {
-          const r = onYes && onYes(b);
-          if (r !== false) close();
-        });
+      render: close => {
+        let box = null;
+        return (
+          <div className="stack jl-sheet" ref={el => (box = el)}>
+            {mini}
+            <ul className="jl-conseq">
+              {bullets.map((b, i) => (
+                <li key={i}>{b}</li>
+              ))}
+            </ul>
+            {extra}
+            <div className="row wrap">
+              <Lq
+                className={danger ? "lq-p bk-danger" : "lq-p"}
+                data-yes=""
+                onClick={() => {
+                  const r = onYes && onYes(box);
+                  if (r !== false) close();
+                }}
+              >
+                {trust ? <Icon n="lock" className="ic" /> : null}
+                {yes}
+              </Lq>
+              <Lq className="lq-s" data-no="" onClick={() => close()}>
+                {no}
+              </Lq>
+            </div>
+            {trust ? (
+              <p className="ll-trust">
+                <Icon n="lock" />
+                {trust}
+              </p>
+            ) : null}
+          </div>
+        );
       },
     });
   }
-  const jobMini =
-    j => `<div class="jl-mini"><span class="bk-plat">${glyph(j.platform)}<span>${esc(platLine(j))}</span></span>
-    <p class="t-money jl-mini-p">${L.inr(j.budget)}</p><p class="t-small muted">${esc(j.title)}</p></div>`;
   const OPEN_BID = ["new", "viewed", "shortlisted"];
 
   function closeJob(id, after) {
@@ -179,7 +187,7 @@
       k = c && cr(c.creator);
     confirm({
       title: "Close this brief?",
-      mini: jobMini(j),
+      mini: <JobMini j={j} />,
       yes: "Close brief",
       no: "Keep it open",
       bullets: [
@@ -222,20 +230,34 @@
     const c = S().campaigns.find(x => x.job === id);
     if (c) {
       const k = cr(c.creator);
-      L.openSheet({
+      openReactSheet({
         title: "This brief can’t be deleted",
-        body: `<div class="stack jl-sheet">${jobMini(j)}
-          <p class="muted">You hired ${esc(k.name)} through it, so it is part of a deal and its invoices. Close the listing instead. It stays in your records.</p>
-          <div class="row wrap">${j.status === "closed" ? "" : '<button class="lq lq-p" type="button" data-close-instead>Close brief instead</button>'}<button class="lq lq-s" type="button" data-no>Got it</button></div></div>`,
-        onMount(b, close) {
-          b.querySelector("[data-no]").addEventListener("click", () => close());
-          const ci = b.querySelector("[data-close-instead]");
-          ci &&
-            ci.addEventListener("click", () => {
-              close(true);
-              closeJob(id, after);
-            });
-        },
+        render: close => (
+          <div className="stack jl-sheet">
+            <JobMini j={j} />
+            <p className="muted">
+              You hired {k.name} through it, so it is part of a deal and its invoices. Close the listing
+              instead. It stays in your records.
+            </p>
+            <div className="row wrap">
+              {j.status === "closed" ? null : (
+                <Lq
+                  className="lq-p"
+                  data-close-instead=""
+                  onClick={() => {
+                    close(true);
+                    closeJob(id, after);
+                  }}
+                >
+                  Close brief instead
+                </Lq>
+              )}
+              <Lq className="lq-s" data-no="" onClick={() => close()}>
+                Got it
+              </Lq>
+            </div>
+          </div>
+        ),
       });
       return;
     }
@@ -243,7 +265,7 @@
       draft = j.status === "draft";
     confirm({
       title: draft ? "Delete this draft?" : "Delete this brief?",
-      mini: jobMini(j),
+      mini: <JobMini j={j} />,
       yes: draft ? "Delete draft" : "Delete brief",
       no: "Keep it",
       danger: true,
@@ -291,7 +313,6 @@
     daysTxt,
     time,
     plat,
-    glyph,
     where,
     job,
     camp,
@@ -299,18 +320,12 @@
     first,
     bidsFor,
     campOfJob,
-    cav,
-    ver,
-    crChip,
     pf,
-    rating,
     nextInvoice,
     notify,
     JST,
     BST,
-    pill,
     confirm,
-    jobMini,
     closeJob,
     deleteJob,
     OPEN_BID,

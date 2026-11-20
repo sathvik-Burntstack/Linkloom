@@ -2,9 +2,9 @@
    Owner: Builder B. Uses LLD.jobkit from jobs.js. React screen (see src/shared/react/view.jsx). */
 import { Fragment, useEffect, useRef, useState } from "react";
 import { BrandChip, FitChip, Glyph, StatusPill } from "../../ui/brief-card";
-import { skeletonHtml } from "@/shared/ux";
+import { Skeleton } from "@/shared/react/skeleton";
 import { reportAbuse, supportError } from "@/shared/support/api";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
 
 const L = window.LLD;
 const REPORT_REASONS = [
@@ -161,7 +161,7 @@ function JobScreen({ param: id }) {
     return () => unsub.current && unsub.current();
   }, []);
 
-  if (fetching) return fromHtml(skeletonHtml("Loading the brief", false)); // F4: page-shaped placeholder, not a blank area
+  if (fetching) return <Skeleton label="Loading the brief" slowNote={false} />; // F4: page-shaped placeholder, not a blank area
   if (!j)
     return (
       <div className="view-in">

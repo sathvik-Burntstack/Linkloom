@@ -5,7 +5,8 @@
    React screens (see src/shared/react/view.jsx). */
 import { useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { fromHtml, Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq } from "@/shared/react/view";
+import { Cav, CrMini, Glyph, Ver } from "./kit";
 import { previewDelivery } from "./pay";
 
 const L = window.LLD,
@@ -77,17 +78,28 @@ const payState = c =>
       : HELD.includes(c.stage)
         ? "held"
         : "none";
-const lockIc = () =>
-  L.icon("lock").replace(
-    /<path d="[^"]*"\/>/,
-    '<path class="cg-shackle" d="M7 11V8a5 5 0 0 1 10 0v3"/><path d="M5 11h14v10H5z"/>',
-  );
+/* the lock icon with its shackle as its own path, so it can swing shut (CSS .cg-shackle) */
+const LockIc = () => (
+  <svg
+    className=""
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path className="cg-shackle" d="M7 11V8a5 5 0 0 1 10 0v3" />
+    <path d="M5 11h14v10H5z" />
+  </svg>
+);
 const PayPill = ({ c }) =>
   ({
     none: <span className="pill pill-line">{c.stage === "accepted" ? "Not paid yet" : "Nothing paid"}</span>,
     held: (
       <span className="pill pill-escrow cg-lockin">
-        {fromHtml(lockIc())}
+        <LockIc />
         In escrow
       </span>
     ),
@@ -197,12 +209,12 @@ function Ticket({ c }) {
   return (
     <li className={`cg-tk${end ? " is-ended" : ""}`} data-who={w} data-id={c.id}>
       <div className="cg-tk-a">
-        {fromHtml(K().cav(k))}
+        <Cav c={k} />
         <div className="cg-tk-tx">
           <p className="cg-tk-brand">
             {k.name}
             <span aria-hidden="true">·</span>
-            {fromHtml(K().glyph(c.platform))}
+            <Glyph p={c.platform} />
             <span>{c.format || ""}</span>
             <span aria-hidden="true">·</span>
             <span>{c.source === "job" ? "From a brief" : "Direct invite"}</span>
@@ -795,7 +807,7 @@ function NowPanel({ c, ui, act }) {
                 <p>“{last.note}”</p>
               </blockquote>
               <figcaption>
-                {fromHtml(K().cav(k))}
+                <Cav c={k} />
                 <span>
                   <b>{k.name}</b>
                   <span className="muted">Note with v{last.v}</span>
@@ -1020,7 +1032,7 @@ function NowPanel({ c, ui, act }) {
                 <p>“{c.declineNote}”</p>
               </blockquote>
               <figcaption>
-                {fromHtml(K().cav(k))}
+                <Cav c={k} />
                 <span>
                   <b>{k.name}</b>
                   <span className="muted">{c.declined ? L.fmtDate(c.declined) + " · " : ""}Their note</span>
@@ -1170,7 +1182,7 @@ function Campaign({ c }) {
         yes: "Cancel invitation",
         no: "Keep it",
         danger: true,
-        mini: `<div class="jl-mini">${K().crChip(k)}<p class="t-money jl-mini-p">${L.inr(c.price)}</p><p class="t-small muted">${esc(c.title)}</p></div>`,
+        mini: <CrMini c={k} price={c.price} line={c.title} />,
         bullets: [
           `${f} is told the invitation was withdrawn.`,
           "Nothing was paid, so there is nothing to refund.",
@@ -1291,7 +1303,7 @@ function Campaign({ c }) {
         title: `Release ${L.inr(c.price)} to ${f}?`,
         yes: "Release payment",
         no: "Not yet",
-        mini: `<div class="jl-mini">${K().crChip(k)}<p class="t-money jl-mini-p">${L.inr(c.price)}</p><p class="t-small muted">${esc(c.title)}</p></div>`,
+        mini: <CrMini c={k} price={c.price} line={c.title} />,
         bullets: [
           `${f} receives ${L.inr(c.price)}, the agreed price, in full.`,
           "It leaves escrow now and can’t be undone.",
@@ -1411,14 +1423,14 @@ function Campaign({ c }) {
       <header className="cw-head">
         <div className="cw-head-t">
           <p className="cw-brand">
-            {fromHtml(K().cav(k))}
+            <Cav c={k} />
             <span>
               <b>
                 {k.name}
-                {fromHtml(K().ver(k))}
+                <Ver c={k} />
               </b>
               <span className="muted">
-                {fromHtml(K().glyph(c.platform))}
+                <Glyph p={c.platform} />
                 {K().plat(c.platform)} {c.format || ""} ·{" "}
                 {c.source === "job" ? "hired from a brief" : "direct invite"}
               </span>
@@ -1528,7 +1540,7 @@ function Campaign({ c }) {
                       0{i + 1}
                     </span>
                     <span className="cw-dl-t">
-                      {x.p ? fromHtml(K().glyph(x.p)) : null}
+                      {x.p ? <Glyph p={x.p} /> : null}
                       <span>
                         {x.t}
                         {x.sub ? <span className="muted">{x.sub}</span> : null}
@@ -1637,7 +1649,7 @@ function Campaign({ c }) {
           </div>
           {t ? (
             <a className="cw-chat" href={`#chat-${t.id}`}>
-              {fromHtml(K().cav(k))}
+              <Cav c={k} />
               <span className="cw-chat-t">
                 <b>Chat with {f}</b>
                 <span className="muted">

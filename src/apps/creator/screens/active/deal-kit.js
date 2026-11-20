@@ -2,9 +2,7 @@
    (active.jsx), Messages, Earnings and Home read these at render time. Owned by Builder C.
    Work status (a.stage, six stages) and payment status (a.pay: 'escrow' | 'released') are separate fields on purpose:
    "completed" never implies "paid". Money is integer paise. */
-const L = window.LLD,
-  esc = L.esc,
-  ic = L.icon;
+const L = window.LLD;
 const C = (window.LLD_C = window.LLD_C || {});
 
 /* ---------- helpers shared by the Builder C screens (messages, earnings and home use these at render time) ---------- */
@@ -44,25 +42,6 @@ C.bi = brand => {
 C.plat = p => (p === "youtube" ? "YouTube" : "Instagram");
 C.sum = (rows, f) => rows.reduce((n, r) => n + f(r), 0);
 C.press = root => L.$$(".lq-p,.lq-coral,[data-press]", root).forEach(b => L.motion.press(b));
-/* network banner: shows while the browser is offline; returns a detach function */
-C.net = (host, cls, text) => {
-  const b = document.createElement("p");
-  b.className = cls;
-  b.setAttribute("role", "status");
-  b.innerHTML = `${ic("alert")}<span>${esc(text)}</span>`;
-  const sync = () => {
-    b.hidden = navigator.onLine;
-  };
-  sync();
-  host.prepend(b);
-  addEventListener("online", sync);
-  addEventListener("offline", sync);
-  return () => {
-    removeEventListener("online", sync);
-    removeEventListener("offline", sync);
-  };
-};
-
 C.STAGES = [
   { k: "kickoff", n: "Accepted", long: "Accepted, awaiting kickoff" },
   { k: "in_progress", n: "In progress", long: "Promotion in progress" },
@@ -82,26 +61,7 @@ C.who = a =>
     : a.awaitingPay || a.stage === "review" || (a.stage === "submitted" && !a.draftOk)
       ? "brand"
       : "you";
-C.whoPill = a =>
-  ({
-    you: '<span class="pill pill-coral">Your move</span>',
-    brand: '<span class="pill pill-violet">With the brand</span>',
-    done: '<span class="pill pill-ok">Done</span>',
-  })[C.who(a)];
-/* the lock icon split into shackle + body so the shackle can click shut when escrow is shown (CSS, reduced-motion safe) */
-C.lock = () =>
-  ic("lock").replace(
-    /<path d="[^"]*"\/>/,
-    '<path class="active-shackle" d="M7 11V8a5 5 0 0 1 10 0v3"/><path d="M5 11h14v10H5z"/>',
-  );
-C.escrowPill = (text = "In escrow") =>
-  `<span class="pill pill-escrow active-lockin">${C.lock()}${esc(text)}</span>`;
-C.payPill = a =>
-  a.pay === "released"
-    ? `<span class="pill pill-ok">${ic("check")}Released</span>`
-    : a.awaitingPay
-      ? '<span class="pill pill-violet">Awaiting payment</span>'
-      : C.escrowPill();
+/* the pills, the payout slip and the offline banner are React components in deal-ui.jsx */
 C.deal = a => {
   const j = L.store.s.jobs.find(x => x.id === a.job) || {};
   return {

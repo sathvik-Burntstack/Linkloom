@@ -5,7 +5,8 @@
 import "./deal-kit";
 import { useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { fromHtml, Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq } from "@/shared/react/view";
+import { EscrowPill, NetBanner, PayoutSlip, PayPill, WhoPill } from "./deal-ui";
 
 const L = window.LLD;
 const C = window.LLD_C;
@@ -73,13 +74,13 @@ function Ticket({ a, hidden }) {
           })}
         </ol>
         <p className="active-tk-stage">
-          {fromHtml(C.whoPill(a))}
+          <WhoPill a={a} />
           <span>{C.STAGES[i].long}</span>
         </p>
       </div>
       <div className="active-tk-m">
         <p className="t-money active-tk-price">{L.inr(a.price)}</p>
-        {fromHtml(C.payPill(a))}
+        <PayPill a={a} />
         <p className={`active-tk-due${late ? " is-late" : ""}`}>
           <Icon n="clock" />
           <span>{C.due(a)}</span>
@@ -586,7 +587,7 @@ function NowPanel({ a, onStart, onUpload, onLive, brandSide }) {
   );
   const head = title => (
     <div className="work-now-h">
-      {fromHtml(C.whoPill(a))}
+      <WhoPill a={a} />
       <h2 className="t-h2" id="workNowH">
         {title}
       </h2>
@@ -778,15 +779,7 @@ function Work({ a }) {
     seen.current = C.ix(a);
   });
   useLayoutEffect(() => {
-    const detachNet = C.net(
-      root.current,
-      "work-net",
-      "You are offline. Uploads pause and resume when you are back.",
-    );
     L.motion.stagger(L.$$(".work-node", root.current));
-    return () => {
-      detachNet && detachNet();
-    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onStart = () => {
@@ -940,6 +933,7 @@ function Work({ a }) {
 
   return (
     <div className="view-in work" data-who={C.who(a)} ref={root}>
+      <NetBanner cls="work-net" text="You are offline. Uploads pause and resume when you are back." />
       <a className="btn-q work-back" href="#active">
         <Icon n="back" />
         <span>Active deals</span>
@@ -969,7 +963,7 @@ function Work({ a }) {
             <span className="muted">agreed price, locked at acceptance</span>
           </p>
           <div className="row wrap">
-            {fromHtml(C.payPill(a))}
+            <PayPill a={a} />
             {t ? (
               <Lq as="a" className="lq-s lq-sm" href={`#chat-${t.id}`}>
                 <Icon n="chat" />
@@ -1113,19 +1107,22 @@ function Work({ a }) {
         </div>
 
         <aside className="work-side" aria-label="Deal details">
-          {C.slip
-            ? fromHtml(
-                C.slip({
-                  price: a.price,
-                  head: out ? "Payout slip" : "Payout if approved",
-                  brand: a.brand,
-                  job: a.title,
-                  status: out
-                    ? `<span class="pill pill-ok">${L.icon("check")}Released from escrow</span>`
-                    : C.escrowPill("Held in escrow until approval"),
-                }),
+          <PayoutSlip
+            price={a.price}
+            head={out ? "Payout slip" : "Payout if approved"}
+            brand={a.brand}
+            job={a.title}
+            status={
+              out ? (
+                <span className="pill pill-ok">
+                  <Icon n="check" />
+                  Released from escrow
+                </span>
+              ) : (
+                <EscrowPill text="Held in escrow until approval" />
               )
-            : null}
+            }
+          />
 
           <section className="ll-panel work-sec" aria-labelledby="workDatesH">
             <div className="ll-panel-head">

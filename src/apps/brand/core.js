@@ -1,6 +1,7 @@
 /* Linkloom Brand Dashboard: core runtime (router, store, helpers, overlays, icons).
    Screens live in screens/<name>.js and call LLD.register(). Money is always integer paise. */
-import { mountView } from "@/shared/react/view";
+import { mountView, outletNote } from "@/shared/react/view";
+import { closeSheet, openSheet, toast } from "@/shared/react/overlays";
 
 (() => {
   const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -120,7 +121,7 @@ import { mountView } from "@/shared/react/view";
     const v = views[name] || {
       title: "Linkloom",
       render: el => {
-        el.innerHTML = '<div class="empty"><p class="t-h2">This screen is being built.</p></div>';
+        outletNote(el, "This screen is being built.");
       },
     };
     const guestOk = !!LLD_DATA.session.guest && guestRoutes.has(name) && !param;
@@ -169,7 +170,7 @@ import { mountView } from "@/shared/react/view";
       cleanup = (v.Component ? mountView(el, v.Component, { param }) : v.render(el, param)) || null;
     } catch (e) {
       console.error(e);
-      el.innerHTML = `<div class="empty"><p class="t-h2">This screen could not load.</p><p class="muted">Reload the page to try again.</p></div>`;
+      outletNote(el, "This screen could not load.", "Reload the page to try again.");
     }
     liquid(el);
     if (!focus) window.scrollTo({ top: 0, behavior: "auto" });
@@ -207,78 +208,7 @@ import { mountView } from "@/shared/react/view";
   /* one letter, like the creator app: two-letter "AI" (Ananya Iyer) reads as an AI button */
   const initials = n => (String(n || "").trim()[0] || "?").toUpperCase();
 
-  /* ---------- overlays ---------- */
-  let sheetEl = null,
-    scrimEl = null,
-    lastFocus = null;
-  function openSheet({ title, body, onMount, wide }) {
-    closeSheet(true);
-    lastFocus = document.activeElement;
-    scrimEl = document.createElement("div");
-    scrimEl.className = "scrim";
-    scrimEl.addEventListener("click", () => closeSheet());
-    sheetEl = document.createElement("aside");
-    sheetEl.className = "sheet light";
-    sheetEl.setAttribute("role", "dialog");
-    sheetEl.setAttribute("aria-modal", "true");
-    sheetEl.setAttribute("aria-label", title);
-    if (wide) sheetEl.style.width = "min(720px,100%)";
-    $("#app").inert = true;
-    $("#focusRoot").inert = true;
-    sheetEl.innerHTML = `<div class="sheet-h"><p class="t-h2">${esc(title)}</p><button class="ibtn" type="button" data-close aria-label="Close">${icon("close")}</button></div><div class="sheet-b"></div>`;
-    const b = $(".sheet-b", sheetEl);
-    if (typeof body === "string") b.innerHTML = body;
-    else if (body) b.append(body);
-    document.body.append(scrimEl, sheetEl);
-    $("[data-close]", sheetEl).addEventListener("click", () => closeSheet());
-    sheetEl.addEventListener("keydown", e => {
-      if (e.key === "Escape") closeSheet();
-    });
-    requestAnimationFrame(() => {
-      scrimEl.classList.add("on");
-      sheetEl.classList.add("on");
-      const f = $("input,button:not([data-close]),select,textarea,a", b) || $("[data-close]", sheetEl);
-      f && f.focus({ preventScroll: true });
-    });
-    liquid(sheetEl);
-    onMount && onMount(b, closeSheet);
-    return { el: b, close: closeSheet };
-  }
-  function closeSheet(instant) {
-    if (!sheetEl) return;
-    const s = sheetEl,
-      c = scrimEl;
-    sheetEl = scrimEl = null;
-    $("#app").inert = false;
-    $("#focusRoot").inert = false;
-    if (instant || RM) {
-      s.remove();
-      c.remove();
-    } else {
-      s.classList.remove("on");
-      c.classList.remove("on");
-      setTimeout(() => {
-        s.remove();
-        c.remove();
-      }, 500);
-    }
-    lastFocus && lastFocus.focus && lastFocus.focus({ preventScroll: true });
-  }
-  let toastT = 0;
-  function toast(msg, ic = "check") {
-    let t = $(".toast");
-    if (!t) {
-      t = document.createElement("div");
-      t.className = "toast";
-      t.setAttribute("role", "status");
-      document.body.append(t);
-    }
-    t.innerHTML = `${icon(ic)}<span>${esc(msg)}</span>`;
-    t.querySelector("svg").style.cssText = "width:18px;height:18px";
-    requestAnimationFrame(() => t.classList.add("on"));
-    clearTimeout(toastT);
-    toastT = setTimeout(() => t.classList.remove("on"), 3200);
-  }
+  /* ---------- overlays: the sheet and the toast are React (shared/react/overlays.jsx) ---------- */
 
   /* liquid buttons: <a class="lq lq-p">Label</a> -> label roll markup */
   function liquid(root = document) {

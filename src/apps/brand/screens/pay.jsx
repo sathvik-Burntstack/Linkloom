@@ -3,7 +3,8 @@
    short wait; live mode opens Razorpay Checkout over the page and the backend verifies the payment and funds the deal.
    React sheets (see src/shared/react/view.jsx). */
 import { useEffect, useRef, useState } from "react";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { CrChip } from "./kit";
 
 const L = window.LLD;
 const S = () => window.LLD_DATA;
@@ -177,7 +178,9 @@ function PaySheet({ cid, close }) {
   return (
     <div className="pe" ref={box}>
       <div className="pe-slip">
-        <div className="pe-who">{fromHtml(K().crChip(k))}</div>
+        <div className="pe-who">
+          <CrChip c={k} />
+        </div>
         <p className="t-small muted">{c.title}</p>
         <p className="pe-lab">Agreed price</p>
         <p className="t-money pe-amt" data-amt="">
@@ -302,7 +305,9 @@ function LivePaySheet({ c, close }) {
   return (
     <div className="pe">
       <div className="pe-slip">
-        <div className="pe-who">{fromHtml(K().crChip(k))}</div>
+        <div className="pe-who">
+          <CrChip c={k} />
+        </div>
         <p className="t-small muted">{c.title}</p>
         <p className="pe-lab">Agreed price</p>
         <p className="t-money pe-amt">{L.inr(c.price)}</p>

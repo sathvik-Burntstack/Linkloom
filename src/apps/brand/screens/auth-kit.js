@@ -1,9 +1,9 @@
 /* The brand sign-in kit (Builder A), shared by the prototype auth screens (auth.jsx) and the profile's sample password
    sheet: rules shown in the UI (the server enforces them in production), the demo's accounts and reset links, the
-   screens' remembered state, and LLD.auth (password rules, the password field, sign out). In live mode session.js
+   screens' remembered state, and LLD.auth (password rules, checks, sign out). In live mode session.js
    replaces LLD.auth.signOut. */
 const L = window.LLD,
-  { esc, icon, store } = L;
+  { store } = L;
 const mo = (k, ...a) => {
   const f = L.motion && L.motion[k];
   if (typeof f === "function") {
@@ -29,11 +29,6 @@ const maskEmail = e => {
   const [u, d] = String(e).split("@");
   return d ? u.slice(0, Math.min(2, u.length)) + "••••@" + d : e;
 };
-const setLabel = (b, t) =>
-  b &&
-  b.querySelectorAll(".t,.t2").forEach(s => {
-    s.textContent = t;
-  });
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const vEmail = v => {
   v = v.trim();
@@ -52,7 +47,7 @@ const taken = () => store.s.taken || { emails: [], mobiles: [] };
 const emailTaken = e => taken().emails.includes(e.trim().toLowerCase());
 const mobileTaken = d => taken().mobiles.includes(d);
 
-/* ---------- password rules (shared with profile and reset) ---------- */
+/* ---------- password rules (shared with profile and reset; the fields themselves are auth-ui.jsx) ---------- */
 const RULES = [
   ["len", "At least 8 characters", v => [...v].length >= 8],
   ["let", "A letter", v => /\p{L}/u.test(v)],
@@ -60,66 +55,6 @@ const RULES = [
   ["sym", "A symbol, like @ # or !", v => /[^\p{L}\d\s]/u.test(v)],
 ];
 const pwOk = v => RULES.every(r => r[2](v));
-const rulesHTML = id =>
-  `<ul class="auth-rules" id="${id}" aria-label="Your password needs">${RULES.map(
-    r =>
-      `<li data-r="${r[0]}"><span class="auth-rule-ic" aria-hidden="true">${icon("check")}</span><span>${esc(r[1])}</span><span class="sr-only" data-rs>, not yet</span></li>`,
-  ).join("")}</ul>`;
-function updRules(ul, v) {
-  if (!ul) return;
-  RULES.forEach(r => {
-    const li = ul.querySelector(`[data-r="${r[0]}"]`),
-      ok = r[2](v),
-      was = li.classList.contains("is-ok");
-    li.classList.toggle("is-ok", ok);
-    li.querySelector("[data-rs]").textContent = ok ? ", done" : ", not yet";
-    if (ok && !was) mo("check", li.querySelector(".auth-rule-ic"), { color: "ink" });
-  });
-}
-const pwField = (id, label, { auto = "new-password", help = "", desc = "" } = {}) => `
-  <div class="field" data-f="${id}"><label for="au-${id}">${label}</label>
-    <div class="auth-pw"><input class="input" id="au-${id}" type="password" autocomplete="${auto}" spellcheck="false" autocapitalize="off" maxlength="64" aria-describedby="${[help ? `au-${id}-h` : "", desc, `au-${id}-e`].filter(Boolean).join(" ")}">
-      <button type="button" class="auth-eye" data-eye aria-label="Show password" aria-pressed="false">${icon("eye")}</button></div>
-    ${help ? `<p class="help" id="au-${id}-h">${help}</p>` : ""}<p class="err" id="au-${id}-e" aria-live="polite"></p></div>`;
-function wireEyes(root) {
-  root.querySelectorAll("[data-eye]").forEach(b => {
-    if (b._w) return;
-    b._w = 1;
-    b.addEventListener("click", () => {
-      const i = b.parentElement.querySelector("input"),
-        show = i.type === "password";
-      i.type = show ? "text" : "password";
-      b.setAttribute("aria-pressed", String(show));
-      b.setAttribute("aria-label", show ? "Hide password" : "Show password");
-      b.classList.toggle("is-on", show);
-    });
-  });
-}
-const fld = (id, label, input, help = "") =>
-  `<div class="field" data-f="${id}"><label for="au-${id}">${label}</label>${input}${help ? `<p class="help" id="au-${id}-h">${help}</p>` : ""}<p class="err" id="au-${id}-e" aria-live="polite"></p></div>`;
-function errAt(root, id, msg) {
-  const f = root.querySelector(`[data-f="${id}"]`);
-  if (!f) return;
-  f.classList.add("is-err");
-  const e = f.querySelector(".err");
-  if (e) e.innerHTML = msg;
-  const i = f.querySelector("input");
-  i && i.setAttribute("aria-invalid", "true");
-}
-function clrErr(root, id) {
-  const f = root.querySelector(`[data-f="${id}"]`);
-  if (!f) return;
-  f.classList.remove("is-err");
-  const e = f.querySelector(".err");
-  if (e) e.textContent = "";
-  const i = f.querySelector("input");
-  i && i.removeAttribute("aria-invalid");
-}
-const focusFirstErr = root => {
-  const i = root.querySelector(".field.is-err input");
-  i && i.focus();
-};
-
 function signOut(opts = {}) {
   store.set(s => {
     s.session.signedIn = false;
@@ -186,10 +121,6 @@ const newToken = (email, ageSec = 0) => {
 L.auth = {
   RULES,
   pwOk,
-  rulesHTML,
-  updRules,
-  pwField,
-  wireEyes,
   signOut,
   checkCurrent,
   setPassword,
@@ -199,8 +130,6 @@ L.auth = {
 };
 export {
   L,
-  esc,
-  icon,
   store,
   mo,
   now,

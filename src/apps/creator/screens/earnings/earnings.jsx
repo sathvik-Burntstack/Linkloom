@@ -6,7 +6,8 @@
    React screen (see src/shared/react/view.jsx). Numbers that count up are elements React leaves to the motion layer. */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { NetBanner, PayoutSlip } from "../active/deal-ui";
 
 const L = window.LLD,
   esc = L.esc,
@@ -30,24 +31,7 @@ C.syncReady = s => {
   s.readyToWithdraw = C.money().ready;
 };
 
-/* the ink payout slip with the scalloped edge (same object as the homepage receipt); also used on the work board */
-/* no fee row: the creator receives the agreed price; the status pill takes the header slot */
-C.slip = o => {
-  const p = L.payout(o.price),
-    head = o.head || "Payout slip";
-  return `<div class="earnings-slip-w">
-      <article class="earnings-slip${o.failed ? " is-failed" : ""}" aria-label="${esc(head)}">
-        <header class="earnings-slip-h"><span>${esc(head)}</span>${o.status || ""}</header>
-        ${o.brand ? `<p class="earnings-slip-who"><b>${esc(o.brand)}</b><span>${esc(o.job || "")}</span></p>` : ""}
-        <dl class="earnings-slip-rows">
-          <div><dt>Agreed price</dt><dd>${L.inr(p.price, { dec: true })}</dd></div>
-          <div><dt>Tax / withholding</dt><dd>As per confirmed rules</dd></div>
-        </dl>
-        <div class="earnings-slip-net"><span>${o.failed ? "Not released" : "You receive"}</span><span class="earnings-slip-amt">${L.inr(p.net)}</span></div>
-        ${o.failed ? "" : '<p class="earnings-slip-why">The agreed price.</p>'}
-        ${o.foot ? `<p class="earnings-slip-f">${esc(o.foot)}</p>` : ""}
-      </article></div>`;
-};
+/* the ink payout slip is deal-ui.jsx's PayoutSlip (also used on the work board) */
 
 const STATUS = {
   paid: { pill: "pill-ok", icon: "check", label: "Paid" },
@@ -55,30 +39,39 @@ const STATUS = {
   failed: { pill: "pill-err", icon: "alert", label: "Failed" },
   processing: { pill: "pill-info", icon: "clock", label: "Processing" },
 };
-const pill = (st, extra) => {
+const Pill = ({ st, extra }) => {
   const x = STATUS[st] || STATUS.pending;
-  return `<span class="pill ${x.pill}">${ic(x.icon)}${esc(x.label + (extra ? " · " + extra : ""))}</span>`;
+  return (
+    <span className={`pill ${x.pill}`}>
+      <Icon n={x.icon} />
+      {x.label + (extra ? " · " + extra : "")}
+    </span>
+  );
 };
-const Pill = ({ st }) => fromHtml(pill(st));
-const ledgerSlip = l =>
-  C.slip({
-    price: l.amount,
-    brand: l.brand,
-    job: l.job,
-    failed: l.status === "failed",
-    status:
-      l.status === "paid"
-        ? pill("paid", "released " + L.fmtDate(l.date))
-        : l.status === "pending"
-          ? pill("pending", l.clears ? "clears " + L.fmtDate(l.clears) : "clearing")
-          : pill("failed"),
-    foot:
+const LedgerSlip = ({ l }) => (
+  <PayoutSlip
+    price={l.amount}
+    brand={l.brand}
+    job={l.job}
+    failed={l.status === "failed"}
+    status={
+      l.status === "paid" ? (
+        <Pill st="paid" extra={"released " + L.fmtDate(l.date)} />
+      ) : l.status === "pending" ? (
+        <Pill st="pending" extra={l.clears ? "clears " + L.fmtDate(l.clears) : "clearing"} />
+      ) : (
+        <Pill st="failed" />
+      )
+    }
+    foot={
       l.status === "paid"
         ? `In your balance since ${L.fmtDate(l.date, { year: true })}. Ref LL-PS-${l.id.toUpperCase()}`
         : l.status === "pending"
           ? `Approved ${L.fmtDate(l.date)}. Not in your balance until it clears.`
-          : l.reason || "The release did not go through. It is not counted in your balance.",
-  });
+          : l.reason || "The release did not go through. It is not counted in your balance."
+    }
+  />
+);
 
 const RANGES = [
   ["30", "30 days"],
@@ -506,14 +499,8 @@ function EarningsScreen() {
 
   useEffect(() => {
     if (empty || !root.current) return;
-    const detach = C.net(
-      root.current,
-      "earnings-net",
-      "You are offline. Amounts are from your last sync; withdrawing waits until you are back.",
-    );
     L.motion.stagger(L.$$(".earnings-row", root.current).filter(r => !r.hidden));
     return () => {
-      detach && detach();
       timers.current.forEach(clearTimeout);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -556,7 +543,11 @@ function EarningsScreen() {
     if (narrow()) {
       openReactSheet({
         title: "Payout slip",
-        render: () => <div className="earnings-sheet-slip">{fromHtml(ledgerSlip(l))}</div>,
+        render: () => (
+          <div className="earnings-sheet-slip">
+            <LedgerSlip l={l} />
+          </div>
+        ),
       });
       requestAnimationFrame(() => feed(L.$(".sheet .earnings-slip-w"), 160));
       return;
@@ -570,6 +561,10 @@ function EarningsScreen() {
 
   return (
     <div className="view-in earnings" ref={root}>
+      <NetBanner
+        cls="earnings-net"
+        text="You are offline. Amounts are from your last sync; withdrawing waits until you are back."
+      />
       <div className="earnings-top">
         <h1 className="t-h1">Earnings</h1>
         <span className="sample">Sample data · amounts in ₹</span>
@@ -792,7 +787,7 @@ function EarningsScreen() {
         </div>
 
         <aside className="earnings-side" aria-label="Payout slip" aria-live="polite" data-slip="">
-          {pick ? fromHtml(ledgerSlip(led.find(l => l.id === pick))) : null}
+          {pick ? <LedgerSlip l={led.find(l => l.id === pick)} /> : null}
         </aside>
       </div>
     </div>

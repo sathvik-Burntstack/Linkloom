@@ -7,11 +7,10 @@
    React screen (see src/shared/react/view.jsx); the invoice stays an HTML document built as a string. */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
 
 const L = window.LLD,
   esc = L.esc,
-  ic = L.icon,
   M = () => L.motion;
 const D = (window.LLD_D = window.LLD_D || {});
 const sum = (rows, f = r => r.amount) => rows.reduce((n, r) => n + f(r), 0);
@@ -49,19 +48,47 @@ D.money = () => {
 /* ---------- labels ---------- */
 const releaseOf = r => L.store.s.payments.find(x => x.kind === "release" && x.campaign === r.campaign);
 const refundOf = r => L.store.s.payments.find(x => x.kind === "refund" && x.campaign === r.campaign);
-const PILL = r => {
-  if (r.kind === "release") return `<span class="pill pill-ok">${ic("check")}Paid to creator</span>`;
-  if (r.kind === "refund") return `<span class="pill pill-info">${ic("refund")}Refunded</span>`;
-  if (r.status === "held") return `<span class="pill pill-escrow">${ic("lock")}Held in escrow</span>`;
+const Pill = ({ r }) => {
+  if (r.kind === "release")
+    return (
+      <span className="pill pill-ok">
+        <Icon n="check" />
+        Paid to creator
+      </span>
+    );
+  if (r.kind === "refund")
+    return (
+      <span className="pill pill-info">
+        <Icon n="refund" />
+        Refunded
+      </span>
+    );
+  if (r.status === "held")
+    return (
+      <span className="pill pill-escrow">
+        <Icon n="lock" />
+        Held in escrow
+      </span>
+    );
   if (r.status === "released") {
     const x = releaseOf(r);
-    return `<span class="pill pill-paper">${ic("check")}Released${x ? " " + esc(L.fmtDate(x.date)) : ""}</span>`;
+    return (
+      <span className="pill pill-paper">
+        <Icon n="check" />
+        {`Released${x ? " " + L.fmtDate(x.date) : ""}`}
+      </span>
+    );
   }
   if (r.status === "refunded") {
     const x = refundOf(r);
-    return `<span class="pill pill-paper">${ic("refund")}Refunded${x ? " " + esc(L.fmtDate(x.date)) : ""}</span>`;
+    return (
+      <span className="pill pill-paper">
+        <Icon n="refund" />
+        {`Refunded${x ? " " + L.fmtDate(x.date) : ""}`}
+      </span>
+    );
   }
-  return `<span class="pill pill-paper">${esc(r.status)}</span>`;
+  return <span className="pill pill-paper">{r.status}</span>;
 };
 const KINDL = { escrow: "Paid into escrow", release: "Released to creator", refund: "Refund to you" };
 const DOC = { escrow: "Invoice", release: "Release invoice", refund: "Credit note" };
@@ -215,7 +242,7 @@ D.downloadInvoice = r => {
 };
 
 /* the ink slip (creator Earnings' payout slip, brand words) */
-const slip = r => {
+const Slip = ({ r }) => {
   const c = camp(r.campaign) || {},
     cr = L.creator(r.creator) || {};
   const head =
@@ -226,21 +253,48 @@ const slip = r => {
       : r.kind === "release"
         ? `Paid to ${first(cr.name || "creator")}`
         : "Back to you";
-  return `<div class="earnings-slip-w">
-    <article class="earnings-slip dark" aria-label="${esc(head)}">
-      <header class="earnings-slip-h"><span>${esc(head)}</span>${PILL(r)}</header>
-      <p class="earnings-slip-who"><b>${esc(cr.name || "")}</b><span>${esc(c.title || "")}</span></p>
-      <dl class="earnings-slip-rows">
-        <div><dt>Agreed price</dt><dd>${L.inr(r.amount, { dec: true })}</dd></div>
-        <div><dt>Platform fee</dt><dd>No platform fee</dd></div>
-        <div><dt>Taxes</dt><dd>As per confirmed rules</dd></div>
-        <div><dt>${r.kind === "refund" ? "Back to" : "Method"}</dt><dd>${esc(r.method)}</dd></div>
-      </dl>
-      <div class="earnings-slip-net"><span>${esc(netL)}</span><span class="earnings-slip-amt">${amt(r)}</span></div>
-      ${r.kind === "refund" && c.refundReason ? `<p class="earnings-slip-why">${esc(c.refundReason)}</p>` : ""}
-      <p class="earnings-slip-f">${esc(DOC[r.kind])} ${esc(r.invoice)} · ${esc(L.fmtDate(r.date, { year: true }))}</p>
-      <button class="lq lq-s pay-slip-dl" type="button" data-dl="${esc(r.id)}">${ic("download", "ic")}Download ${esc(DOC[r.kind].toLowerCase())}</button>
-    </article></div>`;
+  return (
+    <div className="earnings-slip-w">
+      <article className="earnings-slip dark" aria-label={head}>
+        <header className="earnings-slip-h">
+          <span>{head}</span>
+          <Pill r={r} />
+        </header>
+        <p className="earnings-slip-who">
+          <b>{cr.name || ""}</b>
+          <span>{c.title || ""}</span>
+        </p>
+        <dl className="earnings-slip-rows">
+          <div>
+            <dt>Agreed price</dt>
+            <dd>{L.inr(r.amount, { dec: true })}</dd>
+          </div>
+          <div>
+            <dt>Platform fee</dt>
+            <dd>No platform fee</dd>
+          </div>
+          <div>
+            <dt>Taxes</dt>
+            <dd>As per confirmed rules</dd>
+          </div>
+          <div>
+            <dt>{r.kind === "refund" ? "Back to" : "Method"}</dt>
+            <dd>{r.method}</dd>
+          </div>
+        </dl>
+        <div className="earnings-slip-net">
+          <span>{netL}</span>
+          <span className="earnings-slip-amt">{amt(r)}</span>
+        </div>
+        {r.kind === "refund" && c.refundReason ? <p className="earnings-slip-why">{c.refundReason}</p> : null}
+        <p className="earnings-slip-f">{`${DOC[r.kind]} ${r.invoice} · ${L.fmtDate(r.date, { year: true })}`}</p>
+        <Lq className="lq-s pay-slip-dl" data-dl={r.id}>
+          <Icon n="download" className="ic" />
+          {`Download ${DOC[r.kind].toLowerCase()}`}
+        </Lq>
+      </article>
+    </div>
+  );
 };
 const feed = n => {
   if (!n) return;
@@ -351,7 +405,11 @@ function PaymentsScreen({ param }) {
     if (narrow()) {
       openReactSheet({
         title: "Payment slip",
-        render: () => <div className="earnings-sheet-slip">{fromHtml(slip(r))}</div>,
+        render: () => (
+          <div className="earnings-sheet-slip">
+            <Slip r={r} />
+          </div>
+        ),
       });
       requestAnimationFrame(() => {
         const sh = L.$(".sheet");
@@ -522,7 +580,7 @@ function PaymentsScreen({ param }) {
                       <span className="earnings-amt">
                         <b className="t-money">{amt(r)}</b>
                       </span>
-                      {fromHtml(PILL(r))}
+                      <Pill r={r} />
                     </button>
                     <button
                       type="button"
@@ -635,7 +693,7 @@ function PaymentsScreen({ param }) {
         </div>
 
         <aside className="earnings-side" aria-label="Payment slip" aria-live="polite" data-slip="">
-          {fromHtml(slip(rows.find(r => r.id === pick)))}
+          <Slip r={rows.find(r => r.id === pick)} />
         </aside>
       </div>
     </div>

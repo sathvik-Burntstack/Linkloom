@@ -5,7 +5,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { reportAbuse, supportError } from "@/shared/support/api";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { LockIc, NetBanner, PayPill } from "../active/deal-ui";
 
 const L = window.LLD;
 const C = (window.LLD_C = window.LLD_C || {});
@@ -351,13 +352,6 @@ function Chat({ t, onInbox }) {
       L.store.set(() => {
         t.unread = 0;
       }, "chat-read");
-    const detachNet = C.net(
-      chat.current,
-      "chat-net",
-      "You are offline. New messages wait and send when you are back.",
-    );
-    const net = chat.current.querySelector(".chat-net");
-    net && chat.current.querySelector(".chat-h").after(net);
     requestAnimationFrame(bottom);
     const newMark = log.current.querySelector(".chat-new");
     newMark && requestAnimationFrame(() => (log.current.scrollTop = Math.max(0, newMark.offsetTop - 80)));
@@ -381,7 +375,6 @@ function Chat({ t, onInbox }) {
     document.addEventListener("click", outside);
     return () => {
       offLive();
-      detachNet && detachNet();
       removeEventListener("online", retryAll);
       document.removeEventListener("click", outside);
     };
@@ -561,7 +554,7 @@ function Chat({ t, onInbox }) {
       rows.push(
         <li key={key} className={`chat-sys${e ? " is-escrow" : ""}`}>
           <span className={e ? "active-lockin" : undefined}>
-            {e ? fromHtml(C.lock()) : <Icon n="info" />}
+            {e ? <LockIc /> : <Icon n="info" />}
             {m.text}
           </span>
           <time dateTime={m.at}>{C.time(m.at)}</time>
@@ -713,6 +706,7 @@ function Chat({ t, onInbox }) {
           </ul>
         </div>
       </header>
+      <NetBanner cls="chat-net" text="You are offline. New messages wait and send when you are back." />
       <a
         className="chat-job"
         href={a.loose ? "#bids" : "#work-" + a.id}
@@ -729,7 +723,7 @@ function Chat({ t, onInbox }) {
         </span>
         <span className="chat-job-m">
           <b className="t-money">{L.inr(a.price)}</b>
-          {fromHtml(C.payPill(a))}
+          <PayPill a={a} />
         </span>
         <Icon n="chevron" />
       </a>

@@ -6,7 +6,8 @@
    React screen (see src/shared/react/view.jsx): each row edits its draft object and redraws itself. */
 import { Fragment, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { fromHtml, Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq } from "@/shared/react/view";
+import { AvailPill, CkGlyph, CrAvatar, VerBadge } from "./kit";
 
 const L = window.LLD,
   S = () => window.LLD_DATA;
@@ -137,7 +138,7 @@ function ItemRow({ c, it, i, rid, only, onChange, onDel }) {
           </select>
         ) : (
           <span className="cart-fixed">
-            {fromHtml(K().glyph(it.p))}
+            <CkGlyph p={it.p} />
             {P[it.p].name}
           </span>
         )}
@@ -296,17 +297,17 @@ function CartRow({ c, onRemove, onSend, rowRef, onDirty }) {
       }}
     >
       <header className="cart-row-h">
-        {fromHtml(K_.avatar(c, "cart-av"))}
+        <CrAvatar c={c} cls="cart-av" />
         <div className="cart-who">
           <h2 className="t-h3" id={`${rid}-n`}>
             <a href={`#creator-${c.id}`}>{c.name}</a>
-            {fromHtml(K_.verBadge(c))}
+            <VerBadge c={c} />
           </h2>
           <p className="muted">
             {c.handle} · {c.city}
           </p>
         </div>
-        {fromHtml(K_.availPill(c))}
+        <AvailPill c={c} />
         <button
           className="ibtn cart-remove"
           type="button"

@@ -5,9 +5,10 @@
             billing details, plan ("Brand plan · renews 1 Dec", never a price), sign-in and security (change password, sign out).
             "Edit profile" opens a sheet with every brand field plus billing; "Change password" opens its own sheet.
    Validators, choices and the shared counts are in profile-kit.js; the logo picker is logo-picker.jsx. */
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Match, PwField, Rules, focusFirstErr, useErrs } from "./auth-ui";
 import { LogoPicker } from "./logo-picker";
 import {
   ABOUT_MAX,
@@ -1028,134 +1029,112 @@ function EditSheet({ toBilling, close, done }) {
   );
 }
 
-/* the sample build's password change uses the prototype sign-in kit (LLD.auth, auth.js), so it stays a plain DOM sheet
-   until that kit moves to React; the live app links to signin.html instead */
-function openPassword(done) {
+/* the sample build's password change (the prototype sign-in kit, LLD.auth); the live app links to signin.html instead */
+function PasswordSheet({ close, done }) {
   const A = L.auth;
-  if (!A) {
+  const E = useErrs();
+  const [p1, setP1] = useState(""),
+    [p2, setP2] = useState("");
+  const [busy, setBusy] = useState(false);
+  const box = useRef(null),
+    cur = useRef(null),
+    r1 = useRef(null),
+    r2 = useRef(null);
+  useEffect(() => {
+    if (p2 && p1 === p2) E.clr("pw2");
+  }, [p1, p2]); // eslint-disable-line react-hooks/exhaustive-deps
+  const submit = e => {
+    e.preventDefault();
+    const c = cur.current.value,
+      v1 = r1.current.value,
+      v2 = r2.current.value;
+    let bad = false;
+    if (!c) {
+      E.at("cur", "Enter your current password.");
+      bad = true;
+    } else if (!A.checkCurrent(c)) {
+      E.at("cur", `That isn't your current password. Forgot it? Sign out and use "Forgot password".`);
+      bad = true;
+      mo("shake", cur.current.parentElement);
+    }
+    if (!A.pwOk(v1)) {
+      E.at("pw", v1 ? "Your new password needs everything in the list below." : "Choose a new password.");
+      bad = true;
+    } else if (v1 === c) {
+      E.at("pw", "Use a password different from the current one.");
+      bad = true;
+    }
+    if (!bad && v1 !== v2) {
+      E.at("pw2", v2 ? "The two passwords don't match." : "Type the new password again.");
+      bad = true;
+    }
+    if (bad) {
+      flushSync(() => {});
+      return focusFirstErr(box.current);
+    }
+    setBusy(true);
+    setTimeout(() => {
+      A.setPassword(v1);
+      store.set(s => {
+        s.me.passwordChanged = todayISO();
+      }, "password-changed");
+      close();
+      done();
+      L.toast("Password changed. Other devices are signed out.", "check");
+    }, 500);
+  };
+  return (
+    <form className="profile-pe" noValidate data-pwf="" ref={box} onSubmit={submit}>
+      <p className="muted">Changing it signs you out on other devices. This one stays signed in.</p>
+      <PwField
+        id="cur"
+        label="Current password"
+        auto="current-password"
+        E={E}
+        inputRef={cur}
+        onInput={() => E.clr("cur")}
+      />
+      <PwField
+        id="pw"
+        label="New password"
+        desc="au-rules"
+        E={E}
+        inputRef={r1}
+        onInput={e => {
+          setP1(e.currentTarget.value);
+          E.clr("pw");
+        }}
+      />
+      <Rules id="au-rules" value={p1} />
+      <PwField
+        id="pw2"
+        label="Confirm new password"
+        E={E}
+        inputRef={r2}
+        onInput={e => setP2(e.currentTarget.value)}
+      />
+      <Match p1={p1} p2={p2} />
+      <p className="t-cap muted">
+        <span className="sample">Sample</span> current password: <b className="num">Mirevo@2026</b>, unless
+        you changed it
+      </p>
+      <div className="profile-pe-f">
+        <Lq className="lq-p" type="submit" data-save="" disabled={busy}>
+          {busy ? "Updating…" : "Update password"}
+        </Lq>
+        <Lq className="lq-s" data-cancel="" onClick={() => close()}>
+          Cancel
+        </Lq>
+      </div>
+    </form>
+  );
+}
+function openPassword(done) {
+  if (!L.auth) {
     L.toast("Password change is unavailable right now. Reload and try again.", "alert");
     return;
   }
-  const setLabel = (b, t) =>
-    b &&
-    b.querySelectorAll(".t,.t2").forEach(s => {
-      s.textContent = t;
-    });
-  const errAt = (root, id, msg) => {
-    const f = root.querySelector(`[data-f="${id}"]`);
-    if (!f) return;
-    f.classList.add("is-err");
-    const e = f.querySelector(".err");
-    if (e) e.textContent = msg;
-    const i = f.querySelector("input,select,textarea");
-    i && i.setAttribute("aria-invalid", "true");
-  };
-  const clrErr = f => {
-    if (!f) return;
-    f.classList.remove("is-err");
-    const e = f.querySelector(".err");
-    if (e) e.textContent = "";
-    const i = f.querySelector("input,select,textarea");
-    i && i.removeAttribute("aria-invalid");
-  };
-  L.openSheet({
-    title: "Change password",
-    body: `<form class="profile-pe" novalidate data-pwf>
-        <p class="muted">Changing it signs you out on other devices. This one stays signed in.</p>
-        ${A.pwField("cur", "Current password", { auto: "current-password" })}
-        ${A.pwField("pw", "New password", { desc: "au-rules" })}
-        ${A.rulesHTML("au-rules")}
-        ${A.pwField("pw2", "Confirm new password")}
-        <p class="auth-avail" data-match aria-live="polite"></p>
-        <p class="t-cap muted"><span class="sample">Sample</span> current password: <b class="num">Mirevo@2026</b>, unless you changed it</p>
-        <div class="profile-pe-f"><button class="lq lq-p" type="submit" data-save>Update password</button><button class="lq lq-s" type="button" data-cancel>Cancel</button></div>
-      </form>`,
-    onMount(b, close) {
-      const q = x => b.querySelector(x);
-      A.wireEyes(b);
-      const cur = q("#au-cur"),
-        p1 = q("#au-pw"),
-        p2 = q("#au-pw2"),
-        rules = q("#au-rules"),
-        match = q("[data-match]");
-      const ff = id => q(`[data-f="${id}"]`);
-      const paintMatch = () => {
-        if (!p2.value) {
-          match.className = "auth-avail";
-          match.textContent = "";
-          return;
-        }
-        if (p1.value === p2.value) {
-          match.className = "auth-avail is-ok";
-          match.innerHTML = icon("check") + "Passwords match";
-          clrErr(ff("pw2"));
-        } else if (p2.value.length >= p1.value.length) {
-          match.className = "auth-avail is-no";
-          match.innerHTML = icon("close") + "These don't match yet";
-        } else {
-          match.className = "auth-avail";
-          match.textContent = "";
-        }
-      };
-      cur.addEventListener("input", () => clrErr(ff("cur")));
-      p1.addEventListener("input", () => {
-        A.updRules(rules, p1.value);
-        clrErr(ff("pw"));
-        paintMatch();
-      });
-      p2.addEventListener("input", paintMatch);
-      A.updRules(rules, "");
-      q("[data-cancel]").addEventListener("click", () => close());
-      q("[data-pwf]").addEventListener("submit", e => {
-        e.preventDefault();
-        let bad = false;
-        if (!cur.value) {
-          errAt(b, "cur", "Enter your current password.");
-          bad = true;
-        } else if (!A.checkCurrent(cur.value)) {
-          errAt(
-            b,
-            "cur",
-            'That isn\'t your current password. Forgot it? Sign out and use "Forgot password".',
-          );
-          bad = true;
-          mo("shake", cur.parentElement);
-        }
-        if (!A.pwOk(p1.value)) {
-          errAt(
-            b,
-            "pw",
-            p1.value ? "Your new password needs everything in the list below." : "Choose a new password.",
-          );
-          bad = true;
-        } else if (p1.value === cur.value) {
-          errAt(b, "pw", "Use a password different from the current one.");
-          bad = true;
-        }
-        if (!bad && p1.value !== p2.value) {
-          errAt(b, "pw2", p2.value ? "The two passwords don't match." : "Type the new password again.");
-          bad = true;
-        }
-        if (bad) {
-          const i = b.querySelector(".field.is-err input");
-          i && i.focus();
-          return;
-        }
-        const sv = q("[data-save]");
-        sv.disabled = true;
-        setLabel(sv, "Updating…");
-        setTimeout(() => {
-          A.setPassword(p1.value);
-          store.set(s => {
-            s.me.passwordChanged = todayISO();
-          }, "password-changed");
-          close();
-          done();
-          L.toast("Password changed. Other devices are signed out.", "check");
-        }, 500);
-      });
-    },
-  });
+  openReactSheet({ title: "Change password", render: close => <PasswordSheet close={close} done={done} /> });
 }
 
 /** One paint of the profile, keyed by a version: a save redraws it from scratch and the counts count up again. */

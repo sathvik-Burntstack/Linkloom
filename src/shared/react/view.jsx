@@ -10,11 +10,43 @@ import { createElement, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
 
+/* one React root per outlet: the screen, the loading placeholder and the router's notes all render through it */
+const roots = new WeakMap();
+const rootFor = el => {
+  let r = roots.get(el);
+  if (!r) {
+    r = createRoot(el);
+    roots.set(el, r);
+  }
+  return r;
+};
+/** Renders `node` into `el` (an outlet) now. */
+export function renderInto(el, node) {
+  const r = rootFor(el);
+  flushSync(() => r.render(node));
+}
+
 /** Mounts a screen component into `el` and returns the router's cleanup (unmount). */
 export function mountView(el, Component, props) {
-  const root = createRoot(el);
-  flushSync(() => root.render(createElement(Component, props)));
-  return () => root.unmount();
+  renderInto(el, createElement(Component, props));
+  return () => {
+    const r = roots.get(el);
+    roots.delete(el);
+    r && r.unmount();
+  };
+}
+
+/** The router's "This screen is being built." / "could not load" notes. */
+export function outletNote(el, title, text) {
+  renderInto(
+    el,
+    createElement(
+      "div",
+      { className: "empty" },
+      createElement("p", { className: "t-h2" }, title),
+      text ? createElement("p", { className: "muted" }, text) : null,
+    ),
+  );
 }
 
 /**
@@ -50,65 +82,6 @@ export function useStore(match) {
   return window.LLD.store.s;
 }
 
-/* attribute names React wants instead of the HTML ones */
-const ATTR = {
-  class: "className",
-  for: "htmlFor",
-  tabindex: "tabIndex",
-  readonly: "readOnly",
-  maxlength: "maxLength",
-  colspan: "colSpan",
-  rowspan: "rowSpan",
-  "stroke-width": "strokeWidth",
-  "stroke-linecap": "strokeLinecap",
-  "stroke-linejoin": "strokeLinejoin",
-  "fill-rule": "fillRule",
-  "clip-rule": "clipRule",
-  "stop-color": "stopColor",
-  "xlink:href": "xlinkHref",
-};
-const cssObj = s =>
-  Object.fromEntries(
-    s
-      .split(";")
-      .map(d => d.split(":"))
-      .filter(([k, ...v]) => k && k.trim() && v.length)
-      .map(([k, ...v]) => {
-        k = k.trim();
-        return [
-          k.startsWith("--") ? k : k.replace(/-([a-z])/g, (_, ch) => ch.toUpperCase()),
-          v.join(":").trim(),
-        ];
-      }),
-  );
-const toReact = (n, key) => {
-  if (n.nodeType === 3) return n.nodeValue;
-  if (n.nodeType !== 1) return null;
-  const props = { key };
-  for (const a of n.attributes)
-    props[ATTR[a.name] || a.name] = a.name === "style" ? cssObj(a.value) : a.value;
-  const kids = [...n.childNodes].map((ch, i) => toReact(ch, i));
-  return createElement(n.localName, props, ...kids);
-};
-/**
- * React elements from an HTML string made by the apps' older helpers (chips, glyphs, pills), with no wrapper element,
- * so the page's markup stays exactly as before until those helpers move to React.
- */
-export function fromHtml(html) {
-  if (!html) return null;
-  const t = document.createElement("template");
-  t.innerHTML = html;
-  /* buttons in it get their .t/.t2 label spans now (what the router's liquid() did after drawing), so nothing
-     rewrites them once React owns them */
-  if (window.LLD && window.LLD.liquid) window.LLD.liquid(t.content);
-  const out = [...t.content.childNodes].map((ch, i) => toReact(ch, i));
-  return out.length === 1 ? out[0] : out;
-}
-
-/** An HTML string from the apps' older helpers (chips, avatars), shown as-is until those helpers move to React. */
-export const Html = ({ as = "span", html, ...rest }) =>
-  createElement(as, { ...rest, dangerouslySetInnerHTML: { __html: html } });
-
 /* SVG attribute names React wants in camelCase */
 const SVG_ATTR = {
   class: "className",
@@ -117,34 +90,31 @@ const SVG_ATTR = {
   "stroke-linejoin": "strokeLinejoin",
 };
 
-/** An app icon: the same <svg> element the apps' L.icon(n, cls) markup makes, as a React element. */
-export function Icon({ n, className = "" }) {
+/** An app icon: the same <svg> element the apps' L.icon(n, cls) markup makes, as React elements. Extra props
+    (a style, say) go on the <svg>. */
+export function Icon({ n, className = "", ...rest }) {
   const html = window.LLD.icon(n, className);
   const m = /^<svg([^>]*)>([\s\S]*)<\/svg>$/.exec(html.trim());
   if (!m) return null;
-  const props = {};
-  for (const [, k, v] of m[1].matchAll(/([\w:-]+)="([^"]*)"/g)) props[SVG_ATTR[k] || k] = v;
-  return createElement("svg", { ...props, dangerouslySetInnerHTML: { __html: m[2] } });
+  const attrs = str => {
+    const o = {};
+    for (const [, k, v] of str.matchAll(/([\w:-]+)="([^"]*)"/g)) o[SVG_ATTR[k] || k] = v;
+    return o;
+  };
+  /* the icon set's shapes are all self-closing (<path/>, <rect/>, <circle/>) */
+  const inner = m[2].trim();
+  const shapes = [...inner.matchAll(/<(\w+)([^>]*?)\/>/g)];
+  const whole = shapes.map(x => x[0]).join("") === inner.replace(/>\s+</g, "><");
+  return whole
+    ? createElement(
+        "svg",
+        { ...attrs(m[1]), ...rest },
+        ...shapes.map((x, i) => createElement(x[1], { key: i, ...attrs(x[2]) })),
+      )
+    : createElement("svg", { ...attrs(m[1]), ...rest, dangerouslySetInnerHTML: { __html: m[2] } });
 }
 
-/**
- * A sheet (the apps' L.openSheet) whose body is React. `render(close)` returns the body element.
- * The React root is unmounted once the sheet leaves the page, however it was closed (button, Esc, scrim).
- */
+/** A sheet whose body is React: `render(close)` returns the body element (see react/overlays.jsx). */
 export function openReactSheet({ title, wide, render }) {
-  window.LLD.openSheet({
-    title,
-    wide,
-    body: "",
-    onMount(b, close) {
-      const root = createRoot(b);
-      flushSync(() => root.render(render(close)));
-      const mo = new MutationObserver(() => {
-        if (b.isConnected) return;
-        mo.disconnect();
-        setTimeout(() => root.unmount());
-      });
-      mo.observe(document.body, { childList: true, subtree: true });
-    },
-  });
+  return window.LLD.openSheet({ title, wide, render });
 }

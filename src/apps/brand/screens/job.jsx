@@ -4,7 +4,8 @@
    React screen (see src/shared/react/view.jsx). */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { fromHtml, Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Cav, CrChip, CrMini, Glyph, StatusPill, Ver } from "./kit";
 import { PitchCard } from "./pitches";
 
 const L = window.LLD,
@@ -54,13 +55,13 @@ function Compare({ j, ids, vsBudget, fol, onHire, onShort }) {
       <div className="jd-cmp-r jd-cmp-head">
         {cols.map(({ b, c }) => (
           <div key={b.id} className="jd-cmp-c">
-            {fromHtml(K.cav(c))}
+            <Cav c={c} />
             <p className="jd-cmp-n">
               {c.name}
-              {fromHtml(K.ver(c))}
+              <Ver c={c} />
             </p>
             <p className="help">{c.handle}</p>
-            {fromHtml(K.pill(K.BST, b.status))}
+            <StatusPill map={K.BST} k={b.status} />
           </div>
         ))}
       </div>
@@ -323,15 +324,20 @@ function JobScreen({ param: id }) {
       title: `Hire ${c.name}?`,
       yes: `Confirm ${K.first(c)}`,
       no: "Not yet",
-      mini: `<div class="jl-mini">${K.crChip(c)}<p class="t-money jl-mini-p">${L.inr(b.price)}</p><p class="t-small muted">${esc(j.title)} · post by ${esc(L.fmtDate(b.postDate || j.deadline))}</p></div>`,
+      mini: (
+        <CrMini c={c} price={b.price} line={`${j.title} · post by ${L.fmtDate(b.postDate || j.deadline)}`} />
+      ),
       bullets: [
         `A deal starts at Accepted for ${L.inr(b.price)}, the agreed price.`,
         `Next you pay ${L.inr(b.price)} into escrow. Linkloom holds it until you approve the work.`,
         `Chat with ${K.first(c)} opens once you pay. No platform fee.`,
       ],
-      extra: others
-        ? `<label class="check jd-close-others"><input type="checkbox" checked data-closeothers> Close the brief and decline the other ${others} open bid${others === 1 ? "" : "s"}</label>`
-        : "",
+      extra: others ? (
+        <label className="check jd-close-others">
+          <input type="checkbox" defaultChecked data-closeothers="" />
+          {` Close the brief and decline the other ${others} open bid${others === 1 ? "" : "s"}`}
+        </label>
+      ) : null,
       trust: "Held safely until you approve.",
       onYes(body) {
         if (L.live) {
@@ -529,9 +535,9 @@ function JobScreen({ param: id }) {
             id={`jb-${b.id}`}
             onClick={() => seen(b.id)}
           >
-            {fromHtml(K.crChip(c, `${c.handle} · ${c.city}`))}
+            <CrChip c={c} sub={`${c.handle} · ${c.city}`} />
           </a>
-          {fromHtml(K.pill(K.BST, b.status))}
+          <StatusPill map={K.BST} k={b.status} />
         </div>
         <div className="jd-bid-g">
           <div className="jd-bid-p">
@@ -746,14 +752,14 @@ function JobScreen({ param: id }) {
           <header className="jd-h">
             <div className="bk-src">
               <span className="bk-plat">
-                {fromHtml(K.glyph(j.platform))}
+                <Glyph p={j.platform} />
                 <span>
                   {[[K.plat(j.platform), j.format].filter(Boolean).join(" "), j.category]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
               </span>
-              {fromHtml(K.pill(K.JST, j.status))}
+              <StatusPill map={K.JST} k={j.status} />
             </div>
             <h1 className="t-h1" id="jdH">
               {j.title}
@@ -916,7 +922,9 @@ function JobScreen({ param: id }) {
       >
         <p className="jd-tray-t">
           <span className="jd-tray-av">
-            {fromHtml(ids.map(b => K.cav(K.cr(S().bids.find(x => x.id === b).creator))).join(""))}
+            {ids.map((b, i) => (
+              <Cav key={i} c={K.cr(S().bids.find(x => x.id === b).creator)} />
+            ))}
           </span>
           <span>
             <b>

@@ -2,11 +2,12 @@
    Mirrors the creator app's Find briefs screen: filter column, cards, sort, hide with undo, swipe, keyboard keys.
    The filter column shows the four filters brands use most (category, platform, followers, price); the rest sit
    behind "More filters", which opens by itself when one of them is set.
-   The creator cards are the kit's HTML card (creators.js, LLD.ck), kept as an island that is wired once (save, cart,
-   hide, swipe, keys) and then shown, hidden and re-ordered in place. */
-import { useLayoutEffect, useRef, useState } from "react";
+   The creator cards (kit.jsx) are drawn once, wired by the kit (save, cart, hide, swipe, keys) and then shown, hidden
+   and re-ordered in place; their ER and price lines follow the filters. */
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Icon, Lq } from "@/shared/react/view";
+import { CreatorCard, refreshCardLines } from "./kit";
 
 const L = window.LLD,
   S = () => window.LLD_DATA;
@@ -281,7 +282,8 @@ function AllCreators() {
 
   /* show, hide and order the card nodes to match the filters; engagement follows the platform filter, the price follows
      the content type filter */
-  const placeCards = () => {
+  const cardEls = useMemo(() => all.map(c => <CreatorCard key={c.id} c={c} ctx="list" />), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const placeCards = (lines = true) => {
     const { list: vis } = filtered(ui),
       ids = vis.map(c => c.id);
     cards.current.forEach((k, id) => {
@@ -289,17 +291,7 @@ function AllCreators() {
       k.classList.toggle("is-hidden-c", ui.hidden.includes(id));
     });
     ids.forEach(id => listEl.current.append(cards.current.get(id)));
-    vis.forEach(c => {
-      const k = cards.current.get(c.id);
-      const er = k.querySelector("[data-erv]");
-      if (er) er.textContent = K().erTxt(K().erOf(c, ui.platform));
-      const p = k.querySelector("[data-price]");
-      const h = K().priceHTML(c, ui.content);
-      if (p.dataset.h !== h) {
-        p.innerHTML = h;
-        p.dataset.h = h;
-      }
-    });
+    if (lines) refreshCardLines();
   };
   const apply = (animate = true, after) => {
     const mutate = () => {
@@ -326,11 +318,9 @@ function AllCreators() {
   useLayoutEffect(() => {
     first.current = false;
     const list = listEl.current;
-    list.innerHTML = all.map(c => K().card(c, { ctx: "list" })).join("");
-    L.liquid(list);
     cards.current = new Map(L.$$(".creators-card", list).map(k => [k.dataset.id, k]));
     const wired = K().wire(list, { onHide: hide, onFav: () => redraw(x => x + 1) });
-    placeCards();
+    placeCards(false);
     K().persist();
     K().mo("stagger", L.$$(".creators-card:not([hidden])", list));
     if (ui.scrollY && ui.back) {
@@ -834,7 +824,9 @@ function AllCreators() {
               </>
             ) : null}
           </div>
-          <div className="creators-list" id="crList" ref={listEl} hidden={empty} />
+          <div className="creators-list" id="crList" ref={listEl} hidden={empty}>
+            {cardEls}
+          </div>
           <div className="empty creators-empty" hidden={!empty}>
             <img src="assets/step-04-orbit.svg" width="160" height="117" alt="" />
             <p className="t-h2">No creators match all of that.</p>
@@ -901,13 +893,17 @@ function AllCreators() {
 function SavedList({ onUnsave }) {
   const box = useRef(null);
   const s = S();
+  /* drawn once per paint (the list is keyed by it): an unsave takes its card out in place */
+  const cardEls = useMemo(
+    () =>
+      s.favorites
+        .map(L.creator)
+        .filter(Boolean)
+        .map(c => <CreatorCard key={c.id} c={c} ctx="saved" hide={false} platform="" content={[]} />),
+    [], // eslint-disable-line react-hooks/exhaustive-deps
+  );
   useLayoutEffect(() => {
     const list = box.current;
-    const favs = s.favorites.map(L.creator).filter(Boolean);
-    list.innerHTML = favs
-      .map(c => K().card(c, { ctx: "saved", hide: false, platform: "", content: [] }))
-      .join("");
-    L.liquid(list);
     const wired = K().wire(list, {
       onFav: (id, on, k) => {
         if (on) return onUnsave(null);
@@ -923,7 +919,9 @@ function SavedList({ onUnsave }) {
     return () => wired.cleanup();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className="creators-list creators-list--3" id="crSaved" ref={box} hidden={!s.favorites.length} />
+    <div className="creators-list creators-list--3" id="crSaved" ref={box} hidden={!s.favorites.length}>
+      {cardEls}
+    </div>
   );
 }
 
