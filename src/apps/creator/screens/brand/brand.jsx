@@ -320,7 +320,7 @@ function PitchSheet({ p, editing, close, onDone, onOff, onStale }) {
       </p>
       <div className="field">
         <label htmlFor="bpAbout">What's it about?</label>
-        <select className="input" id="bpAbout" value={about} onChange={e => setAbout(e.target.value)}>
+        <select className="select" id="bpAbout" value={about} onChange={e => setAbout(e.target.value)}>
           <option value="">A fresh idea (not a specific collab)</option>
           {p.openBriefs.map(b => (
             <option key={b.id} value={b.id}>

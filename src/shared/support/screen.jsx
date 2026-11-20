@@ -337,7 +337,7 @@ export function installSupport(host) {
         <form className="card sp-form" noValidate onSubmit={submit}>
           <div className="field">
             <label htmlFor="spTopic">What's it about?</label>
-            <select className="input" id="spTopic" value={topic} onChange={e => setTopic(e.target.value)}>
+            <select className="select" id="spTopic" value={topic} onChange={e => setTopic(e.target.value)}>
               {TOPICS.map(([k, n]) => (
                 <option key={k} value={k}>
                   {n}
@@ -349,7 +349,7 @@ export function installSupport(host) {
             <label htmlFor="spDeal">
               Which deal? <span className="muted">(optional)</span>
             </label>
-            <select className="input" id="spDeal" value={deal} onChange={e => setDeal(e.target.value)}>
+            <select className="select" id="spDeal" value={deal} onChange={e => setDeal(e.target.value)}>
               <option value="">Not about a deal</option>
               {deals.map(d => (
                 <option key={d.id} value={d.id}>
