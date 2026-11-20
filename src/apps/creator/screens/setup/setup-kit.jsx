@@ -421,7 +421,7 @@ export function ChipPicker({ title, sub, groups, value, onChange, max, noun }) {
   const host = useRef(null);
   const focus = sel => setTimeout(() => host.current && (host.current.querySelector(sel) || {}).focus?.());
   return (
-    <div ref={host}>
+    <div ref={host} className="setup-pickhost">
       {value.length ? (
         <ul className="setup-picked" aria-label={`Chosen ${noun}`}>
           {value.map(x => (
