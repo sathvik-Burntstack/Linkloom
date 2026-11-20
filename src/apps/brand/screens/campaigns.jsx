@@ -5,7 +5,7 @@
    React screens (see src/shared/react/view.jsx). */
 import { useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq, Photo } from "@/shared/react/view";
 import { Cav, CrMini, Glyph, Ver } from "./kit";
 import { previewDelivery } from "./pay";
 
@@ -897,7 +897,7 @@ function NowPanel({ c, ui, act }) {
             </blockquote>
             <figcaption>
               <span className="avatar v" aria-hidden="true">
-                {L.initials(S().me.brand)}
+                <Photo src={S().me.logo}>{L.initials(S().me.brand)}</Photo>
               </span>
               <span>
                 <b>You</b>

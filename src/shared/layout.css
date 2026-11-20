@@ -450,3 +450,6 @@
   .side .nav-box > .nav-note, .side .nav-box > .nav-site { display: none; }
   .side .slipbox { padding-block: 14px; }
 }
+
+/* a photo or logo inside an avatar (<Photo>, shared/react/view.jsx): fills the circle, the initials' colour behind it */
+.av-ph { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }

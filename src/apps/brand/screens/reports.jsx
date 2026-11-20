@@ -9,7 +9,7 @@
    validator (violet #8981ee / coral #eb6273 on white: all checks pass). Every chart has a text summary and a table view.
    React screen (see src/shared/react/view.jsx); each chart is a small component that draws its SVG at the box width. */
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq, Photo } from "@/shared/react/view";
 
 const L = window.LLD,
   esc = L.esc,
@@ -849,7 +849,7 @@ function ReportsScreen() {
                           className={`avatar msg-av${r.cr.tone === "b" ? " is-b" : ""}`}
                           aria-hidden="true"
                         >
-                          {L.initials(r.cr.name)}
+                          <Photo src={r.cr.avatarUrl}>{L.initials(r.cr.name)}</Photo>
                         </span>
                         <span>
                           <b>{r.cr.name}</b>

@@ -7,7 +7,7 @@
    React screen (see src/shared/react/view.jsx); the invoice stays an HTML document built as a string. */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet, Photo } from "@/shared/react/view";
 
 const L = window.LLD,
   esc = L.esc,
@@ -657,7 +657,7 @@ function PaymentsScreen({ param }) {
                     <li key={r.id} className="pay-ref">
                       <div className="pay-ref-t">
                         <span className={`avatar msg-av${cr.tone === "b" ? " is-b" : ""}`} aria-hidden="true">
-                          {L.initials(cr.name || "?")}
+                          <Photo src={cr.avatarUrl}>{L.initials(cr.name || "?")}</Photo>
                         </span>
                         <div>
                           <b>{c.title || ""}</b>

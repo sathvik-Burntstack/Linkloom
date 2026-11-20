@@ -356,6 +356,7 @@ function mapThread(c) {
     campaign: null,
     creator: idOf(party),
     creatorName: nameOf(party, "Creator"),
+    creatorImage: String(party.image || party.avatarUrl || ""),
     unread: Number(c.unread) || 0,
     loaded: false,
     messages:
@@ -806,8 +807,10 @@ function linkThreads(s) {
     const c = mine[0];
     t.campaign = c ? c.id : null;
     mine.forEach(x => (x.thread = t.id));
-    if (!s.creators.some(x => x.id === t.creator))
-      s.creators.push(mapCreator({ id: t.creator, displayName: t.creatorName }));
+    const known = s.creators.find(x => x.id === t.creator);
+    if (!known)
+      s.creators.push(mapCreator({ id: t.creator, displayName: t.creatorName, avatarUrl: t.creatorImage }));
+    else if (!known.avatarUrl && t.creatorImage) known.avatarUrl = t.creatorImage;
   }
 }
 

@@ -4,7 +4,7 @@
    Uses the creator kit (LLD.ck) from creators.js. Classes are .creator-*; styles in creator.css.
    React screen (see src/shared/react/view.jsx). */
 import { useEffect, useRef, useState } from "react";
-import { Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq, Photo } from "@/shared/react/view";
 import { AvailPill, CkGlyph } from "./kit";
 
 const L = window.LLD,
@@ -152,7 +152,9 @@ function CreatorScreen({ param: id }) {
         </a>
         <header className="creator-mast">
           <div className="creator-photo" aria-hidden="true">
-            <span>{c.name.trim()[0].toUpperCase()}</span>
+            <Photo src={c.avatarUrl}>
+              <span>{c.name.trim()[0].toUpperCase()}</span>
+            </Photo>
           </div>
           <div className="creator-id">
             <p className="t-eyebrow">

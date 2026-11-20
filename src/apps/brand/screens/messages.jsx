@@ -8,7 +8,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { reportAbuse, supportError } from "@/shared/support/api";
-import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet, Photo } from "@/shared/react/view";
 
 const L = window.LLD,
   M = () => L.motion;
@@ -221,7 +221,7 @@ const PayPill = ({ c }) =>
   );
 const Av = ({ cr }) => (
   <span className={`avatar msg-av${cr && cr.tone === "b" ? " is-b" : ""}`} aria-hidden="true">
-    {L.initials(cr ? cr.name : "?")}
+    <Photo src={cr && cr.avatarUrl}>{L.initials(cr ? cr.name : "?")}</Photo>
   </span>
 );
 

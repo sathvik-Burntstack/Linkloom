@@ -6,7 +6,7 @@
    price lines follow the Find creators filters through refreshCardLines(). */
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
-import { Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq, Photo } from "@/shared/react/view";
 
 const L = () => window.LLD;
 
@@ -19,7 +19,7 @@ export const Cav = ({ c, cls = "" }) => (
     className={`avatar bk-cav is-${c.tone === "b" ? "b" : "c"}${cls ? " " + cls : ""}`}
     aria-hidden="true"
   >
-    {L().initials(c.name || "?")}
+    <Photo src={c.avatarUrl}>{L().initials(c.name || "?")}</Photo>
   </span>
 );
 
@@ -84,7 +84,7 @@ export const CkGlyph = ({ p }) => {
 
 export const CrAvatar = ({ c, cls = "" }) => (
   <span className={`creators-av ${cls}`} aria-hidden="true">
-    {L().initials(c.name)}
+    <Photo src={c.avatarUrl}>{L().initials(c.name)}</Photo>
   </span>
 );
 

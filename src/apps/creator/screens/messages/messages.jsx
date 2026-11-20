@@ -5,7 +5,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { reportAbuse, supportError } from "@/shared/support/api";
-import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet, Photo } from "@/shared/react/view";
 import { LockIc, NetBanner, PayPill } from "../active/deal-ui";
 
 const L = window.LLD;
@@ -69,7 +69,7 @@ function ThreadRow({ t, cur }) {
         aria-label={`${t.brand}, ${a.title}${t.unread ? `, ${t.unread} unread` : ""}`}
       >
         <span className="avatar v" aria-hidden="true">
-          {t.bi || C.bi(t.brand)}
+          <Photo src={t.logo || C.logo(t.brand)}>{t.bi || C.bi(t.brand)}</Photo>
         </span>
         <span className="messages-th-t">
           <span className="messages-th-r">
@@ -592,7 +592,7 @@ function Chat({ t, onInbox }) {
           <Icon n="back" />
         </a>
         <span className="avatar v" aria-hidden="true">
-          {t.bi || C.bi(t.brand)}
+          <Photo src={t.logo || C.logo(t.brand)}>{t.bi || C.bi(t.brand)}</Photo>
         </span>
         <div className="chat-h-t">
           <h2 className="chat-name">

@@ -5,7 +5,7 @@
    The wiring, swipe and save stitch change these nodes directly, so a list draws each card once and keeps it
    (see Home's BriefGrid and Find briefs). Card classes stay .jobs-*; styles in brief-card.css. */
 import { LLD as L } from "@/apps/creator/core";
-import { Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq, Photo } from "@/shared/react/view";
 
 import "./brief-card.css";
 
@@ -62,7 +62,7 @@ export function StatusPill({ status, label }) {
 export const BrandChip = ({ j }) => (
   <span className="jobs-brand">
     <span className="jobs-bi" aria-hidden="true">
-      {j.bi || L.initials(j.brand || "")}
+      <Photo src={j.logo}>{j.bi || L.initials(j.brand || "")}</Photo>
     </span>
     <span className="jobs-bn">{j.brand}</span>
   </span>

@@ -39,6 +39,15 @@ C.bi = brand => {
     x = s.threads.find(t => t.brand === brand && t.bi) || s.jobs.find(j => j.brand === brand && j.bi);
   return (x && x.bi) || L.initials(brand);
 };
+/** The brand's logo link, from its chat or one of its briefs; "" when none is known. */
+C.logo = brand => {
+  const s = L.store.s,
+    x =
+      s.active.find(a => a.brand === brand && a.logo) ||
+      s.threads.find(t => t.brand === brand && t.logo) ||
+      s.jobs.find(j => j.brand === brand && j.logo);
+  return (x && x.logo) || "";
+};
 C.plat = p => (p === "youtube" ? "YouTube" : "Instagram");
 C.sum = (rows, f) => rows.reduce((n, r) => n + f(r), 0);
 C.press = root => L.$$(".lq-p,.lq-coral,[data-press]", root).forEach(b => L.motion.press(b));

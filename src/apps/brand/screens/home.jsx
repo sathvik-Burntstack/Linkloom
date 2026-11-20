@@ -6,7 +6,7 @@
    React screen (see src/shared/react/view.jsx); counted numbers are elements left to the motion layer. */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet, Photo } from "@/shared/react/view";
 import { lowestRate, RATE_ON_REQUEST } from "./creator-rates";
 import { REVIEW_TIME } from "../kyc";
 
@@ -31,7 +31,7 @@ const Av = ({ c, cls = "" }) => {
   const n = c ? c.name : "?";
   return (
     <span className={`home-av ${c && c.tone === "b" ? "is-b" : ""} ${cls}`} aria-hidden="true">
-      {cls.includes("lg") ? L.initials(n) : n.trim()[0].toUpperCase()}
+      <Photo src={c && c.avatarUrl}>{cls.includes("lg") ? L.initials(n) : n.trim()[0].toUpperCase()}</Photo>
     </span>
   );
 };

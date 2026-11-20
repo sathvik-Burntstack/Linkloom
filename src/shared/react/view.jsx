@@ -118,3 +118,20 @@ export function Icon({ n, className = "", ...rest }) {
 export function openReactSheet({ title, wide, render }) {
   return window.LLD.openSheet({ title, wide, render });
 }
+
+/**
+ * A person's photo or a brand's logo inside an avatar. Without a link, or when the image fails to load, the avatar's
+ * own contents (the initials) show instead: <Photo src={c.avatarUrl}>{initials}</Photo>.
+ */
+export function Photo({ src, children }) {
+  const [bad, setBad] = useState("");
+  if (!src || bad === src) return children;
+  return createElement("img", {
+    className: "av-ph",
+    src,
+    alt: "",
+    loading: "lazy",
+    decoding: "async",
+    onError: () => setBad(src),
+  });
+}

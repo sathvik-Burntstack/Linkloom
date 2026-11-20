@@ -5,7 +5,7 @@
 import "./deal-kit";
 import { useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq, Photo } from "@/shared/react/view";
 import { EscrowPill, NetBanner, PayoutSlip, PayPill, WhoPill } from "./deal-ui";
 
 const L = window.LLD;
@@ -44,7 +44,7 @@ function Ticket({ a, hidden }) {
     <li className="active-tk" data-who={who} data-id={a.id} hidden={hidden}>
       <div className="active-tk-a">
         <span className="avatar v" aria-hidden="true">
-          {C.bi(a.brand)}
+          <Photo src={a.logo || C.logo(a.brand)}>{C.bi(a.brand)}</Photo>
         </span>
         <div className="active-tk-tx">
           <p className="active-tk-brand">
@@ -645,7 +645,7 @@ function NowPanel({ a, onStart, onUpload, onLive, brandSide }) {
             </blockquote>
             <figcaption>
               <span className="avatar v" aria-hidden="true">
-                {C.bi(a.brand)}
+                <Photo src={a.logo || C.logo(a.brand)}>{C.bi(a.brand)}</Photo>
               </span>
               <span>
                 <b>{a.brand}</b>
@@ -942,7 +942,7 @@ function Work({ a }) {
         <div className="work-head-t">
           <p className="work-brand">
             <span className="avatar v" aria-hidden="true">
-              {C.bi(a.brand)}
+              <Photo src={a.logo || C.logo(a.brand)}>{C.bi(a.brand)}</Photo>
             </span>
             <span>
               <b>{a.brand}</b>
@@ -1156,7 +1156,7 @@ function Work({ a }) {
           {t ? (
             <a className="work-chat" href={`#chat-${t.id}`}>
               <span className="avatar v" aria-hidden="true">
-                {C.bi(a.brand)}
+                <Photo src={a.logo || C.logo(a.brand)}>{C.bi(a.brand)}</Photo>
               </span>
               <span className="work-chat-t">
                 <b>Chat with {a.brand.split(" ")[0]}</b>

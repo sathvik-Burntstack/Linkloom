@@ -150,6 +150,9 @@ function stageOf(status) {
   return "kickoff";
 }
 
+/** A brand's logo link from whatever the API sent for it (an object with logoUrl or image), or "". */
+const logoOf = b => (b && typeof b === "object" ? String(b.logoUrl || b.logo || b.image || "") : "");
+
 export function mapJob(c, me) {
   const brand = nameOf(c.brand, "Brand on Linkloom");
   const platform = platformOf(c.platform);
@@ -161,6 +164,7 @@ export function mapJob(c, me) {
     brand,
     brandId: idOf(c.brand),
     bi: initialsOf(brand),
+    logo: logoOf(c.brand),
     tone: toneOf(brand),
     title: c.title || "Untitled brief",
     platform,
@@ -335,6 +339,7 @@ export function mapOrder(o) {
   if (stage === "approved") a.log.push({ at: isoOr(o.approvedAt || o.updatedAt, created), kind: "approved" });
   a.allowed = Array.isArray(o.allowedActions) ? o.allowedActions : [];
   a.brandId = idOf(o.brand || camp.brand);
+  a.logo = logoOf(o.brand) || logoOf(camp.brand);
   a.status = status;
   return a;
 }
@@ -359,6 +364,7 @@ function mapThread(c, active) {
     id: String(c.id),
     brand,
     bi: initialsOf(brand),
+    logo: logoOf(party),
     tone: toneOf(brand),
     job: a?.id || "",
     unread: Number(c.unread) || 0,

@@ -7,7 +7,7 @@ import { LLD, store } from "@/apps/creator/core";
 import { ApiError } from "@/shared/api/client";
 import { creatorApi, refreshSoft } from "./creator";
 import { amount, day, nameOf } from "../../../shared/live";
-import { Icon, Lq } from "@/shared/react/view";
+import { Icon, Lq, Photo } from "@/shared/react/view";
 
 /* The backend's offer status names aren't documented (pending? invited? sent?), so an offer counts as open unless
    its status says it is finished. A whitelist hid every offer whose status it didn't know. */
@@ -61,7 +61,9 @@ function OfferCard({ o, onGone }) {
         <div className="bids-top">
           <span className="jobs-brand">
             <span className="jobs-bi" aria-hidden="true">
-              {initials(brand)}
+              <Photo src={o.brand && typeof o.brand === "object" ? o.brand.logoUrl || o.brand.image : ""}>
+                {initials(brand)}
+              </Photo>
             </span>
             <span className="jobs-bn">{brand}</span>
           </span>

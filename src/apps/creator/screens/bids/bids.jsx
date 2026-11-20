@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { KYC_AFTER_ACCEPT, kycOwed, openKyc } from "../../core/kyc-gate";
 import { DirectOffers } from "../../live/creator-offers";
-import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet, Photo } from "@/shared/react/view";
 
 const L = window.LLD;
 /* the exact statuses the Filter menu offers; "shortlisted" is a viewed bid the brand shortlisted */
@@ -76,7 +76,7 @@ function Rail({ b }) {
 const BrandChip = ({ m }) => (
   <span className="jobs-brand">
     <span className="jobs-bi" aria-hidden="true">
-      {m.bi}
+      <Photo src={m.logo}>{m.bi}</Photo>
     </span>
     <span className="jobs-bn">{m.brand}</span>
   </span>
@@ -241,6 +241,7 @@ function BidsScreen() {
     return {
       brand: j ? j.brand : b.brand || "Brand",
       bi: j ? j.bi : L.initials(b.brand || "B"),
+      logo: j ? j.logo : "",
       title: j ? j.title : b.title || "Brief",
       platform: j ? j.platform : b.platform || "instagram",
       format: j ? j.format : b.format || "",

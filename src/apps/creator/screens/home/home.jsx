@@ -9,7 +9,7 @@ import { BEST_FIT_MIN, BriefCard, StatusPill } from "../../ui/brief-card";
 import { KYC_AFTER_ACCEPT, kycOwed, kycWaitText, openKyc } from "../../core/kyc-gate";
 import { storedUser } from "@/shared/api/client";
 import { firstTime } from "@/shared/ux";
-import { Icon, Lq, openReactSheet } from "@/shared/react/view";
+import { Icon, Lq, openReactSheet, Photo } from "@/shared/react/view";
 
 const L = window.LLD,
   esc = L.esc;
@@ -464,7 +464,7 @@ function HomeScreen() {
         </div>
         <p className="home-from">
           <span className="jobs-bi" aria-hidden="true">
-            {th ? th.bi : L.initials(a.brand)}
+            <Photo src={a.logo || (th && th.logo)}>{th ? th.bi : L.initials(a.brand)}</Photo>
           </span>
           {a.brand} asked
         </p>
@@ -558,7 +558,7 @@ function HomeScreen() {
       <li key={b.id}>
         <a className="home-bid" href={act ? "#work-" + act.id : "#bids"}>
           <span className="jobs-bi" aria-hidden="true">
-            {j ? j.bi : L.initials(brand)}
+            <Photo src={j && j.logo}>{j ? j.bi : L.initials(brand)}</Photo>
           </span>
           <span className="home-bid-t">
             <span className="home-bid-n">{title}</span>
