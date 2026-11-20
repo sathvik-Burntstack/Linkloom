@@ -439,15 +439,12 @@
 /* sidebar menu: still scrolls on short screens, but without a visible scrollbar (brand and creator) */
 .nav-box { scrollbar-width: none; -ms-overflow-style: none; }
 .nav-box::-webkit-scrollbar { display: none; width: 0; height: 0; }
-/* the menu card hugs its items, with the note right under them behind a hairline; the escrow slip and the account
-   card sit at the foot of the column, and any spare height is the paper between the two groups (no empty dark card) */
-.side .nav-box { flex: 0 1 auto; margin-bottom: auto; }
-.nav-box > .nav-note { margin-top: 0; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.nav-box > .nav-note { margin-top: auto; }
 /* short windows: a tighter menu so every item (Help & support is last) fits without scrolling */
 @media (max-height: 860px) {
   .side .nav-box { padding-block: 18px; gap: 14px; }
-  .side .nav { gap: 2px; }
-  .side .nav a { min-height: 36px; font-size: 19px; line-height: 28px; }
+  .side .nav { gap: 0; }
+  .side .nav a { min-height: 34px; font-size: 18px; line-height: 26px; }
 }
 @media (max-height: 720px) {
   .side .nav a { min-height: 30px; font-size: 16px; line-height: 22px; }
