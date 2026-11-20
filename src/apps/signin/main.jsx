@@ -14,7 +14,7 @@ import { createRoot } from "react-dom/client";
 import { useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "../../shared/vendor-gsap";
 import {} from "./handoff";
-import { attachGoogle } from "../../shared/api/google";
+import { attachGoogle, preloadGoogle } from "../../shared/api/google";
 import {
   authMessage,
   changePassword,
@@ -103,6 +103,9 @@ const stitch = () => {
     .to(thread, { strokeDashoffset: -44, opacity: 0, duration: 0.7, ease: "power2.in" });
 };
 
+/* fetch Google's script now, while the page draws, so its button is ready sooner */
+preloadGoogle();
+
 function SignIn() {
   /* the page's state, kept as one object as the plain-DOM version kept module variables; `draw` paints it */
   const S = useRef(null);
@@ -136,6 +139,11 @@ function SignIn() {
       pw: "",
       sub: "",
       locked: false,
+      /* Google's button: "loading" until Google's own button is laid over ours, then "ready"; "busy" while signing
+         in with the picked account; "failed" (with gMsg) if Google couldn't load, when a click tries again */
+      gState: "loading",
+      gMsg: "",
+      gHint: "",
     };
   const s = S.current;
   const [, tick] = useState(0);
@@ -154,6 +162,7 @@ function SignIn() {
     google: useRef(null),
     sub: useRef(null),
   };
+  const gCtl = useRef(null);
   const showNames = () => (s.verifiedUser ? s.needsProfile : s.mode === "signup");
   const setErr = (input, errId, msg) => {
     s.errs[errId] = msg;
@@ -584,21 +593,36 @@ function SignIn() {
       setTimeout(stitch, 900);
     }
     /* Google: Google's own button sits invisibly over the designed one */
-    attachGoogle(
+    gCtl.current = attachGoogle(
       R.google.current,
       async token => {
+        if (s.gState === "busy") return;
         s.errs.googleErr = "";
+        s.gState = "busy";
+        gCtl.current?.pause(true);
         draw();
         try {
           const user = await googleSignIn(token, s.role, remember());
+          /* an existing account goes straight to its dashboard: the button stays busy until the page changes */
+          if (isNew(user)) {
+            s.gState = "ready";
+            gCtl.current?.pause(false);
+          }
           await afterSignIn(user);
+          draw();
         } catch (err) {
+          s.gState = "ready";
+          gCtl.current?.pause(false);
           s.errs.googleErr = authMessage(err);
           draw();
         }
       },
-      msg => {
-        s.errs.googleErr = msg;
+      (state, msg) => {
+        if (s.gState === "busy") return;
+        s.gState = state;
+        s.gMsg = state === "failed" ? msg || "" : "";
+        if (s.gHint && s.errs.googleErr === s.gHint) s.errs.googleErr = "";
+        s.gHint = "";
         draw();
       },
     );
@@ -1040,8 +1064,33 @@ function SignIn() {
       </form>
       <div id="google" hidden={!!s.verifiedUser}>
         <p className="or">or</p>
-        <button className="alt" type="button" id="googleBtn" ref={R.google}>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+        <button
+          className={"alt g-btn" + (s.gState === "ready" ? "" : " is-" + s.gState)}
+          type="button"
+          id="googleBtn"
+          ref={R.google}
+          aria-busy={s.gState === "loading" || s.gState === "busy" ? "true" : undefined}
+          aria-describedby="googleErr"
+          onClick={() => {
+            /* Google's own button takes the click once it's there; this runs only before that, or after a failure */
+            if (s.gState === "failed") gCtl.current?.retry();
+            else if (s.gState === "loading") {
+              s.gHint = "Google is still loading. It'll be ready in a moment.";
+              s.errs.googleErr = s.gHint;
+              draw();
+            }
+          }}
+        >
+          <span
+            className="g-spin"
+            aria-hidden="true"
+            hidden={s.gState !== "loading" && s.gState !== "busy"}
+          ></span>
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            display={s.gState === "loading" || s.gState === "busy" ? "none" : undefined}
+          >
             <path
               fill="#4285F4"
               d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"
@@ -1056,10 +1105,18 @@ function SignIn() {
               d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4.1 5.6-4.1z"
             />
           </svg>
-          Continue with Google
+          <span className="g-l">
+            {s.gState === "busy"
+              ? "Signing you in…"
+              : s.gState === "loading"
+                ? "Loading Google…"
+                : s.gState === "failed"
+                  ? "Try Google again"
+                  : "Continue with Google"}
+          </span>
         </button>
         <p className="err" id="googleErr" aria-live="assertive">
-          {err("googleErr")}
+          {err("googleErr") || (s.gState === "failed" ? s.gMsg : "")}
         </p>
       </div>
       <div className="join" id="join" hidden={!signin}>

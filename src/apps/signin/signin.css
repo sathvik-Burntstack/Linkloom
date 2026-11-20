@@ -197,3 +197,11 @@ body[data-role=brand] .seg-glide{transform:translateX(100%)}
   .field{gap:6px;margin-bottom:12px}
   .row{margin:-4px 0 10px}
 }
+
+/* Continue with Google: loading, signing in, failed (shared/api/google.js reports the state) */
+.g-btn.is-loading,.g-btn.is-busy{cursor:progress}
+.g-btn.is-failed{border-style:dashed}
+.g-spin{width:18px;height:18px;flex:none;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:g-spin .8s linear infinite}
+.g-spin[hidden]{display:none}
+@keyframes g-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.g-spin{animation-duration:2.4s}}
