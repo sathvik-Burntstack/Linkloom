@@ -7,6 +7,8 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Icon, Lq } from "@/shared/react/view";
+import { CREATOR_LANGUAGES } from "@/shared/creator-languages";
+import { CITIES_BY_STATE } from "@/shared/india-cities";
 import { CreatorCard, refreshCardLines } from "./kit";
 
 const L = window.LLD,
@@ -14,6 +16,8 @@ const L = window.LLD,
 const K = () => L.ck;
 
 /* ---------- filter vocabularies ---------- */
+const FIRST_LANGUAGES = ["Telugu", "Hindi", "English"];
+const INDIAN_STATES = Object.keys(CITIES_BY_STATE);
 const FOLLOW = [
   ["", "Any"],
   ["0-50000", "Under 50K"],
@@ -275,10 +279,18 @@ function AllCreators() {
     /* a filter set behind "More filters" (kept from the last visit) opens it, so nothing active is out of sight */
     ui.more = !!(ui.more || actives(ui).some(a => isMore(a.k)));
   }
-  const uniq = a => [...new Set(a)].sort();
+  const uniq = values => [...new Set(values.filter(value => typeof value === "string" && value.trim()))].sort();
   const cats = uniq(all.flatMap(c => c.categories)),
-    langs = uniq(all.flatMap(c => c.languages)),
-    countries = uniq(all.map(c => c.country));
+    langs = [
+      ...FIRST_LANGUAGES,
+      ...uniq([...CREATOR_LANGUAGES, ...all.flatMap(c => c.languages)]).filter(l => !FIRST_LANGUAGES.includes(l)),
+    ],
+    countries = uniq(["India", ...all.map(c => c.country)]);
+
+  /* React sets option.selected directly when filters are reset. Refresh the desktop labels after that commit. */
+  useLayoutEffect(() => {
+    for (const select of root.current.querySelectorAll(".creators-filters select")) select._ui?.sync?.();
+  }, [ui.country, ui.state, ui.city, ui.lang]);
 
   /* show, hide and order the card nodes to match the filters; engagement follows the platform filter, the price follows
      the content type filter */
@@ -367,9 +379,13 @@ function AllCreators() {
 
   /* location choices narrow each other: country → state → city (a choice that no longer fits is cleared) */
   const pool = all.filter(c => !ui.country || c.country === ui.country);
-  const states = [...new Set(pool.map(c => c.state))].sort();
+  const india = !ui.country || ui.country === "India";
+  const states = uniq([...(india ? INDIAN_STATES : []), ...pool.map(c => c.state)]);
   if (ui.state && !states.includes(ui.state)) ui.state = "";
-  const cities = [...new Set(pool.filter(c => !ui.state || c.state === ui.state).map(c => c.city))].sort();
+  const cities = uniq([
+    ...(india && Object.hasOwn(CITIES_BY_STATE, ui.state) ? CITIES_BY_STATE[ui.state] : []),
+    ...pool.filter(c => !ui.state || c.state === ui.state).map(c => c.city),
+  ]).filter(city => city !== "India");
   if (ui.city && !cities.includes(ui.city)) ui.city = "";
 
   const { list: vis, hiddenCount } = filtered(ui);
@@ -691,7 +707,7 @@ function AllCreators() {
                     value={ui.city}
                     onChange={e => {
                       const v = e.target.value,
-                        c = all.find(x => x.city === v);
+                        c = pool.find(x => x.city === v);
                       if (v && c && !ui.state) ui.state = c.state; // picking a city fills in its state, so the chips read correctly
                       set("city", v);
                     }}
@@ -769,6 +785,7 @@ function AllCreators() {
             <Lq
               className="lq-s lq-sm creators-ftoggle"
               aria-expanded={String(fOpen)}
+              data-guest-ok=""
               aria-controls="crFilters"
               ref={toggleEl}
               onClick={() => {
@@ -802,7 +819,7 @@ function AllCreators() {
               </select>
             </div>
           </div>
-          <div className="creators-active" id="crActive" aria-label="Active filters" hidden={!act.length}>
+          <div className="creators-active" id="crActive" data-guest-ok="" aria-label="Active filters" hidden={!act.length}>
             {act.length ? (
               <>
                 {act.map(a => (
@@ -830,7 +847,7 @@ function AllCreators() {
           <div className="empty creators-empty" hidden={!empty}>
             <img src="assets/step-04-orbit.svg" width="160" height="117" alt="" />
             <p className="t-h2">No creators match all of that.</p>
-            <p className="muted" data-suggest="">
+            <p className="muted" data-suggest="" data-guest-ok="">
               {best && best.n ? (
                 <>
                   Removing <b>{best.a.label}</b> brings back {best.n} {best.n === 1 ? "creator" : "creators"}.{" "}

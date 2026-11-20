@@ -1,0 +1,18 @@
+export const CREATOR_LANGUAGES = [
+  "Hindi",
+  "English",
+  "Marathi",
+  "Tamil",
+  "Telugu",
+  "Bengali",
+  "Kannada",
+  "Malayalam",
+  "Gujarati",
+  "Punjabi",
+  "Odia",
+  "Urdu",
+  "Assamese",
+  "Bhojpuri",
+  "Konkani",
+  "Haryanvi",
+];

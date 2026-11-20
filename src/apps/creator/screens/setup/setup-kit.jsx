@@ -10,24 +10,7 @@ const LLD = window.LLD;
 export { CITIES_BY_STATE, OTHER_CITY };
 export const BIO_MAX = 160,
   CAT_MAX = 3;
-export const LANGS = [
-  "Hindi",
-  "English",
-  "Marathi",
-  "Tamil",
-  "Telugu",
-  "Bengali",
-  "Kannada",
-  "Malayalam",
-  "Gujarati",
-  "Punjabi",
-  "Odia",
-  "Urdu",
-  "Assamese",
-  "Bhojpuri",
-  "Konkani",
-  "Haryanvi",
-];
+export { CREATOR_LANGUAGES as LANGS } from "@/shared/creator-languages";
 /* niches in groups, for the picker; the twelve names creators could pick before are all still here */
 export const NICHE_GROUPS = [
   {

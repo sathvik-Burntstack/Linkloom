@@ -10,6 +10,8 @@
    - conversations                     → s.threads
    - escrow and release, from orders   → s.payments */
 import { api, apiAll, ApiError } from "@/shared/api/client";
+import { CITIES_BY_STATE } from "@/shared/india-cities";
+import { CREATOR_LANGUAGES } from "@/shared/creator-languages";
 import { fetchMe } from "@/shared/api/auth";
 import { onLive, startLive } from "@/shared/api/realtime";
 import { downloadUrl, openPrivateFile, uploadFile } from "@/shared/api/uploads";
@@ -101,9 +103,23 @@ function platformRows(c, primary) {
   return rows;
 }
 
+const stateNames = new Map(Object.keys(CITIES_BY_STATE).map(name => [name.toLowerCase(), name]));
+const languageNames = new Map(CREATOR_LANGUAGES.map(name => [name.toLowerCase(), name]));
+
 export function mapCreator(c) {
   const name = String(c.displayName || c.name || "Creator");
-  const [city, state] = splitLocation(c.location);
+  const location = String(c.location || "").replace(/(?:^|,\s*)India\s*$/i, "").trim();
+  const [place, region] = splitLocation(location);
+  const stateOnly = !region && stateNames.get(place.toLowerCase());
+  const city = String(c.city || (stateOnly ? "" : place)).trim();
+  const rawState = String(c.state || region || stateOnly || "").trim();
+  let state = stateNames.get(rawState.toLowerCase()) || rawState;
+  if (!state || state.toLowerCase() === "india") {
+    const matches = Object.entries(CITIES_BY_STATE).filter(([, cities]) =>
+      cities.some(name => name.toLowerCase() === city.toLowerCase()),
+    );
+    state = matches.length === 1 ? matches[0][0] : "";
+  }
   const p = platformOf(c.primaryPlatform);
   const rates = {};
   const packages = Array.isArray(c.packages) ? c.packages : [];
@@ -126,7 +142,10 @@ export function mapCreator(c) {
     country: "India",
     gender: String(c.gender || ""),
     age: Number(c.age) || "",
-    languages: Array.isArray(c.languages) ? c.languages : [],
+    languages: (Array.isArray(c.languages) ? c.languages : [])
+      .filter(language => typeof language === "string" && language.trim())
+      .map(language => language.trim())
+      .map(language => languageNames.get(language.toLowerCase()) || language),
     categories: Array.isArray(c.categories) ? c.categories : [],
     content: Object.keys(rates).map(k => k[0].toUpperCase() + k.slice(1)),
     platforms: platformRows(c, p),
