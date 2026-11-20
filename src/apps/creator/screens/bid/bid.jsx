@@ -282,7 +282,7 @@ function Review({ j, d, price, pd, views, why, maxDate, save, close }) {
           aria-busy={busy && L.live ? "true" : undefined}
           onClick={send}
         >
-          <Icon n="send" />
+          <Icon n="send" className="ic" />
           Send bid
         </Lq>
         <Lq className="lq-s" data-edit="" onClick={() => close()}>
