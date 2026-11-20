@@ -31,7 +31,7 @@ const PITCH_ERR = {
   EDIT_USED: "You've already used your one edit, so this pitch is locked.",
   PITCH_DECLINED: "The brand passed on this pitch, so it can't be edited.",
   PITCH_COOLDOWN: "The brand passed on your last pitch. You can pitch them again once 15 days have passed.",
-  BRIEF_NOT_THIS_BRAND: "That brief isn't open any more. Pick another one, or pitch a fresh idea.",
+  BRIEF_NOT_THIS_BRAND: "That collab isn't open any more. Pick another one, or pitch a fresh idea.",
 };
 const errText = e => PITCH_ERR[e && e.code] || (L.live ? L.live.errorText(e) : "Something went wrong.");
 const BLOCKED_TXT = "Pitching isn't open for your account yet.";
@@ -80,10 +80,10 @@ function PitchCard({ p, cardRef }) {
   const about = mp.campaignId ? (
     <>
       About{" "}
-      <b>{mp.campaignTitle || (p.openBriefs.find(b => b.id === mp.campaignId) || {}).title || "a brief"}</b>
+      <b>{mp.campaignTitle || (p.openBriefs.find(b => b.id === mp.campaignId) || {}).title || "a collab"}</b>
     </>
   ) : (
-    "A fresh idea, not a specific brief"
+    "A fresh idea, not a specific collab"
   );
   const tag =
     mp.status === "declined" ? (
@@ -197,7 +197,7 @@ function Page({ p, onPitch, onView, cardRef }) {
       <section className="card bp-sec" aria-labelledby="bpBriefsH">
         <div className="bp-sec-h">
           <h2 className="t-h2" id="bpBriefsH">
-            Open briefs
+            Open collabs
           </h2>
           <span className="pill">{p.openBriefs.length}</span>
         </div>
@@ -214,14 +214,14 @@ function Page({ p, onPitch, onView, cardRef }) {
                     </span>
                   </span>
                   <Lq as="span" className="lq-s lq-sm">
-                    View brief
+                    View collab
                   </Lq>
                 </a>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="muted">No open briefs right now. You can still pitch them a fresh idea.</p>
+          <p className="muted">No open collabs right now. You can still pitch them a fresh idea.</p>
         )}
       </section>
       <div className="bp-bar">
@@ -236,10 +236,10 @@ function SoonSheet({ p, close }) {
   return (
     <div className="stack bp-sheet">
       <p>
-        Soon you'll be able to pitch {p.name} an idea, about one of their briefs or something new. You'll get
+        Soon you'll be able to pitch {p.name} an idea, about one of their collabs or something new. You'll get
         one pitch per brand.
       </p>
-      <p className="muted">For now, bid on one of their open briefs.</p>
+      <p className="muted">For now, bid on one of their open collabs.</p>
       <div className="row wrap">
         <Lq className="lq-p" data-no="" onClick={() => close()}>
           OK
@@ -321,13 +321,13 @@ function PitchSheet({ p, editing, close, onDone, onOff, onStale }) {
       <div className="field">
         <label htmlFor="bpAbout">What's it about?</label>
         <select className="input" id="bpAbout" value={about} onChange={e => setAbout(e.target.value)}>
-          <option value="">A fresh idea (not a specific brief)</option>
+          <option value="">A fresh idea (not a specific collab)</option>
           {p.openBriefs.map(b => (
             <option key={b.id} value={b.id}>
               {b.title}
             </option>
           ))}
-          {earlier ? <option value={mp.campaignId}>{mp.campaignTitle || "Your earlier brief"}</option> : null}
+          {earlier ? <option value={mp.campaignId}>{mp.campaignTitle || "Your earlier collab"}</option> : null}
         </select>
       </div>
       <div className="field">
@@ -434,7 +434,7 @@ function BrandScreen({ param: id }) {
     document.title = c.p.name + " · Linkloom";
     const cr = document.getElementById("crumb");
     if (cr) {
-      cr.innerHTML = `<a href="#jobs">Find briefs</a> / ${L.esc(c.p.name)}`;
+      cr.innerHTML = `<a href="#jobs">Find collabs</a> / ${L.esc(c.p.name)}`;
       cr.hidden = false;
     }
   }, [c]);
@@ -445,7 +445,7 @@ function BrandScreen({ param: id }) {
         <div className="empty">
           <p className="t-h2">Brand profiles open in the live app.</p>
           <Lq as="a" className="lq-p" href="#jobs">
-            See open briefs
+            See open collabs
           </Lq>
         </div>
       </div>
@@ -483,7 +483,7 @@ function BrandScreen({ param: id }) {
               </Lq>
             )}
             <Lq as="a" className="lq-s" href="#jobs">
-              See open briefs
+              See open collabs
             </Lq>
           </div>
         </div>
@@ -535,7 +535,7 @@ function BrandScreen({ param: id }) {
 L.register("brand", {
   title: id => (cache[id] && cache[id].p ? cache[id].p.name : "Brand"),
   crumb: id =>
-    `<a href="#jobs">Find briefs</a> / ${L.esc(cache[id] && cache[id].p ? cache[id].p.name : "Brand")}`,
+    `<a href="#jobs">Find collabs</a> / ${L.esc(cache[id] && cache[id].p ? cache[id].p.name : "Brand")}`,
   nav: "jobs",
   Component: BrandScreen,
 });

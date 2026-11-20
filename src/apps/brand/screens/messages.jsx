@@ -303,7 +303,7 @@ const Placeholder = () => (
       <li>
         <Icon n="file" />
         <span>
-          Share briefs, product shots and feedback files here. Creators send their deliveries here too.
+          Share collabs, product shots and feedback files here. Creators send their deliveries here too.
         </span>
       </li>
       <li>

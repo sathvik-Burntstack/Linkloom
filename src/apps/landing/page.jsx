@@ -29,7 +29,7 @@ function Hero() {
           <div className="hx-foot" data-hx-in>
             {" "}
             <p className="hx-sub">
-              Brands post a brief. Creators bid in a minute. Escrow holds the money until the work is
+              Brands post a collab. Creators bid in a minute. Escrow holds the money until the work is
               approved.
             </p>{" "}
             <div className="hx-ctas">
@@ -58,12 +58,12 @@ function How() {
         <div className="in st-in">
           {" "}
           <h2 className="st-h" id="stH" data-reveal>
-            From brief to paid.
+            From posting to payout.
           </h2>{" "}
           <div className="st-lede">
             {" "}
             <p className="st-sub">
-              Six steps, one shared timeline. Creator and brand see the same deal, from the first brief to the
+              Six steps, one shared timeline. Creator and brand see the same deal, from the first collab to the
               final payout.
             </p>{" "}
             <p className="sample">Mirevo, Ananya and the amounts shown are samples.</p>{" "}
@@ -89,7 +89,7 @@ function How() {
                       </div>
                     </div>
                   </div>{" "}
-                  <div className="st-ui st-fields" role="group" aria-label="Brief">
+                  <div className="st-ui st-fields" role="group" aria-label="Collab">
                     {" "}
                     <p>
                       <span>Budget</span>
@@ -110,7 +110,7 @@ function How() {
                   <svg className="st-ar" viewBox="0 0 40 16" aria-hidden="true">
                     <path d="M1 8h37M31 1.5 38 8l-7 6.5" />
                   </svg>
-                  <span>Post a brief</span>
+                  <span>Post a collab</span>
                 </h3>{" "}
                 <p className="st-tx">
                   Set the budget, platform and deadline. Or skip the wait and invite a creator directly.
@@ -452,7 +452,7 @@ function Sides() {
                       <span className="sd-dot">
                         <img src="assets/dot-creator.svg" width="10" height="10" alt="" />
                       </span>
-                      Briefs matched to your niche, city and language
+                      Collabs matched to your niche, city and language
                     </li>{" "}
                     <li>
                       <span className="sd-dot">
@@ -493,7 +493,7 @@ function Sides() {
                       <span className="sd-dot">
                         <img src="assets/dot-brand.svg" width="10" height="10" alt="" />
                       </span>
-                      Hire directly, or post a brief and compare bids
+                      Hire directly, or post a collab and compare bids
                     </li>{" "}
                     <li>
                       <span className="sd-dot">
@@ -520,7 +520,7 @@ function Sides() {
                   <div className="sd-card-in">
                     {" "}
                     {/* front: the creator sees the brief and bids */}{" "}
-                    <article className="sd-face sd-front" aria-label="Sample brief from Mirevo Skincare">
+                    <article className="sd-face sd-front" aria-label="Sample collab from Mirevo Skincare">
                       {" "}
                       <div className="sd-fh">
                         {" "}
@@ -532,7 +532,7 @@ function Sides() {
                       </div>{" "}
                       <h4 className="sd-title">Barrier Repair Serum launch</h4>{" "}
                       <p className="sd-meta">1 Reel · Budget ₹18,000</p>{" "}
-                      <ul className="sd-tags" aria-label="Brief matches your profile">
+                      <ul className="sd-tags" aria-label="Collab matches your profile">
                         {" "}
                         <li>
                           <img src="assets/dot-creator.svg" width="10" height="10" alt="" />
@@ -606,11 +606,11 @@ function Sides() {
                       </p>{" "}
                     </article>{" "}
                     {/* back: the brand compares bids on the same brief */}{" "}
-                    <article className="sd-face sd-back" aria-label="Sample bids on the Mirevo brief" inert>
+                    <article className="sd-face sd-back" aria-label="Sample bids on the Mirevo collab" inert>
                       {" "}
                       <div className="sd-fh">
                         {" "}
-                        <span className="sd-src">Bids on your brief</span>{" "}
+                        <span className="sd-src">Bids on your collab</span>{" "}
                         <span className="sample">Sample</span>{" "}
                       </div>{" "}
                       <h4 className="sd-title">Barrier Repair Serum launch</h4>{" "}
@@ -734,7 +734,7 @@ function Sides() {
                 <ul className="sd-bubbles" aria-hidden="true">
                   {" "}
                   <li className="sd-bub sd-b1" data-for="creator" style={{ "--d": "0" }}>
-                    <i>M</i>New brief · Reel · ₹18,000
+                    <i>M</i>New collab · Reel · ₹18,000
                   </li>{" "}
                   <li className="sd-bub sd-b2" data-for="creator" style={{ "--d": "1" }}>
                     <i>M</i>Can you post by 12 Dec?
@@ -744,7 +744,7 @@ function Sides() {
                     <span>Bid sent · ₹18,000</span>
                   </li>{" "}
                   <li className="sd-bub sd-b4" data-for="brand" style={{ "--d": "0" }}>
-                    <i>3</i>New bids on your brief
+                    <i>3</i>New bids on your collab
                   </li>{" "}
                   <li className="sd-bub sd-b5" data-for="brand" style={{ "--d": "1" }}>
                     <i>AI</i>Love this, I'm in!
@@ -1009,7 +1009,7 @@ function Platforms() {
             Built for the platforms India creates on.
           </h2>{" "}
           <p className="body-l pf-lede">
-            Open a platform, then pick a format to see what a brief for it looks like. Every brief, name and
+            Open a platform, then pick a format to see what a collab for it looks like. Every collab, name and
             budget shown here is a sample.
           </p>{" "}
         </div>{" "}
@@ -1104,11 +1104,11 @@ function Platforms() {
                       <p className="pf-desc">Vertical 9:16 video for the Reels tab and the feed.</p>{" "}
                       <div className="pf-brief">
                         {" "}
-                        <p className="pf-bwho">Brief from Mirevo Skincare</p>{" "}
+                        <p className="pf-bwho">Collab from Mirevo Skincare</p>{" "}
                         <p className="pf-bline">1 Reel · 30–⁠45 s · product in first 3 s · ₹18,000</p>{" "}
                       </div>{" "}
                       <a className="lq lq-s pf-cta" href="brand.html#post">
-                        Post a brief like this
+                        Post a collab like this
                       </a>{" "}
                     </div>{" "}
                   </div>{" "}
@@ -1367,13 +1367,13 @@ function Platforms() {
                       </p>{" "}
                       <div className="pf-brief">
                         {" "}
-                        <p className="pf-bwho">Brief from Mirevo Skincare</p>{" "}
+                        <p className="pf-bwho">Collab from Mirevo Skincare</p>{" "}
                         <p className="pf-bline">
                           4 min review · 60–⁠90 s integration at 0:42–⁠1:30 · ₹45,000
                         </p>{" "}
                       </div>{" "}
                       <a className="lq lq-s pf-cta" href="brand.html#post">
-                        Post a brief like this
+                        Post a collab like this
                       </a>{" "}
                     </div>{" "}
                   </div>{" "}
@@ -1675,7 +1675,7 @@ export function Page() {
               </div>{" "}
               <div className="box updates">
                 {" "}
-                <p className="t">Get new briefs in your inbox</p>{" "}
+                <p className="t">Get new collabs in your inbox</p>{" "}
                 <form className="field" id="subForm" noValidate>
                   {" "}
                   <label

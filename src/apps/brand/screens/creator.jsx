@@ -357,7 +357,7 @@ function CreatorScreen({ param: id }) {
                   <p className="t-h3">No past work on Linkloom yet</p>
                   <p className="muted">
                     {first(c.name)} is new here. Check the platform numbers above, or start with a small
-                    brief.
+                    collab.
                   </p>
                 </div>
               )}
@@ -436,8 +436,8 @@ function CreatorScreen({ param: id }) {
               </p>
               <p className="muted">
                 {K.availDays(c) <= 0
-                  ? `Open to new briefs now. Give at least 3 days for a first draft.`
-                  : `Can start a new brief ${K.availDays(c) === 1 ? "tomorrow" : "in " + K.availDays(c) + " days"}. Set your due date after that.`}
+                  ? `Open to new collabs now. Give at least 3 days for a first draft.`
+                  : `Can start a new collab ${K.availDays(c) === 1 ? "tomorrow" : "in " + K.availDays(c) + " days"}. Set your due date after that.`}
               </p>
               {(c.content || []).length ? <p className="t-cap muted">Posts {c.content.join(", ")}</p> : null}
             </section>

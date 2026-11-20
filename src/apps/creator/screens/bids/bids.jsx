@@ -117,7 +117,7 @@ function WithdrawSheet({ b, m, close, done }) {
       </div>
       <ul className="bids-conseq">
         <li>{m.brand} sees it as withdrawn by you.</li>
-        <li>You can bid again while the brief is open.</li>
+        <li>You can bid again while the collab is open.</li>
         <li>Nothing is charged. No money has moved yet.</li>
       </ul>
       <div className="row wrap">
@@ -200,7 +200,7 @@ function FeedbackSheet({ b, m, s, close, done }) {
           className="textarea"
           id="bidsFbTx"
           maxLength={300}
-          placeholder="Clear brief, quick approvals, paid on time…"
+          placeholder="Clear instructions, quick approvals, paid on time…"
           value={text}
           onChange={e => setText(e.target.value)}
         />
@@ -242,7 +242,7 @@ function BidsScreen() {
       brand: j ? j.brand : b.brand || "Brand",
       bi: j ? j.bi : L.initials(b.brand || "B"),
       logo: j ? j.logo : "",
-      title: j ? j.title : b.title || "Brief",
+      title: j ? j.title : b.title || "Collab",
       platform: j ? j.platform : b.platform || "instagram",
       format: j ? j.format : b.format || "",
       job: j,
@@ -375,7 +375,7 @@ function BidsScreen() {
           </Lq>
           {m.job ? (
             <Lq as="a" className="lq-s lq-sm" href={`#job-${m.job.id}`}>
-              View brief
+              View collab
             </Lq>
           ) : null}
         </>
@@ -424,14 +424,14 @@ function BidsScreen() {
           data-similar={m.job ? m.job.category : ""}
           onClick={() => similar(m.job ? m.job.category : "")}
         >
-          Find similar briefs
+          Find similar collabs
           <Icon n="arrow" className="ic" />
         </Lq>
       );
     else if (b.status === "withdrawn" && m.job)
       actions = (
         <Lq as="a" className="lq-s lq-sm" href={`#job-${m.job.id}`}>
-          Open brief to bid again
+          Open collab to bid again
         </Lq>
       );
     return (
@@ -492,9 +492,9 @@ function BidsScreen() {
         <div className="empty bids-empty">
           <img src="assets/step-02-plane.svg" width="72" height="72" alt="" />
           <p className="t-h2">No bids yet.</p>
-          <p className="muted">Find a brief that fits and send your first bid. It takes about a minute.</p>
+          <p className="muted">Find a collab that fits and send your first bid. It takes about a minute.</p>
           <Lq as="a" className="lq-p" href="#jobs">
-            Find briefs
+            Find collabs
           </Lq>
         </div>
       );
@@ -528,10 +528,10 @@ function BidsScreen() {
               .filter(t => t.key !== "active")
               .map(t => t.title)
               .join(" and ")}
-            . Find a brief that fits and send a new one.
+            . Find a collab that fits and send a new one.
           </p>
           <Lq as="a" className="lq-p" href="#jobs">
-            Find briefs
+            Find collabs
           </Lq>
         </div>
       );
@@ -550,7 +550,7 @@ function BidsScreen() {
         </div>
         <Lq as="a" className="lq-s" href="#jobs">
           <Icon n="search" />
-          Find more briefs
+          Find more collabs
         </Lq>
       </header>
       <DirectOffers />

@@ -127,7 +127,7 @@ export function DirectOffers() {
         <span className="bids-gn num">{offers.length}</span>
       </h2>
       <p className="muted">
-        Brands that want to hire you without a brief. Accepting starts the deal once they pay into escrow.
+        Brands that want to hire you without a collab. Accepting starts the deal once they pay into escrow.
       </p>
       <div className="bids-list">
         {offers.map(o => (

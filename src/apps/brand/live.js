@@ -906,7 +906,7 @@ export async function refresh() {
 /* what the API's field names mean on screen, for "Invalid input." with details */
 const FIELD_LABEL = {
   title: "Title",
-  brief: "The brief",
+  brief: "Collab details",
   platform: "Platform",
   deliverables: "Deliverables",
   budgetMin: "Budget",

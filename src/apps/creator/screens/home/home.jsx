@@ -162,11 +162,11 @@ function KycBar({ k }) {
             We're checking your ID · {reviewLeft(k)}
           </p>
           <p className="t-small muted">
-            Meanwhile, keep browsing briefs. We'll tell you the moment it's done.
+            Meanwhile, keep browsing collabs. We'll tell you the moment it's done.
           </p>
         </div>
         <Lq as="a" className="lq-s lq-sm" href="#jobs">
-          Browse briefs
+          Browse collabs
         </Lq>
       </section>
     );
@@ -272,7 +272,7 @@ function cheerFor(s) {
   if (a && (a.pay === "released" || a.stage === "approved")) return null; // already done: the payout moment covers it
   const j = b ? L.jobkit.job(b.job) : null;
   const brand = a ? a.brand : (j && j.brand) || (b && b.brand) || "The brand";
-  const title = a ? a.title : (j && j.title) || (b && b.title) || "the brief";
+  const title = a ? a.title : (j && j.title) || (b && b.title) || "the collab";
   if (b && b.status === "accepted" && kycOwed())
     /* C10 trial: the bid went out before the ID check, so the deal waits on it */
     return {
@@ -328,12 +328,12 @@ function BriefGrid({ lead }) {
           <p className="t-h2">No new matches right now.</p>
           <p className="muted">
             {anyOpen
-              ? "You have bid on or hidden every brief that fits. New ones arrive most days."
-              : "New briefs arrive most days. The ones that fit you will show up here."}
+              ? "You have bid on or hidden every collab that fits. New ones arrive most days."
+              : "New collabs arrive most days. The ones that fit you will show up here."}
           </p>
           {anyOpen ? (
             <Lq as="a" className={lead ? "lq-p" : "lq-s"} href="#jobs">
-              See all briefs
+              See all collabs
             </Lq>
           ) : null}
         </div>
@@ -539,12 +539,12 @@ function HomeScreen() {
     : cheer
       ? "Good news since your last visit."
       : working.length
-        ? `${working.length === 1 ? "Your deal is" : `${working.length} deals are`} in progress. Find the next brief while you work.`
+        ? `${working.length === 1 ? "Your deal is" : `${working.length} deals are`} in progress. Find the next collab while you work.`
         : s.kyc.status === "verified"
-          ? "Nothing needs you right now. A good day to find a new brief."
+          ? "Nothing needs you right now. A good day to find a new collab."
           : myBids.length
-            ? "Here are the briefs that fit you best."
-            : "Find a brief that fits you and send your first bid.";
+            ? "Here are the collabs that fit you best."
+            : "Find a collab that fits you and send your first bid.";
   const lead = !primaryUsed; // nothing above needs you, so the top brief's Bid is the one primary button
 
   /* Your bids: the latest three that are still in play */
@@ -552,7 +552,7 @@ function HomeScreen() {
   const bidRow = b => {
     const j = K.job(b.job);
     const brand = j ? j.brand : b.brand || "Brand",
-      title = j ? j.title : b.title || "Brief";
+      title = j ? j.title : b.title || "Collab";
     const act = b.status === "accepted" ? s.active.find(a => a.job === b.job) : null;
     return (
       <li key={b.id}>
@@ -654,17 +654,17 @@ function HomeScreen() {
           <div className="ll-panel-head">
             <div>
               <h2 className="ll-panel-h" id="homeMatchH">
-                Briefs for you
+                Collabs for you
               </h2>
               <p className="ll-panel-sub">Ranked on platform, niche, language, city, budget and deadline.</p>
             </div>
-            <a className="ll-panel-more" href="#jobs" aria-label="See all briefs">
+            <a className="ll-panel-more" href="#jobs" aria-label="See all collabs">
               See all →
             </a>
           </div>
           <p className="home-hint help">
             <Icon n="info" />
-            Swipe a brief right to save it, left to hide it. The buttons do the same.
+            Swipe a collab right to save it, left to hide it. The buttons do the same.
           </p>
           <BriefGrid lead={lead} />
         </section>
@@ -686,7 +686,7 @@ function HomeScreen() {
             <p className="home-bids-none">
               {myBids.length
                 ? "No bids in play right now. Your earlier bids are in My bids."
-                : "No bids yet. Pick a brief above and send your first bid. It takes about a minute."}
+                : "No bids yet. Pick a collab above and send your first bid. It takes about a minute."}
             </p>
           )}
         </section>

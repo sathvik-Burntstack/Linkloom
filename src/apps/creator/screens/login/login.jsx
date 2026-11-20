@@ -574,7 +574,7 @@ function LoginScreen({ param }) {
               Sign in
             </h1>
             <p className="muted">
-              Find brand briefs, bid in a minute, and get paid from escrow once the work is approved.
+              Find brand collabs, bid in a minute, and get paid from escrow once the work is approved.
             </p>
           </div>
 

@@ -522,7 +522,7 @@ function BidForm({ j }) {
     <div className="view-in bid" ref={root}>
       <a className="btn-q bid-back" href={`#job-${j.id}`}>
         <Icon n="back" />
-        Back to the brief
+        Back to the collab
       </a>
       <header className="bid-h">
         <div className="job-src">
@@ -545,7 +545,7 @@ function BidForm({ j }) {
             .join(" · ")}
           <span className="sample bid-h-s">
             {" "}
-            · <span className="sample">Sample brief</span>
+            · <span className="sample">Sample collab</span>
           </span>
         </p>
       </header>
@@ -963,10 +963,10 @@ function BidScreen({ param: id }) {
       <div className="view-in">
         <div className="empty">
           <img src="assets/step-01-envelope.svg" width="160" height="117" alt="" />
-          <p className="t-h2">This brief is no longer open.</p>
+          <p className="t-h2">This collab is no longer open.</p>
           <p className="muted">Nothing to bid on here.</p>
           <Lq as="a" className="lq-p" href="#jobs">
-            See open briefs
+            See open collabs
           </Lq>
         </div>
       </div>
@@ -977,7 +977,7 @@ function BidScreen({ param: id }) {
       <div className="view-in">
         <div className="empty">
           <img src="assets/step-02-plane.svg" width="72" height="72" alt="" className="bid-plane" />
-          <p className="t-h2">You already bid on this brief.</p>
+          <p className="t-h2">You already bid on this collab.</p>
           <p className="row wrap bid-already">
             <StatusPill status={existing.status} />
             <span className="num">{L.inr(existing.price)}</span>
@@ -1000,8 +1000,8 @@ L.register("bid", {
   crumb: id => {
     const j = L.jobkit && L.jobkit.job(id);
     return j
-      ? `<a href="#jobs">Find briefs</a> / <a href="#job-${L.esc(j.id)}">${L.esc(j.title)}</a> / Your bid`
-      : '<a href="#jobs">Find briefs</a> / Your bid';
+      ? `<a href="#jobs">Find collabs</a> / <a href="#job-${L.esc(j.id)}">${L.esc(j.title)}</a> / Your bid`
+      : '<a href="#jobs">Find collabs</a> / Your bid';
   },
   nav: "jobs",
   Component: BidScreen,

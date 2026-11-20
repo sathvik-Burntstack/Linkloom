@@ -138,7 +138,7 @@ const FLASH = {
     "clock",
     "Your session expired, so we signed you out to keep your account safe. Sign in again to pick up where you left off.",
   ],
-  out: ["info", "logout", "You're signed out on this device. Your briefs, deals and escrow are unchanged."],
+  out: ["info", "logout", "You're signed out on this device. Your collabs, deals and escrow are unchanged."],
   new: [
     "ok",
     "check",
@@ -333,7 +333,7 @@ function LoginScreen({ param }) {
           Sign in
         </h1>
         <p className="muted">
-          Find creators, post briefs, and pay from escrow only when you approve the work.
+          Find creators, post collabs, and pay from escrow only when you approve the work.
         </p>
       </div>
       {flash ? (

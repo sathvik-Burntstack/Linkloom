@@ -24,7 +24,7 @@ const STATUS = {
   not_started: ["pill-paper", "Not started", "Verify before your first bid"],
   in_progress: ["pill-info", "In progress", "Pick up where you left off"],
   under_review: ["pill-info", "Under review", "Usually within 2 hours"],
-  verified: ["pill-ok", "Verified", "You can bid on any brief"],
+  verified: ["pill-ok", "Verified", "You can bid on any collab"],
   action_needed: ["pill-warn", "Action needed", "Fix one detail to keep bidding"],
   rejected: ["pill-err", "Rejected", "Try again with a different ID"],
 };

@@ -33,7 +33,7 @@ const q = new URLSearchParams(location.search);
 const COPY = {
   creator: {
     eyebrow: "For creators",
-    sub: "Bid on brand briefs, do the work, and get paid from escrow the day they approve.",
+    sub: "Bid on brand collabs, do the work, and get paid from escrow the day they approve.",
     btn: "Sign in as a creator",
     create: "Create creator account",
     dash: "app.html#home",
@@ -42,7 +42,7 @@ const COPY = {
   },
   brand: {
     eyebrow: "For brands",
-    sub: "Find creators, post a brief, and pay into escrow. Money moves only when you approve the work.",
+    sub: "Find creators, post a collab, and pay into escrow. Money moves only when you approve the work.",
     btn: "Sign in as a brand",
     create: "Create brand account",
     dash: "brand.html#home",

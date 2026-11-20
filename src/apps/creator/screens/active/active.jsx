@@ -128,12 +128,12 @@ function ActiveList() {
           <img src="assets/trust-lock-coin.svg" width="200" height="140" alt="" />
           <p className="t-h2">No active work yet</p>
           <p className="muted">
-            When a brand accepts your bid and pays into escrow, the deal lands here with its brief, dates and
+            When a brand accepts your bid and pays into escrow, the deal lands here with its instructions, dates and
             chat.
           </p>
           <div className="row wrap active-empty-cta">
             <Lq as="a" className="lq-p" href="#jobs">
-              Find briefs
+              Find collabs
             </Lq>
             <Lq as="a" className="lq-s" href="#bids">
               See my bids
@@ -609,7 +609,7 @@ function NowPanel({ a, onStart, onUpload, onLive, brandSide }) {
         <>
           {head("Ready when you are")}
           <p className="work-now-p">
-            {a.brand} paid {L.inr(a.price)} into escrow. Start when you have the brief and any product you
+            {a.brand} paid {L.inr(a.price)} into escrow. Start when you have the collab details and any product you
             need.
           </p>
           <Lq className="lq-p" data-start="" onClick={onStart}>
@@ -1034,10 +1034,10 @@ function Work({ a }) {
           <section className="ll-panel work-sec" aria-labelledby="workBriefH">
             <div className="ll-panel-head">
               <h2 className="ll-panel-h" id="workBriefH">
-                Brief
+                Collab details
               </h2>
             </div>
-            <p className="work-brief">{d.brief || "The brand’s brief is attached to the accepted bid."}</p>
+            <p className="work-brief">{d.brief || "The brand’s instructions are attached to the accepted bid."}</p>
             <dl className="work-facts">
               <div>
                 <dt>Platform</dt>

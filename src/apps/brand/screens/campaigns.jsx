@@ -166,7 +166,7 @@ const next = c => {
     {
       invited: `Waiting for ${f} to accept. Nothing is paid until then.`,
       accepted: `${f} accepted. Pay ${L.inr(c.price)} into escrow to start.`,
-      funded: `${f} has the brief and is starting.`,
+      funded: `${f} has the collab details and is getting started.`,
       in_progress: `${f} is making it. ${c.due ? "Due " + L.fmtDate(c.due) + "." : ""}`,
       submitted: `v${d.length || 1} is in. Approve it or ask for a revision.`,
       revision: `You asked: “${c.revisionNote || "see chat"}”`,
@@ -217,7 +217,7 @@ function Ticket({ c }) {
             <Glyph p={c.platform} />
             <span>{c.format || ""}</span>
             <span aria-hidden="true">·</span>
-            <span>{c.source === "job" ? "From a brief" : "Direct invite"}</span>
+            <span>{c.source === "job" ? "From a collab" : "Direct invite"}</span>
           </p>
           <h3 className="cg-tk-t">
             <a className="cg-tk-link" href={`#campaign-${c.id}`}>
@@ -300,7 +300,7 @@ function DealsList() {
           <img src="assets/trust-lock-coin.svg" width="200" height="140" alt="" />
           <p className="t-h2">No deals yet</p>
           <p className="muted">
-            When you hire from a brief or a creator accepts your invitation, it lands here with its stage,
+            When you hire from a collab or a creator accepts your invitation, it lands here with its stage,
             payment and chat.
           </p>
           <div className="row wrap cg-empty-cta">
@@ -308,7 +308,7 @@ function DealsList() {
               Find creators
             </Lq>
             <Lq as="a" className="lq-s" href="#post">
-              Post a brief
+              Post a collab
             </Lq>
           </div>
         </div>
@@ -323,7 +323,7 @@ function DealsList() {
         <div className="cg-head-t">
           <h1 className="t-h1">Deals</h1>
           <p className="muted">
-            Every hire, from your briefs and direct invitations.{" "}
+            Every hire, from your collabs and direct invitations.{" "}
             {count("you")
               ? `${count("you")} need${count("you") === 1 ? "s" : ""} you.`
               : "Nothing needs you right now."}{" "}
@@ -445,7 +445,7 @@ function Rail({ c, from }) {
       state = i < cur || (end && i === cur) ? "done" : i === cur ? "current stage" : "not yet";
     if (i <= cur && dateOf[st.k]) sub = (i === cur && !end ? "Now · " : "") + L.fmtDate(dateOf[st.k]);
     else if (i === cur && !end) sub = "Now";
-    else if (i < cur && st.k === "invited" && c.source === "job") sub = "From your brief";
+    else if (i < cur && st.k === "invited" && c.source === "job") sub = "From your collab";
     else sub = i < cur ? "Done" : ahead[st.k] || "";
     if (st.k === "revision" && i !== cur) {
       if (used) {
@@ -623,7 +623,7 @@ function ReviewForm({ c, k, onSaved, onCancel }) {
           id="cwRvTx"
           maxLength={400}
           rows={3}
-          placeholder="Was it on time, on brief, easy to work with? What did your audience think?"
+          placeholder="Was the work on time? Did it match what you asked for? Was the creator easy to work with? What did your audience think?"
           value={text}
           onChange={e => setText(e.target.value)}
         />
@@ -1432,7 +1432,7 @@ function Campaign({ c }) {
               <span className="muted">
                 <Glyph p={c.platform} />
                 {K().plat(c.platform)} {c.format || ""} ·{" "}
-                {c.source === "job" ? "hired from a brief" : "direct invite"}
+                {c.source === "job" ? "hired from a collab" : "direct invite"}
               </span>
             </span>
             <span className="sample">Sample</span>
@@ -1501,7 +1501,7 @@ function Campaign({ c }) {
             <div className="ll-panel-head">
               <div>
                 <h2 className="ll-panel-h" id="cwBriefH">
-                  {c.source === "job" ? "Brief" : "What you asked for"}
+                  {c.source === "job" ? "Collab details" : "What you asked for"}
                 </h2>
               </div>
             </div>
@@ -1509,7 +1509,7 @@ function Campaign({ c }) {
               {d.brief
                 ? d.brief
                 : c.source === "job"
-                  ? "The brief was agreed when you confirmed the bid. Changes since then are in the chat."
+                  ? "You agreed on the collab details when you confirmed the bid. Changes since then are in the chat."
                   : `A direct invitation for one ${(c.format || "post").toLowerCase()} on ${K().plat(c.platform)}.`}
             </p>
             <dl className="cw-facts">
@@ -1553,7 +1553,7 @@ function Campaign({ c }) {
             ) : null}
             {c.job ? (
               <Lq as="a" className="lq-s lq-sm" href={`#job-${c.job}`}>
-                Open the brief
+                Open the collab
                 <Icon n="arrow" className="ic" />
               </Lq>
             ) : null}

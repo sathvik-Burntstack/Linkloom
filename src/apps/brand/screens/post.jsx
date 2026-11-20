@@ -76,7 +76,7 @@ const R = {
 };
 /* the five steps: name and the one help line under each panel title */
 const STEPS = [
-  ["The brief", "A clear title, then what you want made. Creators read this first."],
+  ["Collab details", "A clear title, then what you want made. Creators read this first."],
   ["Platform and format", "Where the post goes and what kind of post it is."],
   ["Budget and date", "What you expect to pay one creator, and the last day the post can go live."],
   [
@@ -87,7 +87,7 @@ const STEPS = [
 ];
 const NAMES = {
   title: "title",
-  brief: "the brief",
+  brief: "the collab details",
   cat: "category",
   budget: "budget",
   deadline: "live-by date",
@@ -209,13 +209,13 @@ function PostForm({ id, j }) {
     const t = d.title.trim();
     if (!t)
       e.title = publish
-        ? "Give the brief a title creators will understand."
+        ? "Give the collab a title creators will understand."
         : "Give the draft a name so you can find it later.";
     else if (publish && t.length < R.titleMin)
       e.title = `Make the title a little longer, at least ${R.titleMin} characters.`;
     if (!publish) return e;
     const br = d.brief.trim();
-    if (!br) e.brief = "Write the brief. Two or three sentences is enough.";
+    if (!br) e.brief = "Describe the collab in two or three sentences.";
     else if (br.length < R.briefMin)
       e.brief = `Add ${R.briefMin - br.length} more characters. Say what to show and what to avoid.`;
     /* the category is not sent to the server, so a live brief (which comes back without one) is not held up by it */
@@ -224,7 +224,7 @@ function PostForm({ id, j }) {
     if (!b) e.budget = "Enter a budget in rupees.";
     else if (b < R.minBudget) e.budget = `The lowest budget on Linkloom is ${L.inr(R.minBudget)}.`;
     else if (b > R.maxBudget)
-      e.budget = `Budgets go up to ${L.inr(R.maxBudget)} per brief. Split bigger work into more briefs.`;
+      e.budget = `Budgets go up to ${L.inr(R.maxBudget)} per collab. Split bigger work into more collabs.`;
     const dl = d.deadline;
     if (!dl) e.deadline = "Pick the last day the post can go live.";
     else if (dl < minDate) e.deadline = `Pick ${L.fmtDate(minDate)} or later, so creators have time.`;
@@ -421,9 +421,9 @@ function PostForm({ id, j }) {
             const pub = L.store.s.jobs.find(y => y.id === nid);
             L.toast(
               pub && pub.review === "pending"
-                ? "Brief sent for review. Creators see it once it's approved."
+                ? "Collab sent for review. Creators see it once it's approved."
                 : wasDraft
-                  ? "Brief published. Creators can bid now."
+                  ? "Collab published. Creators can bid now."
                   : "Changes saved",
               "check",
             );
@@ -457,7 +457,7 @@ function PostForm({ id, j }) {
     delete u[key];
     K.ui("jobs").justSaved = jid;
     K.ui("jobs").tab = "all";
-    L.toast(wasDraft ? "Brief published. Creators can bid now." : "Changes saved", "check");
+    L.toast(wasDraft ? "Collab published. Creators can bid now." : "Changes saved", "check");
     L.go("#jobs");
   }
 
@@ -497,10 +497,10 @@ function PostForm({ id, j }) {
     <div className="view-in pj" ref={root}>
       <a className="btn-q pj-back" href={j ? "#job-" + j.id : "#jobs"}>
         <Icon n="back" />
-        {j ? "Back to the brief" : "All briefs"}
+        {j ? "Back to the collab" : "All collabs"}
       </a>
       <header className="pj-h">
-        <h1 className="t-h1">{j ? (isOpen ? "Edit brief" : "Finish your draft") : "Post a brief"}</h1>
+        <h1 className="t-h1">{j ? (isOpen ? "Edit collab" : "Finish your draft") : "Post a collab"}</h1>
         <p className="muted t-small">
           {isOpen
             ? `Live since ${L.fmtDate(j.posted)} · ${j.bids} bids so far. Creators who bid see the changes.`
@@ -518,7 +518,7 @@ function PostForm({ id, j }) {
             </h2>
             <p className="ll-panel-sub">
               Creators see your brand before they bid. Add your {L.listWords(miss)}, then publish. You can
-              fill in this brief now; it saves as a draft.
+              fill in this collab now; it saves as a draft.
             </p>
           </div>
           {/* "Complete profile": remember this brief, so saving the profile comes straight back here */}
@@ -555,7 +555,7 @@ function PostForm({ id, j }) {
               if (s) setCur(+s.dataset.step);
             }}
           >
-            <nav className="ll-steps pj-steps" aria-label="Steps of the brief">
+            <nav className="ll-steps pj-steps" aria-label="Steps of the collab">
               <p className="ll-steps-t" id="pjStepT">
                 Step {cur + 1} of {STEPS.length} · {STEPS[cur][0]}
                 {nDone ? ` · ${nDone} of ${STEPS.length} done` : ""}
@@ -593,7 +593,7 @@ function PostForm({ id, j }) {
 
             <Section i={0}>
               <div className={fcls("field", "title")} id="fTitle">
-                <label htmlFor="pjTitle">Brief title</label>
+                <label htmlFor="pjTitle">Collab title</label>
                 <input
                   className="input"
                   id="pjTitle"
@@ -617,7 +617,7 @@ function PostForm({ id, j }) {
               <div className={fcls("field", "brief")} id="fBrief">
                 <div className="pj-why-h">
                   <label id="pjBriefL" htmlFor="pjBrief">
-                    The brief
+                    Collab details
                   </label>
                   <span className="t-note pj-note" aria-hidden="true">
                     creators read this first
@@ -1050,7 +1050,7 @@ function PostForm({ id, j }) {
                   </Lq>
                 ) : null}
                 <Lq className="lq-p" type="submit">
-                  {isOpen ? "Save changes" : "Publish brief"}
+                  {isOpen ? "Save changes" : "Publish collab"}
                 </Lq>
               </div>
             </div>
@@ -1080,7 +1080,7 @@ function PostForm({ id, j }) {
                       })
                     }
                   >
-                    Close brief
+                    Close collab
                   </Lq>
                 ) : null}
                 <Lq
@@ -1095,7 +1095,7 @@ function PostForm({ id, j }) {
                   }
                 >
                   <Icon n="trash" />
-                  {isOpen ? "Delete brief" : "Delete draft"}
+                  {isOpen ? "Delete collab" : "Delete draft"}
                 </Lq>
               </div>
             </div>
@@ -1113,7 +1113,7 @@ function PostForm({ id, j }) {
               </span>
             </p>
             <p className={`pj-pv-t${d.title.trim() ? "" : " is-ph"}`} data-p="title">
-              {d.title.trim() || "Your brief title"}
+              {d.title.trim() || "Your collab title"}
             </p>
             <p className="pj-rc-l">Budget</p>
             <p className="pj-rc-net">
@@ -1147,7 +1147,7 @@ function PostForm({ id, j }) {
           </div>
           <p className="help pj-side-note">
             <Icon n="info" />
-            Your brand name and logo show on the brief. Your billing details never do.
+            Your brand name and logo show on the collab. Your billing details never do.
           </p>
         </aside>
       </div>
@@ -1164,10 +1164,10 @@ function PostScreen({ param: id }) {
       <div className="view-in">
         <div className="empty">
           <img src="assets/step-01-envelope.svg" width="160" height="117" alt="" />
-          <p className="t-h2">This brief is gone.</p>
-          <p className="muted">It may have been deleted. Your other briefs are safe.</p>
+          <p className="t-h2">This collab is gone.</p>
+          <p className="muted">It may have been deleted. Your other collabs are safe.</p>
           <Lq as="a" className="lq-p" href="#jobs">
-            See all briefs
+            See all collabs
           </Lq>
         </div>
       </div>
@@ -1180,13 +1180,13 @@ function PostScreen({ param: id }) {
           <img src="assets/step-05-stamp.svg" width="160" height="117" alt="" />
           <p className="t-h2">
             {j.status === "hired"
-              ? "You hired on this brief, so it is locked."
-              : "This brief is closed, so it can’t be edited."}
+              ? "You hired on this collab, so it is locked."
+              : "This collab is closed, so it can’t be edited."}
           </p>
           <p className="muted">
             {j.status === "hired"
-              ? "The creator bid on this brief. Change details with them in the deal chat."
-              : "Post a new brief if you need another creator."}
+              ? "The creator bid on this collab. Change details with them in the deal chat."
+              : "Post a new collab if you need another creator."}
           </p>
           <div className="row wrap pj-locked-cta">
             {c ? (
@@ -1195,11 +1195,11 @@ function PostScreen({ param: id }) {
               </Lq>
             ) : (
               <Lq as="a" className="lq-p" href="#post">
-                Post a new brief
+                Post a new collab
               </Lq>
             )}
             <Lq as="a" className="lq-s" href={`#job-${j.id}`}>
-              View brief
+              View collab
             </Lq>
           </div>
         </div>
@@ -1210,10 +1210,10 @@ function PostScreen({ param: id }) {
 }
 
 L.register("post", {
-  title: id => (id ? "Edit brief" : "Post a brief"),
+  title: id => (id ? "Edit collab" : "Post a collab"),
   crumb: id => {
     const j = id && L.bk.job(id);
-    return `<a href="#jobs">Briefs</a> / ${j ? esc(j.title || "Untitled brief") + " / Edit" : "Post a brief"}`;
+    return `<a href="#jobs">Collabs</a> / ${j ? esc(j.title || "Untitled collab") + " / Edit" : "Post a collab"}`;
   },
   nav: "jobs",
   Component: PostScreen,

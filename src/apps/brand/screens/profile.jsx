@@ -97,7 +97,7 @@ const gstinInput = (e, set) => {
    #setup (first run)
    ===================================================================== */
 const STEPS = [
-  { t: "Your brand", sub: "Creators see this on your briefs and invitations before they accept." },
+  { t: "Your brand", sub: "Creators see this on your collabs and invitations before they accept." },
   { t: "Billing details", sub: "Printed on every invoice and credit note. Creators never see it." },
 ];
 let D = null;
@@ -364,7 +364,7 @@ function Setup() {
                   p="su"
                   id="brand"
                   label="Brand name"
-                  help="Shown on your briefs, invitations and chats."
+                  help="Shown on your collabs, invitations and chats."
                   err={errs.brand}
                 >
                   <input
@@ -561,7 +561,7 @@ function bizCheck(k) {
       pill: "pill-ok",
       state: "Verified",
       icon: "verified",
-      sub: "You can post briefs, send offers and hire with escrow.",
+      sub: "You can post collabs, send offers and hire with escrow.",
     };
   if (["pending", "submitted", "in_review", "under_review"].includes(st))
     return {
@@ -586,8 +586,8 @@ function bizCheck(k) {
     state: n ? `${n} of 3 done` : "Not started",
     icon: "shield",
     sub: n
-      ? "A few minutes to finish. Needed to post a brief, send an offer or hire."
-      : "About 4 min. Needed to post a brief, send an offer or hire.",
+      ? "A few minutes to finish. Needed to post a collab, send an offer or hire."
+      : "About 4 min. Needed to post a collab, send an offer or hire.",
     todo: n ? "Continue" : "Start",
   };
 }
@@ -685,7 +685,7 @@ const SignOutSheet = ({ close }) => (
       {L.live
         ? "You'll sign back in with your password, a one-time code or Google."
         : "You'll need your email and password to sign back in."}{" "}
-      Briefs, deals and money in escrow are not affected.
+      Collabs, deals and money in escrow are not affected.
     </p>
     <div className="row wrap">
       <Lq
@@ -825,7 +825,7 @@ function EditSheet({ toBilling, close, done }) {
       } catch (x) {
         /* ignore */
       }
-      L.toast("Profile complete. You can publish your brief now.", "check");
+      L.toast("Profile complete. You can publish your collab now.", "check");
       L.go(back);
       return;
     }
@@ -1294,7 +1294,7 @@ function Profile({ param, repaint }) {
                 ? hiredNames.join(" and ")
                 : st.hired
                   ? "Paid through escrow"
-                  : "Hire from a brief or Find creators"}
+                  : "Hire from a collab or Find creators"}
             </p>
           </div>
           <div>
@@ -1303,14 +1303,14 @@ function Profile({ param, repaint }) {
             <p>{st.funded ? "funded through escrow" : "Fund a deal after you hire"}</p>
           </div>
           <div>
-            <dt>Briefs posted</dt>
+            <dt>Collabs posted</dt>
             {num(st.jobs, "None yet")}
             <p>
               {st.drafts
                 ? `${st.drafts} draft not counted`
                 : st.jobs
                   ? "open, hired or closed"
-                  : "Post a brief to hear from creators"}
+                  : "Post a collab to hear from creators"}
             </p>
           </div>
         </dl>

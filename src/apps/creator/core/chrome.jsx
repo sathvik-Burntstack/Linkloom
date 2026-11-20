@@ -29,14 +29,14 @@ const Badge = ({ k, n, cls = "badge" }) => (
 );
 const NAV = [
   ["home", "Home"],
-  ["jobs", "Find briefs"],
+  ["jobs", "Find collabs"],
   ["bids", "My bids"],
   ["active", "Active deals"],
   ["earnings", "Earnings"],
 ];
 const TABS = [
   ["home", "Home", "home"],
-  ["jobs", "Find briefs", "brief"],
+  ["jobs", "Find collabs", "brief"],
   ["bids", "My bids", "send"],
   ["active", "Active deals", "rail"],
   ["earnings", "Earnings", "coin"],

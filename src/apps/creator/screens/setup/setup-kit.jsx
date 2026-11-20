@@ -269,7 +269,7 @@ export function PriceFields({ attr, pre, d, E, onChange, ids }) {
       </legend>
       <p className="help">
         Your lowest price for one post. Brands see "From ₹…" on your card, and you can still bid any amount on
-        a brief.
+        a collab.
       </p>
       <div className="setup-metrics">
         {F({

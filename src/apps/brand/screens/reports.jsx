@@ -364,7 +364,7 @@ function Start() {
         </p>
         <div className="row wrap rp-start-a">
           <Lq as="a" className="lq-p" href="#post">
-            Post a brief
+            Post a collab
           </Lq>
           {waiting ? (
             <Lq as="a" className="lq-s" href="#campaigns">

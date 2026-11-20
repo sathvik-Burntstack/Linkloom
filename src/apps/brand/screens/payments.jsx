@@ -208,7 +208,7 @@ tr.tot td:last-child{padding-top:14px}tr.tot td:last-child span{display:inline-b
   <section class="cols">
     <div class="box"><p class="k">Billed to</p><p><b>${x(b.legal || me.brand)}</b>${b.address ? "<br>" + x(b.address) : ""}<br>GSTIN ${x(b.gstin || "not added")}<br>${x(b.email || me.email)}${me.name ? `<br>Attn. ${x(me.name)}${me.role ? ", " + x(me.role) : ""}` : ""}</p></div>
     <div class="box"><p class="k">Creator</p><p><b>${x(cr.name || "")}</b>${cr.handle ? "<br>" + x(cr.handle) : ""}${cr.city || cr.state ? "<br>" + x([cr.city, cr.state].filter(Boolean).join(", ")) : ""}</p></div>
-    <div class="box"><p class="k">Deal</p><p><b>${x(c.title || "")}</b><br>${x([plat, c.format].filter(Boolean).join(" · "))}<br>${c.source === "job" ? "Hired from a brief" : "Direct hire"} · ${x((c.id || "").toUpperCase())}</p></div>
+    <div class="box"><p class="k">Deal</p><p><b>${x(c.title || "")}</b><br>${x([plat, c.format].filter(Boolean).join(" · "))}<br>${c.source === "job" ? "Hired from a collab" : "Direct hire"} · ${x((c.id || "").toUpperCase())}</p></div>
     <div class="box"><p class="k">Payment</p><p><b>${x(KINDL[r.kind] || "")}</b>${r.method ? "<br>" + x(r.method) : ""}<br>Payment ID <span class="num">${x(String(r.id || "").toUpperCase())}</span></p></div>
   </section>
   <table><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody>

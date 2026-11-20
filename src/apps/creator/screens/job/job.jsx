@@ -11,7 +11,7 @@ const REPORT_REASONS = [
   "Pay looks misleading",
   "Asks to pay or chat outside Linkloom",
   "Inappropriate or unsafe content",
-  "Spam or a duplicate brief",
+  "Spam or a duplicate collab",
   "Something else",
 ];
 const tried = {}; // brief ids already fetched once from the server
@@ -33,7 +33,7 @@ function ShareSheet({ url }) {
     <div className="stack">
       <p className="muted">Copy the link and send it to a creator friend.</p>
       <div className="field">
-        <label htmlFor="jobShareUrl">Link to this brief</label>
+        <label htmlFor="jobShareUrl">Link to this collab</label>
         <input className="input" id="jobShareUrl" readOnly value={url} ref={input} />
       </div>
       <Lq
@@ -109,7 +109,7 @@ function ReportSheet({ j, close }) {
           className="textarea"
           id="jobRepTx"
           maxLength={300}
-          placeholder="For example: they asked for my number in the brief"
+          placeholder="For example: they asked for my number in the collab"
           value={details}
           onChange={e => setDetails(e.target.value)}
         />
@@ -161,16 +161,16 @@ function JobScreen({ param: id }) {
     return () => unsub.current && unsub.current();
   }, []);
 
-  if (fetching) return <Skeleton label="Loading the brief" slowNote={false} />; // F4: page-shaped placeholder, not a blank area
+  if (fetching) return <Skeleton label="Loading the collab" slowNote={false} />; // F4: page-shaped placeholder, not a blank area
   if (!j)
     return (
       <div className="view-in">
         <div className="empty">
           <img src="assets/step-01-envelope.svg" width="160" height="117" alt="" />
-          <p className="t-h2">This brief is no longer open.</p>
+          <p className="t-h2">This collab is no longer open.</p>
           <p className="muted">The brand may have closed it or picked a creator.</p>
           <Lq as="a" className="lq-p" href="#jobs">
-            See open briefs
+            See open collabs
           </Lq>
         </div>
       </div>
@@ -283,14 +283,14 @@ function JobScreen({ param: id }) {
       L.toast("Link copied");
       return;
     } catch (e) {}
-    openReactSheet({ title: "Share this brief", render: () => <ShareSheet url={url} /> });
+    openReactSheet({ title: "Share this collab", render: () => <ShareSheet url={url} /> });
   };
 
   return (
     <div className="view-in job" ref={root}>
       <a className="btn-q job-back" href="#jobs">
         <Icon n="back" />
-        All briefs
+        All collabs
       </a>
       <div className="job-layout">
         <article className="job-main" aria-labelledby="jobH">
@@ -324,9 +324,9 @@ function JobScreen({ param: id }) {
               {j.title}
             </h1>
             <p className="muted t-small">
-              Posted {L.ago(j.posted)} · <span className="sample">Sample brief</span>
+              Posted {L.ago(j.posted)} · <span className="sample">Sample collab</span>
             </p>
-            <div className="job-tools" role="group" aria-label="Brief actions">
+            <div className="job-tools" role="group" aria-label="Collab actions">
               <button
                 className="chip job-save"
                 type="button"
@@ -352,7 +352,7 @@ function JobScreen({ param: id }) {
                 onClick={() =>
                   !reported &&
                   openReactSheet({
-                    title: "Report this brief",
+                    title: "Report this collab",
                     render: close => <ReportSheet j={j} close={close} />,
                   })
                 }
@@ -406,7 +406,7 @@ function JobScreen({ param: id }) {
                 </p>
                 <p className="help">
                   {j.status === "hired"
-                    ? "You're hired on this brief. Work and chat live in Active deals."
+                    ? "You're hired on this collab. Work and chat live in Active deals."
                     : bid.note || ""}
                 </p>
                 <Lq as="a" className="lq-p job-bid-btn" href={mineHref}>
@@ -419,7 +419,7 @@ function JobScreen({ param: id }) {
                   <p className="help job-prev">You withdrew a {L.inr(prev.price)} bid. You can bid again.</p>
                 ) : null}
                 <Lq className="lq-p job-bid-btn" data-bidnow="" onClick={bidNow}>
-                  Bid on this brief
+                  Bid on this collab
                 </Lq>
                 <p className="job-kyc help">
                   <Icon n={verified ? "check" : "shield"} />
@@ -432,7 +432,7 @@ function JobScreen({ param: id }) {
           </div>
         </aside>
       </div>
-      <div className="job-sticky dark" role="region" aria-label="Bid on this brief">
+      <div className="job-sticky dark" role="region" aria-label="Bid on this collab">
         <div className="job-sticky-t">
           <p className="t-money">{L.inr(j.budget)}</p>
           <p className="jobs-loc">
@@ -446,7 +446,7 @@ function JobScreen({ param: id }) {
           </Lq>
         ) : (
           <Lq className="lq-p" data-bidnow="" onClick={bidNow}>
-            Bid on this brief
+            Bid on this collab
           </Lq>
         )}
       </div>
@@ -457,11 +457,11 @@ function JobScreen({ param: id }) {
 L.register("job", {
   title: id => {
     const j = L.jobkit && L.jobkit.job(id);
-    return j ? j.title : "Brief";
+    return j ? j.title : "Collab";
   },
   crumb: id => {
     const j = L.jobkit && L.jobkit.job(id);
-    return `<a href="#jobs">Find briefs</a> / ${j ? L.esc(j.title) : "Brief"}`;
+    return `<a href="#jobs">Find collabs</a> / ${j ? L.esc(j.title) : "Collab"}`;
   },
   nav: "jobs",
   Component: JobScreen,

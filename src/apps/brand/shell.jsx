@@ -28,7 +28,7 @@ const Badge = ({ k, n, cls = "badge" }) => (
 const NAV = [
   ["home", "Home"],
   ["creators", "Find creators"],
-  ["jobs", "Briefs"],
+  ["jobs", "Collabs"],
 ];
 const NAV2 = [
   ["campaigns", "Deals"],
@@ -38,7 +38,7 @@ const NAV2 = [
 const TABS = [
   ["home", "Home", "home"],
   ["creators", "Creators", "users"],
-  ["jobs", "Briefs", "brief"],
+  ["jobs", "Collabs", "brief"],
   ["campaigns", "Deals", "rail"],
   ["payments", "Payments", "coin"],
 ];

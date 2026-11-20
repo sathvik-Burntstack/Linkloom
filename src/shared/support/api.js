@@ -15,7 +15,7 @@ export const TOPICS = [
   ["payments", "Payments & escrow"],
   ["deal", "A deal or delivery"],
   ["account", "Account & KYC"],
-  ["marketplace", "Briefs, bids & pitches"],
+  ["marketplace", "Collabs, bids & pitches"],
   ["bug", "Something's broken"],
   ["other", "Something else"],
 ];

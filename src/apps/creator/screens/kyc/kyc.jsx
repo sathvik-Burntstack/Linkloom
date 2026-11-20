@@ -1401,12 +1401,12 @@ function MainView({ k, ctx }) {
           </span>
           <div className="kyc-wait-t">
             <p className="kyc-wait-h" id="kycWaitH">
-              Meanwhile, keep browsing briefs
+              Meanwhile, keep browsing collabs
             </p>
             <p className="muted">We'll tell you the moment it's done.</p>
           </div>
           <Lq className="lq-p" data-go="#jobs">
-            Browse briefs
+            Browse collabs
           </Lq>
         </section>
       </>
@@ -1426,7 +1426,7 @@ function MainView({ k, ctx }) {
               You're verified
             </h1>
             <p className="muted">
-              You can bid on any brief now. Payouts go to{" "}
+              You can bid on any collab now. Payouts go to{" "}
               {k.payoutMethod === "bank" ? (
                 <>
                   bank account <b className="num">{k.bank.acc}</b>
@@ -1458,7 +1458,7 @@ function MainView({ k, ctx }) {
             </Lq>
           ) : (
             <Lq className="lq-p lq-xl" data-go="#jobs">
-              Find briefs <Icon n="arrow" className="ic" />
+              Find collabs <Icon n="arrow" className="ic" />
             </Lq>
           )}
           <Lq className="lq-s lq-sm" data-go="#profile">

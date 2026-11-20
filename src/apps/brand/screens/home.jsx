@@ -68,9 +68,9 @@ const KIND = {
   canceled: ["close", "Invitation cancelled", "plain"],
   submitted: ["upload", "Delivery submitted", "info"],
   approved: ["check", "Work approved", "ok"],
-  job: ["brief", "Brief", "plain"],
-  closed: ["brief", "Brief closed", "plain"],
-  posted: ["brief", "Brief posted", "plain"],
+  job: ["brief", "Collab", "plain"],
+  closed: ["brief", "Collab closed", "plain"],
+  posted: ["brief", "Collab posted", "plain"],
 };
 const kindOf = k =>
   KIND[String(k || "").toLowerCase()] || ["bell", "Update", "plain"]; /* unknown kinds still read sensibly */
@@ -696,13 +696,13 @@ function HomeScreen() {
   const showNums = st.hired > 0 || act.length > 0 || held > 0;
   const n = k => WORDS[Math.min(k, 5)];
   const lede = isNew
-    ? "Post a brief, and creators who fit will bid with a price and a date."
+    ? "Post a collab, and creators who fit will bid with a price and a date."
     : objs.length
       ? `${n(objs.length)} ${objs.length === 1 ? "needs" : "need"} you today${waits.length ? `, and ${n(waits.length).toLowerCase()} ${waits.length === 1 ? "is" : "are"} with creators` : ""}.`
       : waits.length
         ? `Nothing needs you right now. ${n(waits.length)} ${waits.length === 1 ? "is" : "are"} with creators.`
         : open.length
-          ? `You're all caught up. ${open.length === 1 ? "One brief is" : `${open.length} briefs are`} taking bids.`
+          ? `You're all caught up. ${open.length === 1 ? "One collab is" : `${open.length} collabs are`} taking bids.`
           : "You're all caught up.";
 
   /* needs you: the actions, then what is with creators; a quiet line while open briefs wait for bids */
@@ -717,11 +717,11 @@ function HomeScreen() {
               No new bids yet on <b>{open[0].title}</b>. Bids land here as creators send them.
             </>
           ) : (
-            `No new bids yet on your ${open.length} open briefs. Bids land here as creators send them.`
+            `No new bids yet on your ${open.length} open collabs. Bids land here as creators send them.`
           )}
         </p>
         <Lq as="a" className="lq-s lq-sm" href={open.length === 1 ? `#job-${open[0].id}` : "#jobs"}>
-          {open.length === 1 ? "View brief" : "See briefs"}
+          {open.length === 1 ? "View collab" : "See collabs"}
           <Icon n="arrow" className="ic" />
         </Lq>
       </div>
@@ -765,7 +765,7 @@ function HomeScreen() {
       ) : null}
       <div className="home-post-t">
         <h2 className="ll-panel-h" id="homePostH">
-          {isNew ? "Post your first brief" : "Post a brief"}
+          {isNew ? "Post your first collab" : "Post a collab"}
           <span className="home-post-time"> · takes about 3 minutes</span>
         </h2>
         <p className="ll-panel-sub">
@@ -776,13 +776,13 @@ function HomeScreen() {
         {draft ? (
           <Lq as="a" className="lq-s lq-sm home-post-draft" href={`#post-${draft.id}`}>
             <Icon n="edit" className="ic" />
-            Finish your draft: {draft.title || "Untitled brief"}
+            Finish your draft: {draft.title || "Untitled collab"}
           </Lq>
         ) : null}
       </div>
       <Lq as="a" className={cta().replace(" lq-sm", "")} href="#post">
         <Icon n="plus" className="ic" />
-        Post a brief
+        Post a collab
       </Lq>
     </section>
   );
@@ -797,14 +797,14 @@ function HomeScreen() {
       "pill-paper",
       "Not started",
       "Verify your business",
-      "Needed before you post a brief, send an offer or pay into escrow. 3 steps, about 4 minutes.",
+      "Needed before you post a collab, send an offer or pay into escrow. 3 steps, about 4 minutes.",
       "Start verification",
     ],
     in_progress: [
       "pill-info",
       `${kDone} of 3 done`,
       "Finish verifying your business",
-      "Needed before you post a brief, send an offer or pay into escrow. Pick up where you left off.",
+      "Needed before you post a collab, send an offer or pay into escrow. Pick up where you left off.",
       "Continue verification",
     ],
     pending: [
@@ -1063,7 +1063,7 @@ function HomeScreen() {
               <Icon n="verified" />
               Business verified
             </span>
-            <span>You can post briefs, send offers and hire with escrow.</span>
+            <span>You can post collabs, send offers and hire with escrow.</span>
           </p>
         ) : null}
       </header>

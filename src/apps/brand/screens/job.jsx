@@ -220,10 +220,10 @@ function JobScreen({ param: id }) {
       <div className="view-in">
         <div className="empty">
           <img src="assets/step-01-envelope.svg" width="160" height="117" alt="" />
-          <p className="t-h2">This brief is gone.</p>
-          <p className="muted">It may have been deleted. Your other briefs are safe.</p>
+          <p className="t-h2">This collab is gone.</p>
+          <p className="muted">It may have been deleted. Your other collabs are safe.</p>
           <Lq as="a" className="lq-p" href="#jobs">
-            See all briefs
+            See all collabs
           </Lq>
         </div>
       </div>
@@ -335,7 +335,7 @@ function JobScreen({ param: id }) {
       extra: others ? (
         <label className="check jd-close-others">
           <input type="checkbox" defaultChecked data-closeothers="" />
-          {` Close the brief and decline the other ${others} open bid${others === 1 ? "" : "s"}`}
+          {` Close the collab and decline the other ${others} open bid${others === 1 ? "" : "s"}`}
         </label>
       ) : null,
       trust: "Held safely until you approve.",
@@ -601,7 +601,7 @@ function JobScreen({ param: id }) {
         ) : null}
         <p className="jd-sent">
           Sent {L.ago(b.sent)}
-          {b.closedWithJob ? " · declined when the brief closed" : ""}
+          {b.closedWithJob ? " · declined when the collab closed" : ""}
         </p>
         {acts.length ? <div className="jd-acts">{acts}</div> : null}
       </article>
@@ -616,7 +616,7 @@ function JobScreen({ param: id }) {
     bidsBlock = (
       <div className="empty jd-empty">
         <p className="t-h2">No bids on a draft.</p>
-        <p className="muted">Publish the brief and creators who fit can bid on it.</p>
+        <p className="muted">Publish the collab and creators who fit can bid on it.</p>
         <Lq as="a" className="lq-p" href={`#post-${j.id}`}>
           Finish and publish
         </Lq>
@@ -632,8 +632,8 @@ function JobScreen({ param: id }) {
             <p className="t-h2">{j.bids} bids came in.</p>
             <p className="muted">
               {k
-                ? `You hired ${k.name}. The other bids closed with the brief.`
-                : "They closed with the brief."}
+                ? `You hired ${k.name}. The other bids closed with the collab.`
+                : "They closed with the collab."}
             </p>
             {c ? (
               <Lq as="a" className="lq-s" href={`#campaign-${c.id}`}>
@@ -645,7 +645,7 @@ function JobScreen({ param: id }) {
           <>
             <p className="t-h2">No bids yet.</p>
             <p className="muted">
-              New briefs usually get their first bids within a day. You get a notification for each one.
+              New collabs usually get their first bids within a day. You get a notification for each one.
             </p>
           </>
         )}
@@ -745,7 +745,7 @@ function JobScreen({ param: id }) {
     <div className="view-in jd" ref={root}>
       <a className="btn-q jd-back" href="#jobs">
         <Icon n="back" />
-        All briefs
+        All collabs
       </a>
       <div className="jd-layout">
         <article className="jd-main" aria-labelledby="jdH">
@@ -766,9 +766,9 @@ function JobScreen({ param: id }) {
             </h1>
             <p className="muted t-small">
               {j.posted ? "Posted " + L.ago(j.posted) : "Not posted yet"}
-              <span className="sample"> · Sample brief</span>
+              <span className="sample"> · Sample collab</span>
             </p>
-            <div className="jd-tools-h" role="group" aria-label="Brief actions">
+            <div className="jd-tools-h" role="group" aria-label="Collab actions">
               {j.status === "open" || j.status === "draft" ? (
                 <a className="chip" href={`#post-${j.id}`}>
                   <Icon n="edit" />
@@ -783,7 +783,7 @@ function JobScreen({ param: id }) {
                   onClick={() => K.closeJob(j.id, () => draw())}
                 >
                   <Icon n="close" />
-                  <span>{j.status === "hired" ? "Close listing" : "Close brief"}</span>
+                  <span>{j.status === "hired" ? "Close listing" : "Close collab"}</span>
                 </button>
               ) : null}
               {S().campaigns.some(x => x.job === j.id) ? null : (
@@ -802,9 +802,9 @@ function JobScreen({ param: id }) {
           {banner}
           <section className="jd-sec jd-brief-sec card" aria-labelledby="jdBriefH">
             <h2 className="t-eyebrow muted" id="jdBriefH">
-              The brief
+              Collab details
             </h2>
-            <p className="jd-brief">{j.brief || "No brief yet."}</p>
+            <p className="jd-brief">{j.brief || "No details yet."}</p>
             <dl className="cw-facts jd-facts">
               <div>
                 <dt>Followers</dt>
@@ -848,7 +848,7 @@ function JobScreen({ param: id }) {
             <section className="jd-sec jd-pitches" id="jdPitches" aria-labelledby="jdPitchH">
               <div className="jd-pitches-h">
                 <h2 className="t-h2" id="jdPitchH">
-                  Pitches about this brief <span className="jl-cn">{pitches.length}</span>
+                  Pitches about this collab <span className="jl-cn">{pitches.length}</span>
                 </h2>
                 <Lq as="a" className="lq-s lq-sm" href={`#pitches-${j.id}`}>
                   See {pitches.length > 2 ? "all " + pitches.length : pitches.length === 1 ? "it" : "both"} in
@@ -904,7 +904,7 @@ function JobScreen({ param: id }) {
             {j.status === "open" || j.status === "draft" ? (
               <Lq as="a" className="lq-s jd-side-btn" href={`#post-${j.id}`}>
                 <Icon n="edit" />
-                {j.status === "draft" ? "Continue editing" : "Edit brief"}
+                {j.status === "draft" ? "Continue editing" : "Edit collab"}
               </Lq>
             ) : null}
           </div>
@@ -962,11 +962,11 @@ function JobScreen({ param: id }) {
 L.register("job", {
   title: id => {
     const j = L.bk && L.bk.job(id);
-    return j ? j.title : "Brief";
+    return j ? j.title : "Collab";
   },
   crumb: id => {
     const j = L.bk && L.bk.job(id);
-    return `<a href="#jobs">Briefs</a> / ${j ? esc(j.title) : "Brief"}`;
+    return `<a href="#jobs">Collabs</a> / ${j ? esc(j.title) : "Collab"}`;
   },
   nav: "jobs",
   Component: JobScreen,

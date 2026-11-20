@@ -755,7 +755,7 @@ function AllCreators() {
                 {chips("crAgeL", "age", AGES, ui.age, v => set("age", v))}
               </div>
               <p className="help">
-                Creators choose whether to share these. Leave them on Any unless the brief needs it.
+                Creators choose whether to share these. Leave them on Any unless the collab needs it.
               </p>
             </Acc>
           </div>

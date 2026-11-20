@@ -818,7 +818,7 @@ function MessagesScreen({ param }) {
               See my bids
             </Lq>
             <Lq as="a" className="lq-s" href="#jobs">
-              Find briefs
+              Find collabs
             </Lq>
           </div>
         </div>

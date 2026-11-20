@@ -27,7 +27,7 @@ const hrefOf = u => (/^https?:\/\//.test(u) ? u : "https://" + u);
 const shortUrl = u => u.replace(/^https?:\/\/(www\.)?/, "");
 const whenTxt = p => `${L.fmtDate(p.at)}${p.edited ? ` · edited ${L.fmtDate(p.editedAt || p.at)}` : ""}`;
 const creatorOf = p => K().cr(p.creator) || { id: p.creator, name: "Creator", handle: "" };
-const aboutTitle = p => p.jobTitle || (K().job(p.job) || {}).title || "a brief";
+const aboutTitle = p => p.jobTitle || (K().job(p.job) || {}).title || "a collab";
 
 /* ---------- actions (shared by the React card and the HTML card) ---------- */
 /** Opens the chat with the pitch's creator; `busy(true|false)` disables the button meanwhile. */
@@ -53,7 +53,7 @@ function decline(p, done) {
     yes: "Decline pitch",
     no: "Keep it",
     danger: true,
-    mini: <CrMini c={c} line={p.job ? "About " + (p.jobTitle || "a brief") : "General pitch"} />,
+    mini: <CrMini c={c} line={p.job ? "About " + (p.jobTitle || "a collab") : "General pitch"} />,
     bullets: [
       `${f} is told you passed on it.`,
       `${f} can pitch you again after 15 days.`,
@@ -175,7 +175,7 @@ function PitchesScreen({ param: briefId }) {
         <div className="jl-head-t">
           <h1 className="t-h1">{j ? "Pitches about " + j.title : "Pitches"}</h1>
           <p className="muted">
-            Creators pitch you once from your brand profile, about a brief or a fresh idea. They can edit a
+            Creators pitch you once from your brand profile, about a collab or a fresh idea. They can edit a
             pitch once. {L.live ? null : <span className="sample">Sample data</span>}
           </p>
         </div>
@@ -214,7 +214,7 @@ function PitchesScreen({ param: briefId }) {
           <div className="empty">
             <p className="t-h2">No pitches yet</p>
             <p className="muted">
-              Creators can open your brand profile and pitch you once, about one of your briefs or a fresh
+              Creators can open your brand profile and pitch you once, about one of your collabs or a fresh
               idea. Each new pitch lands here and in your notifications.
             </p>
             <Lq as="a" className="lq-s" href="#profile">

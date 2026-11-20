@@ -244,7 +244,7 @@ function KycScreen() {
           </li>
           <li>
             <Icon n="shield" />
-            <span>Once verified, you can post briefs, send offers and pay into escrow.</span>
+            <span>Once verified, you can post collabs, send offers and pay into escrow.</span>
           </li>
           <li>
             <Icon n="bell" />
@@ -267,10 +267,10 @@ function KycScreen() {
             </h1>
             <p className="muted">
               {st === "verified"
-                ? "You can post briefs, send offers and hire with escrow."
+                ? "You can post collabs, send offers and hire with escrow."
                 : st === "pending"
                   ? `${REVIEW_TIME} You'll get a notification when it's done.`
-                  : "Posting a brief, sending an offer and checking out need a verified account. Numbers are encrypted and never shown to creators."}
+                  : "Posting a collab, sending an offer and checking out need a verified account. Numbers are encrypted and never shown to creators."}
             </p>
             {st === "rejected" && k.rejectionReason ? (
               <div className="profile-formerr" role="alert">

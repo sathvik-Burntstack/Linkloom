@@ -186,16 +186,16 @@ import { JobMini } from "./kit";
     const c = campOfJob(id),
       k = c && cr(c.creator);
     confirm({
-      title: "Close this brief?",
+      title: "Close this collab?",
       mini: <JobMini j={j} />,
-      yes: "Close brief",
+      yes: "Close collab",
       no: "Keep it open",
       bullets: [
         c
           ? `Your deal with ${k.name} carries on. Only the listing closes.`
           : "Creators can no longer find it or bid on it.",
         open
-          ? `${open} open bid${open === 1 ? " is" : "s are"} declined, and ${open === 1 ? "that creator is" : "those creators are"} told the brief closed.`
+          ? `${open} open bid${open === 1 ? " is" : "s are"} declined, and ${open === 1 ? "that creator is" : "those creators are"} told the collab closed.`
           : "No open bids are waiting on you.",
         "Nothing is charged. It stays under Closed with its history.",
       ],
@@ -220,7 +220,7 @@ import { JobMini } from "./kit";
           }
         });
       }, "job-closed");
-      L.toast("Brief closed", "check");
+      L.toast("Collab closed", "check");
       after && after();
     }
   }
@@ -231,7 +231,7 @@ import { JobMini } from "./kit";
     if (c) {
       const k = cr(c.creator);
       openReactSheet({
-        title: "This brief can’t be deleted",
+        title: "This collab can’t be deleted",
         render: close => (
           <div className="stack jl-sheet">
             <JobMini j={j} />
@@ -249,7 +249,7 @@ import { JobMini } from "./kit";
                     closeJob(id, after);
                   }}
                 >
-                  Close brief instead
+                  Close collab instead
                 </Lq>
               )}
               <Lq className="lq-s" data-no="" onClick={() => close()}>
@@ -264,9 +264,9 @@ import { JobMini } from "./kit";
     const n = bidsFor(id).length || j.bids || 0,
       draft = j.status === "draft";
     confirm({
-      title: draft ? "Delete this draft?" : "Delete this brief?",
+      title: draft ? "Delete this draft?" : "Delete this collab?",
       mini: <JobMini j={j} />,
-      yes: draft ? "Delete draft" : "Delete brief",
+      yes: draft ? "Delete draft" : "Delete collab",
       no: "Keep it",
       danger: true,
       bullets: [
@@ -285,7 +285,7 @@ import { JobMini } from "./kit";
                 const x = s.jobs.find(y => y.id === id);
                 if (x) x.status = "closed";
               }, "job-closed");
-              L.toast("Brief closed and removed from creators' search", "check");
+              L.toast("Collab closed and removed from creators' search", "check");
               after && after();
             },
             e => L.toast(L.live.errorText(e), "alert"),
@@ -296,7 +296,7 @@ import { JobMini } from "./kit";
           s.jobs = s.jobs.filter(y => y.id !== id);
           s.bids = s.bids.filter(b => b.job !== id);
         }, "job-deleted");
-        L.toast(draft ? "Draft deleted" : "Brief deleted", "trash");
+        L.toast(draft ? "Draft deleted" : "Collab deleted", "trash");
         after && after();
       },
     });

@@ -162,17 +162,17 @@ function JobsScreen() {
     <div className="view-in jobs">
       <header className="jobs-head">
         <div className="jobs-head-t">
-          <h1 className="t-h1">Find briefs</h1>
+          <h1 className="t-h1">Find collabs</h1>
           <p className="muted">
             {open
               ? `${open} ${open === 1 ? "brand wants" : "brands want"} creators this week. Bid on the ones that fit you.`
-              : "No open briefs right now. New ones arrive most days."}{" "}
+              : "No open collabs right now. New ones arrive most days."}{" "}
             <span className="sample">Sample data</span>
           </p>
         </div>
         <div className="jobs-search">
           <label className="sr-only" htmlFor="jobsQ">
-            Search briefs
+            Search collabs
           </label>
           <Icon n="search" />
           <input
@@ -296,13 +296,13 @@ function JobsScreen() {
               checked={!!ui.savedOnly}
               onChange={e => set("savedOnly", e.target.checked)}
             />{" "}
-            Saved briefs only
+            Saved collabs only
           </label>
         </aside>
-        <section className="jobs-results" aria-label="Briefs">
+        <section className="jobs-results" aria-label="Collabs">
           <div className="jobs-bar">
             <p className="jobs-count" id="jobsCount" aria-live="polite">
-              <b>{ids.length}</b> of {open} briefs
+              <b>{ids.length}</b> of {open} collabs
               {ui.sort !== "match" ? ` · ${SORTS[ui.sort]}` : " · Best match first"}
             </p>
             <Lq
@@ -315,7 +315,7 @@ function JobsScreen() {
             </Lq>
             <div className="jobs-sort">
               <label className="sr-only" htmlFor="jobsSort">
-                Sort briefs
+                Sort collabs
               </label>
               <select
                 className="select"
@@ -337,7 +337,7 @@ function JobsScreen() {
           </p>
           <p className="jobs-offline" role="status" hidden={online}>
             <Icon n="alert" />
-            You are offline. These are the briefs from your last visit.
+            You are offline. These are the collabs from your last visit.
           </p>
           <div
             className="jobs-list"
@@ -362,7 +362,7 @@ function JobsScreen() {
           </div>
           <div className="empty jobs-empty" hidden={ids.length > 0}>
             <img src="assets/step-01-envelope.svg" width="160" height="117" alt="" />
-            <p className="t-h2">No briefs match that.</p>
+            <p className="t-h2">No collabs match that.</p>
             <p className="muted">Try a lower minimum budget or another city.</p>
             <Lq className="lq-p" data-clear="" onClick={clear}>
               Clear filters
@@ -388,7 +388,7 @@ function JobsScreen() {
               </>
             ) : hiddenCount ? (
               <>
-                {hiddenCount} hidden {hiddenCount === 1 ? "brief" : "briefs"} ·{" "}
+                {hiddenCount} hidden {hiddenCount === 1 ? "collab" : "collabs"} ·{" "}
                 <button
                   className="btn-q"
                   type="button"
@@ -406,4 +406,4 @@ function JobsScreen() {
   );
 }
 
-L.register("jobs", { title: "Find briefs", nav: "jobs", Component: JobsScreen });
+L.register("jobs", { title: "Find collabs", nav: "jobs", Component: JobsScreen });

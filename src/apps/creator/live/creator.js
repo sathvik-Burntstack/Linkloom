@@ -166,7 +166,7 @@ export function mapJob(c, me) {
     bi: initialsOf(brand),
     logo: logoOf(c.brand),
     tone: toneOf(brand),
-    title: c.title || "Untitled brief",
+    title: c.title || "Untitled collab",
     platform,
     format: formatOf(c.deliverables, c.platform),
     category,
@@ -266,7 +266,7 @@ export function mapBid(b, jobs) {
     out.format = mj.format;
   } else if (!j) {
     out.brand = nameOf(b.brand, "Brand");
-    out.title = String(b.campaignTitle || b.title || "Brief");
+    out.title = String(b.campaignTitle || b.title || "Collab");
     out.platform = platformOf(b.platform);
     out.format = formatOf(b.deliverables, String(b.platform || ""));
   }
@@ -919,7 +919,7 @@ export function mapBrandProfile(b) {
     about: String(b.about || b.bio || b.description || ""),
     openBriefs: briefs.map(c => ({
       id: String(c.id),
-      title: String(c.title || "Brief"),
+      title: String(c.title || "Collab"),
       platform: String(platformOf(c.platform)),
       closesAt: day(c.closesAt) || "",
     })),

@@ -143,7 +143,7 @@ function EmptyEarnings({ s }) {
           slip.
         </p>
         <Lq as="a" className="lq-p" href="#jobs">
-          Find briefs
+          Find collabs
         </Lq>
       </div>
     </div>

@@ -4,11 +4,11 @@ import { Lq, openReactSheet, renderInto } from "./view";
 
 const WORDS = {
   creator: [
-    "Create a free creator account or sign in to bid on briefs, message brands and get paid from escrow.",
+    "Create a free creator account or sign in to bid on collabs, message brands and get paid from escrow.",
     "Create a creator account",
   ],
   brand: [
-    "Create a free brand account or sign in to post briefs, save creators, message them and hire with escrow.",
+    "Create a free brand account or sign in to post collabs, save creators, message them and hire with escrow.",
     "Create a brand account",
   ],
 };

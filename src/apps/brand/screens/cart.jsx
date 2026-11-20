@@ -332,7 +332,7 @@ function CartRow({ c, onRemove, onSend, rowRef, onDirty }) {
         "title",
         "field cart-title",
         <>
-          <label htmlFor={`${rid}-t`}>Brief title</label>
+          <label htmlFor={`${rid}-t`}>Collab title</label>
           <input
             className="input"
             id={`${rid}-t`}

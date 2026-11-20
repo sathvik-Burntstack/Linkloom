@@ -72,14 +72,14 @@ function Slip({ j, onClose, onDel }) {
   let note = "";
   if (j.status === "open" && j.review === "pending")
     note =
-      "In review. Our team checks every brief before creators see it; it shows up for creators once it's approved.";
+      "In review. Our team checks every collab before creators see it; it shows up for creators once it's approved.";
   else if (j.status === "open" && j.review === "rejected")
-    note = `Not approved, so creators can't see it.${j.reviewReason ? ` Reason: ${j.reviewReason}.` : ""} Edit the brief and save it to send it for review again.`;
+    note = `Not approved, so creators can't see it.${j.reviewReason ? ` Reason: ${j.reviewReason}.` : ""} Edit the collab and save it to send it for review again.`;
   else if (j.status === "open")
     note = j.bids
-      ? `${j.bids} bid${j.bids === 1 ? "" : "s"} so far${nNew ? `, ${nNew} new` : ""}${nShort ? `, ${nShort} shortlisted` : ""}. Bids stay open until you hire or close the brief.`
+      ? `${j.bids} bid${j.bids === 1 ? "" : "s"} so far${nNew ? `, ${nNew} new` : ""}${nShort ? `, ${nShort} shortlisted` : ""}. Bids stay open until you hire or close the collab.`
       : "Published. Creators who match will start bidding soon.";
-  else if (draft) note = "Only you can see this. Publish it when the brief is ready.";
+  else if (draft) note = "Only you can see this. Publish it when the collab is ready.";
   else if (j.status === "hired")
     note = k ? `You hired ${k.name}. The work and payment live in Deals.` : "Hired. The work lives in Deals.";
   else note = k ? `Closed after hiring ${k.name}.` : "Closed without a hire.";
@@ -89,14 +89,14 @@ function Slip({ j, onClose, onDel }) {
     acts = (
       <>
         <Lq as="a" className="lq-s lq-sm" href={`#job-${j.id}`}>
-          {j.bids ? `See ${j.bids} bid${j.bids === 1 ? "" : "s"}` : "Open brief"}
+          {j.bids ? `See ${j.bids} bid${j.bids === 1 ? "" : "s"}` : "Open collab"}
         </Lq>
         <Lq as="a" className="lq-s lq-sm" href={`#post-${j.id}`}>
           <Icon n="edit" />
           Edit
         </Lq>
         <Lq className="lq-s lq-sm" data-close={j.id} onClick={() => onClose(j.id)}>
-          Close brief
+          Close collab
         </Lq>
       </>
     );
@@ -125,7 +125,7 @@ function Slip({ j, onClose, onDel }) {
           </Lq>
         ) : null}
         <Lq as="a" className="lq-s lq-sm" href={`#job-${j.id}`}>
-          View brief
+          View collab
         </Lq>
         {j.status === "hired" ? (
           <Lq className="lq-s lq-sm" data-close={j.id} onClick={() => onClose(j.id)}>
@@ -219,7 +219,7 @@ function JobsScreen() {
   /* counts only for the states that have something in them: a new brand sees the next step, not a row of zeros */
   const summary = () => {
     if (!jobs.length)
-      return "Post a brief and creators who fit bid on it. Your briefs and their bids show up here.";
+      return "Post a collab and creators who fit bid on it. Your collabs and their bids show up here.";
     const n = t => count(t),
       nNew = S().bids.filter(b => b.status === "new" && (k_.job(b.job) || {}).status === "open").length;
     const parts = [
@@ -236,12 +236,12 @@ function JobsScreen() {
   };
   const pickTab = t => {
     u.tab = t;
-    refresh(true, `Showing ${u.tab === "all" ? "all" : u.tab} briefs`);
+    refresh(true, `Showing ${u.tab === "all" ? "all" : u.tab} collabs`);
     const same = root.current.querySelector(`.jl-filter [data-tab="${u.tab}"]`);
     same && same.focus();
   };
-  const onClose = id => k_.closeJob(id, () => refresh(true, "Brief closed"));
-  const onDel = id => k_.deleteJob(id, () => refresh(true, "Brief deleted"));
+  const onClose = id => k_.closeJob(id, () => refresh(true, "Collab closed"));
+  const onDel = id => k_.deleteJob(id, () => refresh(true, "Collab deleted"));
   useEffect(() => {
     k_.mo("stagger", L.$$(".jl-slip", root.current));
     if (u.justSaved) {
@@ -265,12 +265,12 @@ function JobsScreen() {
     board = (
       <div className="empty jl-empty">
         <img src="assets/step-01-envelope.svg" width="160" height="117" alt="" />
-        <p className="t-h2">No briefs yet.</p>
+        <p className="t-h2">No collabs yet.</p>
         <p className="muted">
-          Post a brief and creators who fit will bid on it. It takes about three minutes.
+          Post a collab and creators who fit will bid on it. It takes about three minutes.
         </p>
         <Lq as="a" className="lq-p" href="#post">
-          Post a brief
+          Post a collab
         </Lq>
       </div>
     );
@@ -278,9 +278,9 @@ function JobsScreen() {
     const list = jobs.filter(j => inTab(j, u.tab));
     if (!list.length) {
       const m = {
-        open: ["No open briefs.", "Publish a draft or post a new brief to start getting bids."],
-        drafts: ["No drafts.", "Save a brief as a draft when it is not ready yet."],
-        closed: ["Nothing closed yet.", "Briefs you hire on or close show up here."],
+        open: ["No open collabs.", "Publish a draft or post a new collab to start getting bids."],
+        drafts: ["No drafts.", "Save a collab as a draft when it is not ready yet."],
+        closed: ["Nothing closed yet.", "Collabs you hire on or close show up here."],
       }[u.tab];
       board = (
         <div className="empty jl-empty">
@@ -288,7 +288,7 @@ function JobsScreen() {
           <p className="muted">{m[1]}</p>
           <div className="row wrap jl-empty-cta">
             <Lq className="lq-s" data-tab="all" onClick={() => pickTab("all")}>
-              Show all briefs
+              Show all collabs
             </Lq>
           </div>
         </div>
@@ -322,7 +322,7 @@ function JobsScreen() {
     <div className="view-in jl" ref={root}>
       <header className="jl-head">
         <div className="jl-head-t">
-          <h1 className="t-h1">Briefs</h1>
+          <h1 className="t-h1">Collabs</h1>
           <p className="muted" id="jlSum">
             {summary()} <span className="sample">Sample data</span>
           </p>
@@ -342,11 +342,11 @@ function JobsScreen() {
           ) : null}
           <Lq as="a" className="lq-p" href="#post" data-post="" hidden={!jobs.length}>
             <Icon n="plus" />
-            Post a brief
+            Post a collab
           </Lq>
         </div>
       </header>
-      <div className="chips jl-filter" role="group" aria-label="Show briefs" hidden={!jobs.length}>
+      <div className="chips jl-filter" role="group" aria-label="Show collabs" hidden={!jobs.length}>
         {jobs.length
           ? TABS.map(([k, n]) => (
               <button
@@ -372,4 +372,4 @@ function JobsScreen() {
   );
 }
 
-L.register("jobs", { title: "Briefs", nav: "jobs", Component: JobsScreen });
+L.register("jobs", { title: "Collabs", nav: "jobs", Component: JobsScreen });
